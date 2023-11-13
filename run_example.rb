@@ -1,7 +1,11 @@
+require "logger"
+
 require_relative "bag_courier"
 require_relative "config"
 require_relative "data_transfer"
 require_relative "status_event"
+
+LOGGER = Logger.new($stdout)
 
 config_data = Config::ConfigService.read_config_file(
   File.join(".", "config", "config.yml")
@@ -15,7 +19,7 @@ work = BagCourier::Work.new(
   description: "Something something something"
 )
 
-status_event_repo = StatusEventInMemoryRepository.new
+status_event_repo = StatusEvent::StatusEventInMemoryRepository.new
 
 courier = BagCourier::BagCourierService.new(
   work: work,
