@@ -10,7 +10,7 @@ class AptrustInfo
   attr_accessor :title
 
   def squish(value)
-    value[0..@@field_length]
+    value.strip.gsub(/\s+/, " ")[0..@@field_length]
   end
 
   def initialize(
