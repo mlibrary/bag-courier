@@ -1,0 +1,20 @@
+# Bag Courier Config Example/Template
+
+WorkingDir: "./prep"
+ExportDir: "./export"
+TestSourceDir: "./test_source/work_dir"
+
+Repository:
+RepositoryDescription:
+
+# AWS S3 APTrust KEYS [for preview]
+
+# Config for apt_upload and apt_download
+DownloadDir:
+AptrustApiUser:
+AptrustApiUrl:
+AptrustApiKey:
+Bucket:
+BucketRegion:
+AwsAccessKeyId:
+AwsSecretAccessKey:
