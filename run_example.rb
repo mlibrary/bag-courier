@@ -1,6 +1,7 @@
 require_relative "bag_courier"
 require_relative "config"
 require_relative "data_transfer"
+require_relative "status_event"
 
 config_data = Config::ConfigService.read_config_file(
   File.join(".", "config", "config.yml")
@@ -14,11 +15,19 @@ work = BagCourier::Work.new(
   description: "Something something something"
 )
 
+status_event_repo = StatusEventInMemoryRepository.new
+
 courier = BagCourier::BagCourierService.new(
   work: work,
+  context: "some",
   config: config,
   data_transfer: DataTransfer::DirDataTransfer.new(config.test_source_dir),
-  context: "some"
+  status_event_repo: status_event_repo
 )
 
 courier.perform_deposit
+
+LOGGER.info("Events")
+status_event_repo.get_all_by_work_id(work.id).each do |e|
+  LOGGER.info(e)
+end

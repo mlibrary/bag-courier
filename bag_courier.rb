@@ -4,6 +4,7 @@ require "bagit"
 require "minitar"
 
 require_relative "aptrust_info"
+require_relative "status_event"
 
 LOGGER = Logger.new($stdout)
 
@@ -59,7 +60,6 @@ module BagCourier
   class BagCourierService
     @@allow_deposit = false
 
-    EXT_TAR = ".tar"
     IDENTIFIER_TEMPLATE = "%repository%.%context%.%id%"
     BAG_INFO_KEY_SOURCE = "Source-Organization"
     BAG_INFO_KEY_COUNT = "Bag-Count"
@@ -67,15 +67,7 @@ module BagCourier
     BAG_INFO_VALUE_SOURCE = "University of Michigan"
     BAG_FILE_APTRUST_INFO = "aptrust-info.txt"
 
-    STATUSES = %w[
-      bagged bagging
-      deposit_skipped deposited depositing
-      copied copying
-      failed
-      packed packing
-      skipped
-      uploaded uploading
-    ]
+    EXT_TAR = ".tar"
 
     attr_reader :work
     attr_reader :data_transfer
@@ -86,7 +78,7 @@ module BagCourier
 
     attr_reader :status_history
 
-    def initialize(work:, config:, data_transfer:, context:)
+    def initialize(work:, context:, config:, data_transfer:, status_event_repo:)
       @work = work
       @data_transfer = data_transfer
       @working_dir = config.working_dir
@@ -96,23 +88,15 @@ module BagCourier
       @context = context || ""
       @repository = config.repository.name
       @description = config.repository.description
-
-      @status_history = []
+      @status_event_repo = status_event_repo
     end
 
-    def track_deposit!(status:, note: nil)
-      LOGGER.debug([
-        "work.id=#{@work.id}",
-        "status=#{status}",
-        "status_history=#{@status_history}"
-      ])
-
-      LOGGER.error("BagCourierService.track_deposit!(#{status}) unknown status") unless STATUSES.include? status
-      status_event = {id: @work.id, status: status, timestamp: Time.now}
+    def track!(status:, note: nil)
+      status_event = {work_id: @work.id, status: status, timestamp: Time.now}
       if !note.nil?
         status_event[:note] = note
       end
-      @status_history << status_event
+      @status_event_repo.create(status_event)
     end
 
     def fs_identifier
@@ -150,9 +134,9 @@ module BagCourier
           "tar_src=#{tar_src}",
           "tar_file=#{tar_file}"
         ])
-        track_deposit!(status: "packing")
+        track!(status: "packing")
         Minitar.pack(tar_src, File.open(tar_file, "wb"))
-        track_deposit!(status: "packed")
+        track!(status: "packed")
       end
       new_path = target_path + EXT_TAR
       LOGGER.debug([
@@ -173,12 +157,12 @@ module BagCourier
       success = false
       LOGGER.debug("allow_deposit?=#{@@allow_deposit}")
       if !@@allow_deposit
-        track_deposit!(status: "deposit_skipped")
+        track!(status: "deposit_skipped")
         return
       end
 
       begin
-        track_deposit!(status: "depositing")
+        track!(status: "depositing")
         # add timing
         Aws.config.update(
           credentials: Aws::Credentials.new(
@@ -189,15 +173,15 @@ module BagCourier
         s3 = Aws::S3::Resource.new(region: @aptrust_config.bucket_region)
         bucket = s3.bucket(@aptrust_config.bucket)
         aws_object = bucket.object(File.basename(file_path))
-        track_deposit!(status: "uploading")
+        track!(status: "uploading")
         aws_object.upload_file(file_path)
-        track_deposit!(status: "uploaded")
+        track!(status: "uploaded")
       rescue Aws::S3::Errors::ServiceError => e
-        track_deposit!(status: "failed", note: "failed in #{e.context} with error #{e}")
+        track!(status: "failed", note: "failed in #{e.context} with error #{e}")
         LOGGER.error(["Upload of file #{filename} failed in #{e.context} with error #{e}"] + e.backtrace[0..20])
         success = false
       end
-      track_deposit!(status: "deposited") if success
+      track!(status: "deposited") if success
       success
     end
 
@@ -205,13 +189,13 @@ module BagCourier
       LOGGER.debug("work.id=#{@work.id}")
 
       begin
-        track_deposit!(status: "bagging")
+        track!(status: "bagging")
         bag_path = File.join(@working_dir, fs_identifier)
         bag = BagAdapter.new(bag_path)
 
-        track_deposit!(status: "copying")
+        track!(status: "copying")
         @data_transfer.transfer(bag.data_dir)
-        track_deposit!(status: "copied")
+        track!(status: "copied")
 
         # TO DO: Support more than one tag file
         aptrust_info_text = AptrustInfo.new(work: @work).build
@@ -220,7 +204,7 @@ module BagCourier
         bag.add_bag_info(bag_info)
 
         bag.add_manifests
-        track_deposit!(status: "bagged", note: "bag_path: #{bag_path}")
+        track!(status: "bagged", note: "bag_path: #{bag_path}")
 
         tar_file_path = tar(bag.bag_dir)
         export_tar_file_path = File.join(@export_dir, File.basename(tar_file_path))
@@ -237,7 +221,7 @@ module BagCourier
         LOGGER.error(
           ["BagCourierService.perform_deposit error #{e}"] + e.backtrace[0..20]
         )
-        track_deposit!(status: "failed", note: "failed with error #{e}")
+        track!(status: "failed", note: "failed with error #{e}")
       end
     end
   end
