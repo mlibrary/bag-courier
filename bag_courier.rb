@@ -58,8 +58,6 @@ module BagCourier
   end
 
   class BagCourierService
-    @@allow_deposit = false
-
     IDENTIFIER_TEMPLATE = "%repository%.%context%.%id%"
     BAG_INFO_KEY_SOURCE = "Source-Organization"
     BAG_INFO_KEY_COUNT = "Bag-Count"
@@ -83,6 +81,8 @@ module BagCourier
       @data_transfer = data_transfer
       @working_dir = config.working_dir
       @export_dir = config.export_dir
+
+      @dry_run = config.dry_run
 
       @aptrust_config = config.aptrust
       @context = context || ""
@@ -154,15 +154,14 @@ module BagCourier
         "status_history=#{@status_history}"
       ])
 
-      success = false
-      LOGGER.debug("allow_deposit?=#{@@allow_deposit}")
-      if !@@allow_deposit
+      deposited = false
+      LOGGER.debug("dry_run=#{@dry_run}")
+      if @dry_run
         track!(status: "deposit_skipped")
-        return
+        return deposited
       end
 
       begin
-        track!(status: "depositing")
         # add timing
         Aws.config.update(
           credentials: Aws::Credentials.new(
@@ -175,20 +174,20 @@ module BagCourier
         aws_object = bucket.object(File.basename(file_path))
         track!(status: "uploading")
         aws_object.upload_file(file_path)
+        deposited = true
         track!(status: "uploaded")
       rescue Aws::S3::Errors::ServiceError => e
         track!(status: "failed", note: "failed in #{e.context} with error #{e}")
         LOGGER.error(["Upload of file #{filename} failed in #{e.context} with error #{e}"] + e.backtrace[0..20])
-        success = false
       end
-      track!(status: "deposited") if success
-      success
+      deposited
     end
 
     def perform_deposit
       LOGGER.debug("work.id=#{@work.id}")
 
       begin
+        track!(status: "depositing")
         track!(status: "bagging")
         bag_path = File.join(@working_dir, fs_identifier)
         bag = BagAdapter.new(bag_path)
@@ -200,9 +199,7 @@ module BagCourier
         # TO DO: Support more than one tag file
         aptrust_info_text = AptrustInfo.new(work: @work).build
         bag.add_tag_file!(tag_file_text: aptrust_info_text, file_name: BAG_FILE_APTRUST_INFO)
-
         bag.add_bag_info(bag_info)
-
         bag.add_manifests
         track!(status: "bagged", note: "bag_path: #{bag_path}")
 
@@ -216,7 +213,8 @@ module BagCourier
         FileUtils.mv(tar_file_path, export_tar_file_path)
         # TO DO: delete untarred files
 
-        deposit(file_path: export_tar_file_path)
+        deposited = deposit(file_path: export_tar_file_path)
+        track!(status: "deposited") if deposited
       rescue => e
         LOGGER.error(
           ["BagCourierService.perform_deposit error #{e}"] + e.backtrace[0..20]

@@ -23,6 +23,7 @@ module Config
   )
 
   Config = Struct.new(
+    :dry_run,
     :working_dir,
     :export_dir,
     :test_source_dir,
@@ -35,9 +36,31 @@ module Config
   end
 
   class ConfigService
+    def raise_error(key, value)
+      raise ConfigError, "Value for \"#{key}\" is not valid: #{value}"
+    end
+
     def self.verify_string(key, value)
       if !value.is_a?(String)
-        raise ConfigError, "Value for \"#{key}\" is not valid: #{value}"
+        raise_error(key, value)
+      end
+      value
+    end
+
+    def self.to_boolean(value)
+      case value
+      when true, "true", "1"
+        true
+      when false, "false", "0"
+        false
+      else
+        raise TypeError, "Value \"#{value}\" could not be converted to true or false."
+      end
+    end
+
+    def self.verify_boolean(key, value)
+      if ![true, false].include?(value)
+        raise_error(key, value)
       end
       value
     end
@@ -54,6 +77,7 @@ module Config
       LOGGER.debug(data)
 
       Config.new(
+        dry_run: verify_boolean("DryRun", to_boolean(data["DryRun"])),
         working_dir: verify_string("WorkingDir", data["WorkingDir"]),
         export_dir: verify_string("ExportDir", data["ExportDir"]),
         test_source_dir: verify_string("TestSourceDir", data["TestSourceDir"]),
