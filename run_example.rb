@@ -31,7 +31,11 @@ status_event_repo = StatusEvent::StatusEventInMemoryRepository.new
 courier = BagCourier::BagCourierService.new(
   work: work,
   context: "some",
-  config: config,
+  working_dir: config.working_dir,
+  export_dir: config.export_dir,
+  repository_name: config.repository.name,
+  repository_description: config.repository.description,
+  dry_run: config.dry_run,
   remote: aws_remote,
   data_transfer: DataTransfer::DirDataTransfer.new(config.test_source_dir),
   status_event_repo: status_event_repo

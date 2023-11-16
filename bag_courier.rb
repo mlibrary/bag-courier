@@ -3,7 +3,7 @@ require "logger"
 require "bagit"
 require "minitar"
 
-require_relative "aptrust_info"
+require_relative "aptrust"
 require_relative "remote"
 require_relative "status_event"
 
@@ -64,7 +64,6 @@ module BagCourier
     BAG_INFO_KEY_COUNT = "Bag-Count"
     BAG_INFO_KEY_DATE = "Bagging-Date"
     BAG_INFO_VALUE_SOURCE = "University of Michigan"
-    BAG_FILE_APTRUST_INFO = "aptrust-info.txt"
 
     EXT_TAR = ".tar"
 
@@ -80,20 +79,24 @@ module BagCourier
     def initialize(
       work:,
       context:,
-      config:,
+      working_dir:,
+      export_dir:,
+      repository_name:,
+      repository_description:,
+      dry_run:,
       data_transfer:,
       remote:,
       status_event_repo:
     )
       @work = work
-      @working_dir = config.working_dir
-      @export_dir = config.export_dir
+      @working_dir = working_dir
+      @export_dir = export_dir
 
-      @dry_run = config.dry_run
+      @dry_run = dry_run
 
       @context = context || ""
-      @repository = config.repository.name
-      @description = config.repository.description
+      @repository = repository_name
+      @description = repository_description
 
       @data_transfer = data_transfer
       @remote = remote
@@ -177,7 +180,10 @@ module BagCourier
         track!(status: "uploaded")
       rescue Remote::RemoteError => e
         track!(status: "failed", note: "failed in #{e.context} with error #{e}")
-        LOGGER.error(["Upload of file #{filename} failed in #{e.context} with error #{e}"] + e.backtrace[0..20])
+        LOGGER.error(
+          ["Upload of file #{filename} failed in #{e.context} with error #{e}"] +
+          e.backtrace[0..20]
+        )
       end
       deposited
     end
@@ -196,8 +202,11 @@ module BagCourier
         track!(status: "copied")
 
         # TO DO: Support more than one tag file
-        aptrust_info_text = AptrustInfo.new(work: @work).build
-        bag.add_tag_file!(tag_file_text: aptrust_info_text, file_name: BAG_FILE_APTRUST_INFO)
+        aptrust_info_text = Aptrust::AptrustInfo.new(work: @work).build
+        bag.add_tag_file!(
+          tag_file_text: aptrust_info_text,
+          file_name: Aptrust::AptrustInfo.file_name
+        )
         bag.add_bag_info(bag_info)
         bag.add_manifests
         track!(status: "bagged", note: "bag_path: #{bag_path}")
