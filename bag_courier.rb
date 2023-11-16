@@ -219,7 +219,7 @@ module BagCourier
           "export_tar_file_path=#{export_tar_file_path}"
         ])
         FileUtils.mv(tar_file_path, export_tar_file_path)
-        # TO DO: delete untarred files
+        FileUtils.rm_r(bag.bag_dir)
 
         deposited = deposit(file_path: export_tar_file_path)
         track!(status: "deposited") if deposited
