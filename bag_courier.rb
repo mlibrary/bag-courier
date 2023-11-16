@@ -4,6 +4,7 @@ require "bagit"
 require "minitar"
 
 require_relative "aptrust_info"
+require_relative "remote"
 require_relative "status_event"
 
 LOGGER = Logger.new($stdout)
@@ -76,18 +77,26 @@ module BagCourier
 
     attr_reader :status_history
 
-    def initialize(work:, context:, config:, data_transfer:, status_event_repo:)
+    def initialize(
+      work:,
+      context:,
+      config:,
+      data_transfer:,
+      remote:,
+      status_event_repo:
+    )
       @work = work
-      @data_transfer = data_transfer
       @working_dir = config.working_dir
       @export_dir = config.export_dir
 
       @dry_run = config.dry_run
 
-      @aptrust_config = config.aptrust
       @context = context || ""
       @repository = config.repository.name
       @description = config.repository.description
+
+      @data_transfer = data_transfer
+      @remote = remote
       @status_event_repo = status_event_repo
     end
 
@@ -149,9 +158,8 @@ module BagCourier
 
     def deposit(file_path:)
       LOGGER.debug([
-        "filename=#{file_path}",
-        "work.id=#{@work.id}",
-        "status_history=#{@status_history}"
+        "file_path=#{file_path}",
+        "work.id=#{@work.id}"
       ])
 
       deposited = false
@@ -163,20 +171,11 @@ module BagCourier
 
       begin
         # add timing
-        Aws.config.update(
-          credentials: Aws::Credentials.new(
-            @aptrust_config.aws_access_key_id,
-            @aptrust_config.aws_secret_access_key
-          )
-        )
-        s3 = Aws::S3::Resource.new(region: @aptrust_config.bucket_region)
-        bucket = s3.bucket(@aptrust_config.bucket)
-        aws_object = bucket.object(File.basename(file_path))
         track!(status: "uploading")
-        aws_object.upload_file(file_path)
+        @remote.upload_file(file_path)
         deposited = true
         track!(status: "uploaded")
-      rescue Aws::S3::Errors::ServiceError => e
+      rescue Remote::RemoteError => e
         track!(status: "failed", note: "failed in #{e.context} with error #{e}")
         LOGGER.error(["Upload of file #{filename} failed in #{e.context} with error #{e}"] + e.backtrace[0..20])
       end
@@ -217,7 +216,7 @@ module BagCourier
         track!(status: "deposited") if deposited
       rescue => e
         LOGGER.error(
-          ["BagCourierService.perform_deposit error #{e}"] + e.backtrace[0..20]
+          ["BagCourierService.perform_deposit error: #{e}"] + e.backtrace[0..20]
         )
         track!(status: "failed", note: "failed with error #{e}")
       end

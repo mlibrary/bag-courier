@@ -10,15 +10,21 @@ module Config
     keyword_init: true
   )
 
+  AwsConfig = Struct.new(
+    :region,
+    :receiving_bucket,
+    :restore_bucket,
+    :access_key_id,
+    :secret_access_key,
+    keyword_init: true
+  )
+
   APTrustConfig = Struct.new(
     :download_dir,
     :aptrust_api_url,
     :aptrust_api_user,
     :aptrust_api_key,
-    :bucket,
-    :bucket_region,
-    :aws_access_key_id,
-    :aws_secret_access_key,
+    :aws,
     keyword_init: true
   )
 
@@ -36,7 +42,7 @@ module Config
   end
 
   class ConfigService
-    def raise_error(key, value)
+    def self.raise_error(key, value)
       raise ConfigError, "Value for \"#{key}\" is not valid: #{value}"
     end
 
@@ -90,10 +96,13 @@ module Config
           aptrust_api_user: verify_string("AptrustApiUser", data["AptrustApiUser"]),
           aptrust_api_url: verify_string("AptrustApiUrl", data["AptrustApiUrl"]),
           aptrust_api_key: verify_string("AptrustApiKey", data["AptrustApiKey"]),
-          bucket: verify_string("Bucket", data["Bucket"]),
-          bucket_region: verify_string("BucketRegion", data["BucketRegion"]),
-          aws_access_key_id: verify_string("AwsAccessKeyId", data["AwsAccessKeyId"]),
-          aws_secret_access_key: verify_string("AwsSecretAccessKey", "AwsSecretAccessKey")
+          aws: AwsConfig.new(
+            region: verify_string("BucketRegion", data["BucketRegion"]),
+            receiving_bucket: verify_string("ReceivingBucket", data["ReceivingBucket"]),
+            restore_bucket: verify_string("RestoreBucket", data["RestoreBucket"]),
+            access_key_id: verify_string("AwsAccessKeyId", data["AwsAccessKeyId"]),
+            secret_access_key: verify_string("AwsSecretAccessKey", data["AwsSecretAccessKey"])
+          )
         )
       )
     end

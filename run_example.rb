@@ -19,16 +19,23 @@ work = BagCourier::Work.new(
   description: "Something something something"
 )
 
+aws_config = config.aptrust.aws
+Remote::AwsS3Remote.update_config(aws_config.access_key_id, aws_config.secret_access_key)
+aws_remote = Remote::AwsS3Remote.new(
+  region: aws_config.region,
+  bucket: aws_config.receiving_bucket
+)
+
 status_event_repo = StatusEvent::StatusEventInMemoryRepository.new
 
 courier = BagCourier::BagCourierService.new(
   work: work,
   context: "some",
   config: config,
+  remote: aws_remote,
   data_transfer: DataTransfer::DirDataTransfer.new(config.test_source_dir),
   status_event_repo: status_event_repo
 )
-
 courier.perform_deposit
 
 LOGGER.info("Events")
