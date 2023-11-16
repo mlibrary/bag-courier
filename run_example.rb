@@ -1,9 +1,9 @@
 require "logger"
 
-require_relative "bag_courier"
-require_relative "config"
-require_relative "data_transfer"
-require_relative "status_event"
+require_relative "lib/bag_courier"
+require_relative "lib/config"
+require_relative "lib/data_transfer"
+require_relative "lib/status_event"
 
 LOGGER = Logger.new($stdout)
 
