@@ -17,7 +17,15 @@ module Aptrust
     end
   end
 
-  class AptrustInfo
+  class BagTag
+    @@file_name = "default.txt"
+
+    def build
+      raise NotImplementedError
+    end
+  end
+
+  class AptrustInfo < BagTag
     @@file_name = "aptrust-info.txt"
     @@default_description = "Bag deposited to APTrust"
     @@field_length = 255
@@ -30,7 +38,7 @@ module Aptrust
       :storage_option,
       :extra_data
 
-    def self.file_name
+    def file_name
       @@file_name
     end
 

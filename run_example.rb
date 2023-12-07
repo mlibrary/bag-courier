@@ -28,6 +28,14 @@ aws_remote = Remote::AwsS3Remote.new(
 
 status_event_repo = StatusEvent::StatusEventInMemoryRepository.new
 
+tags = [
+  Aptrust::AptrustInfo.new(
+    title: work.title,
+    item_description: work.description,
+    creator: work.creator
+  )
+]
+
 courier = BagCourier::BagCourierService.new(
   work: work,
   context: "some",
@@ -38,7 +46,8 @@ courier = BagCourier::BagCourierService.new(
   dry_run: config.dry_run,
   remote: aws_remote,
   data_transfer: DataTransfer::DirDataTransfer.new(config.test_source_dir),
-  status_event_repo: status_event_repo
+  status_event_repo: status_event_repo,
+  tags: tags
 )
 courier.perform_deposit
 

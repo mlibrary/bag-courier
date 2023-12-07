@@ -86,7 +86,8 @@ module BagCourier
       dry_run:,
       data_transfer:,
       remote:,
-      status_event_repo:
+      status_event_repo:,
+      tags:
     )
       @work = work
       @working_dir = working_dir
@@ -101,6 +102,7 @@ module BagCourier
       @data_transfer = data_transfer
       @remote = remote
       @status_event_repo = status_event_repo
+      @tags = tags
     end
 
     def track!(status:, note: nil)
@@ -201,16 +203,12 @@ module BagCourier
         @data_transfer.transfer(bag.data_dir)
         track!(status: "copied")
 
-        # TO DO: Support more than one tag file
-        aptrust_info_text = Aptrust::AptrustInfo.new(
-          title: work.title,
-          item_description: work.description,
-          creator: work.creator
-        ).build
-        bag.add_tag_file!(
-          tag_file_text: aptrust_info_text,
-          file_name: Aptrust::AptrustInfo.file_name
-        )
+        @tags.each do |tag|
+          bag.add_tag_file!(
+            tag_file_text: tag.build,
+            file_name: tag.file_name
+          )
+        end
         bag.add_bag_info(bag_info)
         bag.add_manifests
         track!(status: "bagged", note: "bag_path: #{bag_path}")
