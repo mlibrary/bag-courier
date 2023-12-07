@@ -1,4 +1,22 @@
 module Aptrust
+  class TagSerializer
+    def initialize(data)
+      @data = data
+    end
+
+    def serialize
+      content = ""
+      @data.each_pair do |k, v|
+        content += "#{k}: #{v}\n"
+      end
+      content
+    end
+
+    def self.serialize(data)
+      new(data).serialize
+    end
+  end
+
   class AptrustInfo
     @@file_name = "aptrust-info.txt"
     @@default_description = "Bag deposited to APTrust"
@@ -12,19 +30,11 @@ module Aptrust
       :storage_option,
       :extra_data
 
-    def self.write(data)
-      content = ""
-      data.each_pair do |k, v|
-        content += "#{k}: #{v}\n"
-      end
-      content
-    end
-
     def self.file_name
       @@file_name
     end
 
-    def self.squish(value)
+    def squish(value)
       value.strip.gsub(/\s+/, " ")[0..@@field_length]
     end
 
@@ -35,15 +45,17 @@ module Aptrust
       description: nil,
       access: nil,
       storage_option: nil,
-      extra_data: nil
+      extra_data: nil,
+      serializer: TagSerializer
     )
-      @title = AptrustInfo.squish(title || work.title)
-      @description = AptrustInfo.squish(description || @@default_description)
-      @item_description = AptrustInfo.squish(item_description || work.description)
-      @creator = AptrustInfo.squish(creator || work.creator)
+      @title = squish(title || work.title)
+      @description = squish(description || @@default_description)
+      @item_description = squish(item_description || work.description)
+      @creator = squish(creator || work.creator)
       @access = access || "Institution"
-      @storage_option = AptrustInfo.squish(storage_option || "Standard")
+      @storage_option = squish(storage_option || "Standard")
       @extra_data = extra_data
+      @serializer = serializer
     end
 
     def prep_data
@@ -62,7 +74,7 @@ module Aptrust
     end
 
     def build
-      AptrustInfo.write(prep_data)
+      @serializer.serialize(prep_data)
     end
   end
 end
