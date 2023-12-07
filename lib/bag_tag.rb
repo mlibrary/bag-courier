@@ -1,4 +1,4 @@
-module Aptrust
+module BagTag
   class TagSerializer
     def initialize(data)
       @data = data
@@ -25,7 +25,7 @@ module Aptrust
     end
   end
 
-  class AptrustInfo < BagTag
+  class AptrustInfoBagTag < BagTag
     @@file_name = "aptrust-info.txt"
     @@default_description = "Bag deposited to APTrust"
     @@field_length = 255

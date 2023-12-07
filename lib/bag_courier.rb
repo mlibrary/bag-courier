@@ -3,7 +3,6 @@ require "logger"
 require "bagit"
 require "minitar"
 
-require_relative "aptrust"
 require_relative "remote"
 require_relative "status_event"
 
