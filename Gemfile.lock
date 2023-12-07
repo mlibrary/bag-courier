@@ -23,6 +23,7 @@ GEM
     docopt (0.5.0)
     jmespath (1.6.2)
     minitar (0.9)
+    minitest (5.20.0)
     validatable (1.6.7)
 
 PLATFORMS
@@ -32,6 +33,7 @@ DEPENDENCIES
   aws-sdk-s3 (~> 1.136)
   bagit (~> 0.4.6)
   minitar (~> 0.9)
+  minitest (~> 5.20)
 
 BUNDLED WITH
    2.4.20

@@ -1,60 +1,68 @@
 module Aptrust
   class AptrustInfo
     @@file_name = "aptrust-info.txt"
-    @@default_description = "The Description" # TO DO
+    @@default_description = "Bag deposited to APTrust"
     @@field_length = 255
 
-    attr_accessor :access
-    attr_accessor :creator
-    attr_accessor :description
-    attr_accessor :item_description
-    attr_accessor :storage_option
-    attr_accessor :title
+    attr_reader :title,
+      :item_description,
+      :creator,
+      :description,
+      :access,
+      :storage_option,
+      :extra_data
 
-    def self.file_name
-      @@file_name
-    end
-
-    def squish(value)
-      value.strip.gsub(/\s+/, " ")[0..@@field_length]
-    end
-
-    def initialize(
-      work:,
-      access: nil,
-      creator: nil,
-      description: nil,
-      item_description: nil,
-      storage_option: nil,
-      title: nil
-    )
-      @access = access || "Institution"
-      @creator = squish(creator || work.creator)
-      @description = squish(description || @@default_description)
-      @item_description = squish(item_description || work.description)
-      @storage_option = squish(storage_option || "Standard")
-      @title = squish(title || work.title)
-    end
-
-    def build(extra_data = nil)
-      data = {
-        Title: @title,
-        Access: @access,
-        "Storage-Option": @storage_option,
-        Description: @description,
-        "Item Description": @item_description,
-        "Creator/Author": @creator
-      }
-
-      if !extra_data.nil?
-        data = data.merge(extra_data)
-      end
-
+    def self.write(data)
       content = ""
       data.each_pair do |k, v|
         content += "#{k}: #{v}\n"
       end
       content
+    end
+
+    def self.file_name
+      @@file_name
+    end
+
+    def self.squish(value)
+      value.strip.gsub(/\s+/, " ")[0..@@field_length]
+    end
+
+    def initialize(
+      title:,
+      item_description:,
+      creator:,
+      description: nil,
+      access: nil,
+      storage_option: nil,
+      extra_data: nil
+    )
+      @title = AptrustInfo.squish(title || work.title)
+      @description = AptrustInfo.squish(description || @@default_description)
+      @item_description = AptrustInfo.squish(item_description || work.description)
+      @creator = AptrustInfo.squish(creator || work.creator)
+      @access = access || "Institution"
+      @storage_option = AptrustInfo.squish(storage_option || "Standard")
+      @extra_data = extra_data
+    end
+
+    def prep_data
+      data = {
+        Title: @title,
+        Description: @description,
+        "Item Description": @item_description,
+        "Creator/Author": @creator,
+        Access: @access,
+        "Storage-Option": @storage_option
+      }
+      if !@extra_data.nil?
+        data = data.merge(@extra_data)
+      end
+      data
+    end
+
+    def build
+      AptrustInfo.write(prep_data)
     end
   end
 end

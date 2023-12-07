@@ -202,7 +202,11 @@ module BagCourier
         track!(status: "copied")
 
         # TO DO: Support more than one tag file
-        aptrust_info_text = Aptrust::AptrustInfo.new(work: @work).build
+        aptrust_info_text = Aptrust::AptrustInfo.new(
+          title: work.title,
+          item_description: work.description,
+          creator: work.creator
+        ).build
         bag.add_tag_file!(
           tag_file_text: aptrust_info_text,
           file_name: Aptrust::AptrustInfo.file_name
