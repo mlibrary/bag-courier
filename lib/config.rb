@@ -71,7 +71,7 @@ module Config
       value
     end
 
-    def self.read_config_file(yaml_path)
+    def self.read_data_from_file(yaml_path)
       LOGGER.debug("yaml_path=#{yaml_path}")
       YAML.safe_load_file(yaml_path)
     end
@@ -105,6 +105,10 @@ module Config
           )
         )
       )
+    end
+
+    def self.from_file(yaml_path)
+      create_config(read_data_from_file(yaml_path))
     end
   end
 end

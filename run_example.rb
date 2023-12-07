@@ -8,10 +8,7 @@ require_relative "lib/status_event"
 
 LOGGER = Logger.new($stdout)
 
-config_data = Config::ConfigService.read_config_file(
-  File.join(".", "config", "config.yml")
-)
-config = Config::ConfigService.create_config(config_data)
+config = Config::ConfigService.from_file(File.join(".", "config", "config.yml"))
 
 work = BagCourier::Work.new(
   id: "00001",
