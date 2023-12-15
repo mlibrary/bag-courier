@@ -59,20 +59,10 @@ module BagCourier
 
   class BagCourierService
     IDENTIFIER_TEMPLATE = "%repository%.%context%.%id%"
-    BAG_INFO_KEY_SOURCE = "Source-Organization"
-    BAG_INFO_KEY_COUNT = "Bag-Count"
-    BAG_INFO_KEY_DATE = "Bagging-Date"
-    BAG_INFO_VALUE_SOURCE = "University of Michigan"
 
     EXT_TAR = ".tar"
 
-    attr_reader :work
     attr_reader :data_transfer
-
-    attr_reader :repository
-    attr_reader :context
-    attr_reader :description
-
     attr_reader :status_history
 
     def initialize(
@@ -81,12 +71,12 @@ module BagCourier
       working_dir:,
       export_dir:,
       repository_name:,
-      repository_description:,
       dry_run:,
       data_transfer:,
       remote:,
       status_event_repo:,
-      tags:
+      tags:,
+      bag_info:
     )
       @work = work
       @working_dir = working_dir
@@ -96,11 +86,11 @@ module BagCourier
 
       @context = context || ""
       @repository = repository_name
-      @description = repository_description
 
       @data_transfer = data_transfer
       @remote = remote
       @status_event_repo = status_event_repo
+      @bag_info = bag_info
       @tags = tags
     end
 
@@ -117,21 +107,6 @@ module BagCourier
         .gsub("%repository%", @repository)
         .gsub("%context%", @context)
         .gsub("%id%", @work.id)
-    end
-
-    def self.bag_datetime_now
-      now_datetime = Time.now.utc.strftime("%Y-%m-%dT%H:%M:%SZ")
-      Time.parse(now_datetime).iso8601
-    end
-
-    def bag_info
-      {
-        BAG_INFO_KEY_SOURCE => BAG_INFO_VALUE_SOURCE,
-        BAG_INFO_KEY_COUNT => "1",
-        BAG_INFO_KEY_DATE => BagCourierService.bag_datetime_now,
-        "Internal-Sender-Description" => @description,
-        "Internal-Sender-Identifier" => @work.id
-      }
     end
 
     def tar(target_path)
@@ -204,11 +179,11 @@ module BagCourier
 
         @tags.each do |tag|
           bag.add_tag_file!(
-            tag_file_text: tag.build,
+            tag_file_text: tag.serialize,
             file_name: tag.file_name
           )
         end
-        bag.add_bag_info(bag_info)
+        bag.add_bag_info(@bag_info.data)
         bag.add_manifests
         track!(status: "bagged", note: "bag_path: #{bag_path}")
 

@@ -1,4 +1,44 @@
+require "time"
+
 module BagTag
+  class BagInfoBagTag
+    KEY_SOURCE = "Source-Organization"
+    KEY_COUNT = "Bag-Count"
+    KEY_DATE = "Bagging-Date"
+    KEY_INTERNAL_SENDER_ID = "Internal-Sender-Identifier"
+    KEY_INTERNAL_SENDER_DESC = "Internal-Sender-Description"
+    VALUE_SOURCE_DEFAULT = "University of Michigan"
+
+    @@file_name = "bag-info.txt"
+
+    def self.datetime_now
+      now_datetime = Time.now.utc.strftime("%Y-%m-%dT%H:%M:%SZ")
+      Time.parse(now_datetime).iso8601
+    end
+
+    def initialize(
+      identifier:,
+      description:,
+      bag_count: [1, 1],
+      organization: VALUE_SOURCE_DEFAULT
+    )
+      @identifier = identifier
+      @description = description
+      @bag_count = bag_count
+      @organization = organization
+    end
+
+    def data
+      {
+        KEY_SOURCE => @organization,
+        KEY_COUNT => "#{@bag_count[0]} of #{@bag_count[1]}",
+        KEY_DATE => BagInfoBagTag.datetime_now,
+        KEY_INTERNAL_SENDER_ID => @identifier,
+        KEY_INTERNAL_SENDER_DESC => @description
+      }
+    end
+  end
+
   class TagSerializer
     def initialize(data)
       @data = data
@@ -17,15 +57,15 @@ module BagTag
     end
   end
 
-  class BagTag
+  class SerializableBagTag
     @@file_name = "default.txt"
 
-    def build
+    def serialize
       raise NotImplementedError
     end
   end
 
-  class AptrustInfoBagTag < BagTag
+  class AptrustInfoBagTag < SerializableBagTag
     @@file_name = "aptrust-info.txt"
     @@default_description = "Bag deposited to APTrust"
     @@field_length = 255
@@ -66,7 +106,7 @@ module BagTag
       @serializer = serializer
     end
 
-    def prep_data
+    def data
       data = {
         Title: @title,
         Description: @description,
@@ -81,8 +121,8 @@ module BagTag
       data
     end
 
-    def build
-      @serializer.serialize(prep_data)
+    def serialize
+      @serializer.serialize(data)
     end
   end
 end
