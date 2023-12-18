@@ -2,6 +2,8 @@ module StatusEvent
   class UnknownStatusError < StandardError
   end
 
+  StatusEvent = Struct.new(:id, :object_id, :bag_id, :status, :timestamp, keyword_init: true)
+
   class StatusEventRepositoryBase
     def initialize(status_events = nil)
       raise NotImplementedError
@@ -46,15 +48,22 @@ module StatusEvent
       if !STATUSES.include?(event_data[:status])
         raise UnknownStatusError
       end
-      @status_events << event_data.merge({id: get_next_id!})
+      event = StatusEvent.new(
+        id: get_next_id!,
+        bag_id: event_data[:bag_id],
+        object_id: event_data[:object_id],
+        status: event_data[:status],
+        timestamp: event_data[:timestamp]
+      )
+      @status_events << event
     end
 
     def get_by_id(id)
-      @status_events.find { |e| e[:id] == id }
+      @status_events.find { |e| e.id == id }
     end
 
-    def get_all_by_work_id(work_id)
-      @status_events.select { |e| e[:work_id] == work_id }
+    def get_all_by_bag_id(bag_id)
+      @status_events.select { |e| e.bag_id == bag_id }
     end
   end
 end

@@ -17,6 +17,17 @@ work = BagCourier::Work.new(
   description: "Something something something"
 )
 
+bag_id = BagCourier::BagId.new(
+  repository: config.repository_name,
+  object_id: work.id,
+  context: "some"
+)
+
+bag_info = BagTag::BagInfoBagTag.new(
+  identifier: work.id,
+  description: config.repository.description
+)
+
 aws_config = config.aptrust.aws
 Remote::AwsS3Remote.update_config(aws_config.access_key_id, aws_config.secret_access_key)
 aws_remote = Remote::AwsS3Remote.new(
@@ -35,21 +46,19 @@ tags = [
 ]
 
 courier = BagCourier::BagCourierService.new(
-  work: work,
-  context: "some",
-  working_dir: config.working_dir,
-  export_dir: config.export_dir,
-  repository_name: config.repository.name,
-  repository_description: config.repository.description,
-  dry_run: config.dry_run,
+  bag_id: bag_id,
+  bag_info: bag_info,
+  tags: tags,
   remote: aws_remote,
   data_transfer: DataTransfer::DirDataTransfer.new(config.test_source_dir),
   status_event_repo: status_event_repo,
-  tags: tags
+  working_dir: config.working_dir,
+  export_dir: config.export_dir,
+  dry_run: config.dry_run
 )
 courier.perform_deposit
 
 LOGGER.info("Events")
-status_event_repo.get_all_by_work_id(work.id).each do |e|
+status_event_repo.get_all_by_bag_id(bag_id.to_s).each do |e|
   LOGGER.info(e)
 end

@@ -57,60 +57,61 @@ module BagCourier
     end
   end
 
-  class BagCourierService
-    IDENTIFIER_TEMPLATE = "%repository%.%context%.%id%"
+  class BagId
+    attr_reader :repository, :object_id, :context, :part_id
 
+    def initialize(repository:, object_id:, context: nil, part_id: nil)
+      @repository = repository
+      @context = context
+      @object_id = object_id
+      @part_id = part_id
+    end
+
+    def to_s
+      segments = [@context, @object_id, @part_id].select { |segment| !segment.nil? }
+      "#{@repository}.#{segments.join "-"}"
+    end
+  end
+
+  class BagCourierService
     EXT_TAR = ".tar"
 
-    attr_reader :data_transfer
-    attr_reader :status_history
+    attr_reader :bag_id, :status_history
 
     def initialize(
-      work:,
-      context:,
-      working_dir:,
-      export_dir:,
-      repository_name:,
-      dry_run:,
+      bag_id:,
+      bag_info:,
+      tags:,
       data_transfer:,
       remote:,
       status_event_repo:,
-      tags:,
-      bag_info:
+      working_dir:,
+      export_dir:,
+      dry_run:
     )
-      @work = work
-      @working_dir = working_dir
-      @export_dir = export_dir
-
-      @dry_run = dry_run
-
-      @context = context || ""
-      @repository = repository_name
+      @bag_id = bag_id
+      @bag_info = bag_info
+      @tags = tags
 
       @data_transfer = data_transfer
       @remote = remote
       @status_event_repo = status_event_repo
-      @bag_info = bag_info
-      @tags = tags
+
+      @working_dir = working_dir
+      @export_dir = export_dir
+      @dry_run = dry_run
     end
 
     def track!(status:, note: nil)
-      status_event = {work_id: @work.id, status: status, timestamp: Time.now}
+      status_event = {bag_id: @bag_id.to_s, object_id: @bag_id.object_id, status: status, timestamp: Time.now}
       if !note.nil?
         status_event[:note] = note
       end
       @status_event_repo.create(status_event)
     end
 
-    def fs_identifier
-      IDENTIFIER_TEMPLATE
-        .gsub("%repository%", @repository)
-        .gsub("%context%", @context)
-        .gsub("%id%", @work.id)
-    end
-
     def tar(target_path)
-      LOGGER.debug(["target_path=#{target_path}", "work.id=#{@work.id}"])
+      LOGGER.debug(["target_path=#{target_path}", "bag_id=#{@bag_id}"])
 
       parent = File.dirname target_path
       Dir.chdir(parent) do
@@ -129,7 +130,7 @@ module BagCourier
       new_path = target_path + EXT_TAR
       LOGGER.debug([
         "target_path=#{target_path}",
-        "work.id=#{@work.id}",
+        "bag_id=#{@bag_id}",
         "new_path=#{new_path}"
       ])
       new_path
@@ -138,7 +139,7 @@ module BagCourier
     def deposit(file_path:)
       LOGGER.debug([
         "file_path=#{file_path}",
-        "work.id=#{@work.id}"
+        "bag_id=#{@bag_id}"
       ])
 
       deposited = false
@@ -165,12 +166,12 @@ module BagCourier
     end
 
     def perform_deposit
-      LOGGER.debug("work.id=#{@work.id}")
+      LOGGER.debug("bag_id=#{@bag_id}")
 
       begin
         track!(status: "depositing")
         track!(status: "bagging")
-        bag_path = File.join(@working_dir, fs_identifier)
+        bag_path = File.join(@working_dir, @bag_id.to_s)
         bag = BagAdapter.new(bag_path)
 
         track!(status: "copying")
