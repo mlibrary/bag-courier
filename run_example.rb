@@ -8,7 +8,7 @@ LOGGER = Logger.new($stdout)
 
 config = Config::ConfigService.from_file(File.join(".", "config", "config.yml"))
 
-dispatcher = Dispatcher::APTrustDispatcher.new(config)
+dispatcher = Dispatcher::APTrustDispatcher.new(config.settings, config.repository, config.aptrust)
 
 work = Dispatcher::Work.new(
   id: "00001",
@@ -19,7 +19,7 @@ work = Dispatcher::Work.new(
 
 courier = dispatcher.dispatch(
   work: work,
-  data_transfer: DataTransfer::DirDataTransfer.new(config.test_source_dir),
+  data_transfer: DataTransfer::DirDataTransfer.new(config.test.work_source_dir),
   context: "somecontext"
 )
 courier.perform_deposit

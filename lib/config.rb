@@ -4,13 +4,23 @@ require "yaml"
 LOGGER = Logger.new($stdout)
 
 module Config
+  SettingsConfig = Struct.new(
+    :dry_run,
+    :working_dir,
+    :export_dir
+  )
+
+  TestConfig = Struct.new(
+    :work_source_dir
+  )
+
   RepositoryConfig = Struct.new(
     :name,
     :description,
     keyword_init: true
   )
 
-  AwsConfig = Struct.new(
+  AwsAptrustConfig = Struct.new(
     :region,
     :receiving_bucket,
     :restore_bucket,
@@ -20,7 +30,6 @@ module Config
   )
 
   APTrustConfig = Struct.new(
-    :download_dir,
     :aptrust_api_url,
     :aptrust_api_user,
     :aptrust_api_key,
@@ -29,10 +38,8 @@ module Config
   )
 
   Config = Struct.new(
-    :dry_run,
-    :working_dir,
-    :export_dir,
-    :test_source_dir,
+    :settings,
+    :test,
     :repository,
     :aptrust,
     keyword_init: true
@@ -83,20 +90,23 @@ module Config
       LOGGER.debug(data)
 
       Config.new(
-        dry_run: verify_boolean("DryRun", to_boolean(data["DryRun"])),
-        working_dir: verify_string("WorkingDir", data["WorkingDir"]),
-        export_dir: verify_string("ExportDir", data["ExportDir"]),
-        test_source_dir: verify_string("TestSourceDir", data["TestSourceDir"]),
+        settings: SettingsConfig.new(
+          dry_run: verify_boolean("DryRun", to_boolean(data["DryRun"])),
+          working_dir: verify_string("WorkingDir", data["WorkingDir"]),
+          export_dir: verify_string("ExportDir", data["ExportDir"])
+        ),
+        test: TestConfig.new(
+          work_source_dir: verify_string("TestSourceDir", data["TestSourceDir"])
+        ),
         repository: RepositoryConfig.new(
           name: verify_string("Repository", data["Repository"]),
           description: verify_string("RepositoryDescription", data["RepositoryDescription"])
         ),
         aptrust: APTrustConfig.new(
-          download_dir: verify_string("DownloadDir", data["DownloadDir"]),
           aptrust_api_user: verify_string("AptrustApiUser", data["AptrustApiUser"]),
           aptrust_api_url: verify_string("AptrustApiUrl", data["AptrustApiUrl"]),
           aptrust_api_key: verify_string("AptrustApiKey", data["AptrustApiKey"]),
-          aws: AwsConfig.new(
+          aws: AwsAptrustConfig.new(
             region: verify_string("BucketRegion", data["BucketRegion"]),
             receiving_bucket: verify_string("ReceivingBucket", data["ReceivingBucket"]),
             restore_bucket: verify_string("RestoreBucket", data["RestoreBucket"]),
