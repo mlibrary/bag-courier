@@ -9,8 +9,6 @@ require_relative "status_event"
 LOGGER = Logger.new($stdout)
 
 module BagCourier
-  Work = Struct.new("Work", :id, :creator, :description, :title)
-
   class BagId
     attr_reader :repository, :object_id, :context, :part_id
 
@@ -27,10 +25,10 @@ module BagCourier
     end
   end
 
-  class BagCourierService
+  class BagCourier
     EXT_TAR = ".tar"
 
-    attr_reader :bag_id, :status_history
+    attr_reader :bag_id, :status_event_repo
 
     def initialize(
       bag_id:,
