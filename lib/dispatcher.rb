@@ -2,6 +2,7 @@ require_relative "bag_courier"
 require_relative "bag_tag"
 require_relative "data_transfer"
 require_relative "remote"
+require_relative "status_event"
 
 module Dispatcher
   Work = Struct.new("Work", :id, :creator, :description, :title)
@@ -15,7 +16,12 @@ module Dispatcher
   class APTrustDispatcher < DispatcherBase
     attr_reader :status_event_repo
 
-    def initialize(settings_config, repo_config, aptrust_config)
+    def initialize(
+      settings_config,
+      repo_config,
+      aptrust_config,
+      status_event_repo = StatusEvent::StatusEventInMemoryRepository.new
+    )
       @settings_config = settings_config
       @repo_config = repo_config
 
@@ -25,8 +31,7 @@ module Dispatcher
         region: aws_config.region,
         bucket: aws_config.receiving_bucket
       )
-
-      @status_event_repo = StatusEvent::StatusEventInMemoryRepository.new
+      @status_event_repo = status_event_repo
     end
 
     def dispatch(work:, data_transfer:, context: nil)

@@ -4,7 +4,6 @@ require "minitar"
 
 require_relative "bag_adapter"
 require_relative "remote"
-require_relative "status_event"
 
 LOGGER = Logger.new($stdout)
 
