@@ -6,3 +6,5 @@ test_source
 .DS_Store
 
 config/config.yml
+
+test/bag_test_dir
