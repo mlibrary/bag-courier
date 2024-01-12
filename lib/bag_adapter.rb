@@ -4,6 +4,8 @@ LOGGER = Logger.new($stdout)
 
 module BagAdapter
   class BagAdapter
+    attr_reader :additional_tag_files
+
     def initialize(target_dir)
       @bag = BagIt::Bag.new(target_dir)
       @additional_tag_files = []
@@ -22,9 +24,9 @@ module BagAdapter
     end
 
     def add_tag_file!(tag_file_text:, file_name:)
-      file = File.join(@bag.bag_dir, file_name)
-      File.write(file, tag_file_text, mode: "w")
-      @additional_tag_files << file
+      file_path = File.join(@bag.bag_dir, file_name)
+      File.write(file_path, tag_file_text, mode: "w")
+      @additional_tag_files << file_path
     end
 
     def add_manifests
@@ -35,10 +37,10 @@ module BagAdapter
       @bag.manifest!(algo: "md5") # Create manifests
 
       # Rewrite the tag manifest files to include extra tag files
-      tag_files = @bag.tag_files
-      new_tag_files = tag_files & @additional_tag_files
-      LOGGER.debug("new_tag_files=#{new_tag_files}")
-      @bag.tagmanifest!(new_tag_files) unless (new_tag_files - tag_files).empty?
+      tag_files_set = Set.new(@bag.tag_files)
+      new_tag_files_set = tag_files_set | Set.new(@additional_tag_files)
+      LOGGER.debug("new_tag_files_set=#{new_tag_files_set}")
+      @bag.tagmanifest!(new_tag_files_set.to_a) unless (new_tag_files_set - tag_files_set).empty?
 
       # HELIO-4380 demo.aptrust.org doesn't like this file for some reason, gives an ingest error:
       # "Bag contains illegal tag manifest 'sha1'""
