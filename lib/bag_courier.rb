@@ -153,7 +153,7 @@ module BagCourier
         track!(status: "deposited") if deposited
       rescue => e
         LOGGER.error(
-          ["BagCourierService.perform_deposit error: #{e}"] + e.backtrace[0..20]
+          ["BagCourier.perform_deposit error: #{e}"] + e.backtrace[0..20]
         )
         track!(status: "failed", note: "failed with error #{e}")
       end
