@@ -19,6 +19,13 @@ dispatcher = Dispatcher::APTrustDispatcher.new(
   destination: destination
 )
 
+work = Dispatcher::Work.new(
+  id: "00001",
+  title: "Some title",
+  creator: "Some creator",
+  description: "Something something something"
+)
+
 courier = dispatcher.dispatch(
   work: work,
   data_transfer: DataTransfer::DirDataTransfer.new(config.test.work_source_dir),
