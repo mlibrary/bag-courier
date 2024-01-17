@@ -20,7 +20,7 @@ module Config
     keyword_init: true
   )
 
-  AwsAptrustConfig = Struct.new(
+  AptrustAwsRemoteConfig = Struct.new(
     :region,
     :receiving_bucket,
     :restore_bucket,
@@ -29,11 +29,14 @@ module Config
     keyword_init: true
   )
 
-  APTrustConfig = Struct.new(
-    :aptrust_api_url,
-    :aptrust_api_user,
-    :aptrust_api_key,
-    :aws,
+  FileSystemRemoteConfig = Struct.new(
+    :remote_path,
+    keyword_init: true
+  )
+
+  RemoteConfig = Struct.new(
+    :type,
+    :settings,
     keyword_init: true
   )
 
@@ -41,7 +44,7 @@ module Config
     :settings,
     :test,
     :repository,
-    :aptrust,
+    :remote,
     keyword_init: true
   )
 
@@ -88,6 +91,7 @@ module Config
 
     def self.create_config(data)
       LOGGER.debug(data)
+      remote_type = verify_string("RemoteType", data["RemoteType"]).to_sym
 
       Config.new(
         settings: SettingsConfig.new(
@@ -102,16 +106,25 @@ module Config
           name: verify_string("Repository", data["Repository"]),
           description: verify_string("RepositoryDescription", data["RepositoryDescription"])
         ),
-        aptrust: APTrustConfig.new(
-          aptrust_api_user: verify_string("AptrustApiUser", data["AptrustApiUser"]),
-          aptrust_api_url: verify_string("AptrustApiUrl", data["AptrustApiUrl"]),
-          aptrust_api_key: verify_string("AptrustApiKey", data["AptrustApiKey"]),
-          aws: AwsAptrustConfig.new(
-            region: verify_string("BucketRegion", data["BucketRegion"]),
-            receiving_bucket: verify_string("ReceivingBucket", data["ReceivingBucket"]),
-            restore_bucket: verify_string("RestoreBucket", data["RestoreBucket"]),
-            access_key_id: verify_string("AwsAccessKeyId", data["AwsAccessKeyId"]),
-            secret_access_key: verify_string("AwsSecretAccessKey", data["AwsSecretAccessKey"])
+        remote: RemoteConfig.new(
+          type: remote_type,
+          settings: (
+            case remote_type
+            when :aptrust
+              AptrustAwsRemoteConfig.new(
+                region: verify_string("BucketRegion", data["BucketRegion"]),
+                receiving_bucket: verify_string("ReceivingBucket", data["ReceivingBucket"]),
+                restore_bucket: verify_string("RestoreBucket", data["RestoreBucket"]),
+                access_key_id: verify_string("AwsAccessKeyId", data["AwsAccessKeyId"]),
+                secret_access_key: verify_string("AwsSecretAccessKey", data["AwsSecretAccessKey"])
+              )
+            when :file_system
+              FileSystemRemoteConfig.new(
+                remote_path: verify_string("FileSystemRemotePath", data["FileSystemRemotePath"])
+              )
+            else
+              raise ConfigError, "Remote type #{remote_type} is not supported"
+            end
           )
         )
       )

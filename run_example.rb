@@ -8,11 +8,9 @@ LOGGER = Logger.new($stdout)
 
 config = Config::ConfigService.from_file(File.join(".", "config", "config.yml"))
 
-aws_config = config.aptrust.aws
-Remote::AwsS3Remote.update_config(aws_config.access_key_id, aws_config.secret_access_key)
-destination = Remote::AwsS3Remote.new(
-  region: aws_config.region,
-  bucket: aws_config.receiving_bucket
+destination = Remote::RemoteFactory.from_config(
+  type: config.remote.type,
+  settings: config.remote.settings
 )
 
 dispatcher = Dispatcher::APTrustDispatcher.new(
