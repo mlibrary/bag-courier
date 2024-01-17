@@ -17,32 +17,26 @@ module Dispatcher
     attr_reader :status_event_repo
 
     def initialize(
-      settings_config,
-      repo_config,
-      aptrust_config,
-      status_event_repo = StatusEvent::StatusEventInMemoryRepository.new
+      settings:,
+      repository:,
+      destination:,
+      status_event_repo: StatusEvent::StatusEventInMemoryRepository.new
     )
-      @settings_config = settings_config
-      @repo_config = repo_config
-
-      aws_config = aptrust_config.aws
-      Remote::AwsS3Remote.update_config(aws_config.access_key_id, aws_config.secret_access_key)
-      @remote = Remote::AwsS3Remote.new(
-        region: aws_config.region,
-        bucket: aws_config.receiving_bucket
-      )
+      @settings = settings
+      @repository = repository
+      @destination = destination
       @status_event_repo = status_event_repo
     end
 
     def dispatch(work:, data_transfer:, context: nil)
       bag_id = BagCourier::BagId.new(
-        repository: @repo_config.name,
+        repository: @repository.name,
         object_id: work.id,
         context: context
       )
       bag_info = BagTag::BagInfoBagTag.new(
         identifier: work.id,
-        description: @repo_config.description
+        description: @repository.description
       )
       tags = [
         BagTag::AptrustInfoBagTag.new(
@@ -56,12 +50,12 @@ module Dispatcher
         bag_id: bag_id,
         bag_info: bag_info,
         tags: tags,
-        remote: @remote,
+        destination: @destination,
         data_transfer: data_transfer,
         status_event_repo: @status_event_repo,
-        working_dir: @settings_config.working_dir,
-        export_dir: @settings_config.export_dir,
-        dry_run: @settings_config.dry_run
+        working_dir: @settings.working_dir,
+        export_dir: @settings.export_dir,
+        dry_run: @settings.dry_run
       )
     end
   end

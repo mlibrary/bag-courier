@@ -25,12 +25,12 @@ module StatusEvent
   class StatusEventInMemoryRepository < StatusEventRepositoryBase
     STATUSES = %w[
       bagged bagging
-      deposit_skipped deposited depositing
+      delivery_skipped delivered delivering
       copied copying
       failed
       packed packing
       skipped
-      uploaded uploading
+      sent sending
     ]
 
     def initialize(status_events = nil)
