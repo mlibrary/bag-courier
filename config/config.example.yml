@@ -1,5 +1,7 @@
 # Bag Courier Config Example/Template
 
+# Determines whether the process skips sending bag(s)
+DryRun: false
 WorkingDir: "./prep"
 ExportDir: "./export"
 TestSourceDir: "./test_source/work_dir"
@@ -7,14 +9,16 @@ TestSourceDir: "./test_source/work_dir"
 Repository:
 RepositoryDescription:
 
-# AWS S3 APTrust KEYS [for preview]
+# Either aptrust or file_system
+RemoteType:
 
-# Config for apt_upload and apt_download
-DownloadDir:
-AptrustApiUser:
-AptrustApiUrl:
-AptrustApiKey:
-Bucket:
+
+# APTrust AWS remote settings
+ReceivingBucket:
+RestoreBucket:
 BucketRegion:
 AwsAccessKeyId:
 AwsSecretAccessKey:
+
+# File System remote settings
+FileSystemRemotePath:

@@ -97,4 +97,20 @@ module Remote
     # def retrieve_dir(local_dir_path:, remote_dir_path: nil)
     # end
   end
+
+  class RemoteFactory
+    def self.from_config(type:, settings:)
+      case type
+      when :aptrust
+        aws_config = settings
+        Remote::AwsS3Remote.update_config(aws_config.access_key_id, aws_config.secret_access_key)
+        Remote::AwsS3Remote.new(
+          region: aws_config.region,
+          bucket: aws_config.receiving_bucket
+        )
+      when :file_system
+        Remote::FileSystemRemote.new(settings.remote_path)
+      end
+    end
+  end
 end
