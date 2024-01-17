@@ -8,3 +8,4 @@ test_source
 config/config.yml
 
 test/bag_test_dir
+test/remote_test
