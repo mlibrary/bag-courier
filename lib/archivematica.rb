@@ -2,6 +2,8 @@ require "logger"
 
 require "faraday"
 
+LOGGER = Logger.new($stdout)
+
 module Archivematica
   Package = Struct.new(
     :uuid,
@@ -29,6 +31,7 @@ module Archivematica
       (meta.key?("next") && meta["next"].is_a?(String)) ?
         meta["next"].gsub(@api_prefix, "") : nil
     end
+    private :get_next_url
 
     def get_objects_from_pages(url)
       no_more_pages = false
@@ -50,11 +53,7 @@ module Archivematica
       end
       results
     end
-
-    def get_location(uuid)
-      resp = @conn.get("#{@@location_endpoint}#{uuid}/")
-      JSON.parse(resp.body)
-    end
+    private :get_objects_from_pages
 
     def get_packages(uuid)
       objects = get_objects_from_pages(@@packages_endpoint)
