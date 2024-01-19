@@ -12,7 +12,6 @@ RepositoryDescription:
 # Either aptrust or file_system
 RemoteType:
 
-
 # APTrust AWS remote settings
 ReceivingBucket:
 RestoreBucket:
