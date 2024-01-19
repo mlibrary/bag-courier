@@ -29,13 +29,13 @@ bundle install
 ### Usage
 
 There is not currently a default entrypoint for this application, but you can copy `run_example.rb` and modify it as necessary for testing purposes.
-```
+```sh
 cp run_example.rb run_test.rb
 ```
 
 ## Running tests
 
 `minitest` unit tests for classes are located in `/test`. A test runner will be added later. For now, run specific test files by executing the file directly, e.g.
-```
+```sh
 ruby test/test_bag_adapter.rb
 ```
