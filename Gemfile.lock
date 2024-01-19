@@ -21,9 +21,16 @@ GEM
       docopt (~> 0.5.0)
       validatable (~> 1.6)
     docopt (0.5.0)
+    faraday (2.9.0)
+      faraday-net_http (>= 2.0, < 3.2)
+    faraday-net_http (3.1.0)
+      net-http
     jmespath (1.6.2)
     minitar (0.9)
     minitest (5.20.0)
+    net-http (0.4.1)
+      uri
+    uri (0.13.0)
     validatable (1.6.7)
 
 PLATFORMS
@@ -32,6 +39,7 @@ PLATFORMS
 DEPENDENCIES
   aws-sdk-s3 (~> 1.136)
   bagit (~> 0.4.6)
+  faraday (~> 2.9)
   minitar (~> 0.9)
   minitest (~> 5.20)
 

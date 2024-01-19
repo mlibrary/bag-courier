@@ -40,11 +40,20 @@ module Config
     keyword_init: true
   )
 
+  ArchivematicaConfig = Struct.new(
+    :username,
+    :base_url,
+    :api_key,
+    :location_uuid,
+    keyword_init: true
+  )
+
   Config = Struct.new(
     :settings,
     :test,
     :repository,
     :remote,
+    :archivematica,
     keyword_init: true
   )
 
@@ -105,6 +114,12 @@ module Config
         repository: RepositoryConfig.new(
           name: verify_string("Repository", data["Repository"]),
           description: verify_string("RepositoryDescription", data["RepositoryDescription"])
+        ),
+        archivematica: ArchivematicaConfig.new(
+          base_url: verify_string("ArchivematicaBaseURL", data["ArchivematicaBaseURL"]),
+          username: verify_string("ArchivematicaUsername", data["ArchivematicaUsername"]),
+          api_key: verify_string("ArchivematicaAPIKey", data["ArchivematicaAPIKey"]),
+          location_uuid: verify_string("LocationUUID", data["LocationUUID"])
         ),
         remote: RemoteConfig.new(
           type: remote_type,

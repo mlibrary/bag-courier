@@ -6,6 +6,12 @@ WorkingDir: "./prep"
 ExportDir: "./export"
 TestSourceDir: "./test_source/work_dir"
 
+# Archivematica REST API
+ArchivematicaBaseURL:
+ArchivematicaUsername:
+ArchivematicaAPIKey:
+LocationUUID:
+
 Repository:
 RepositoryDescription:
 
