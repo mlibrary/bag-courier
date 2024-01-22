@@ -16,7 +16,9 @@ dark_blue_api = Archivematica::ArchivematicaAPI.new(
   username: config.archivematica.username
 )
 
-packages = dark_blue_api.get_packages(config.archivematica.location_uuid)
+packages = dark_blue_api.get_packages(
+  location_uuid: config.archivematica.location_uuid
+)
 
 destination = Remote::RemoteFactory.from_config(
   type: config.remote.type,

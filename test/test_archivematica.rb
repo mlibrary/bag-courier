@@ -9,6 +9,7 @@ require_relative "../lib/archivematica"
 class ArchivematicaAPITest < Minitest::Test
   def setup
     @location_uuid = SecureRandom.uuid
+    @location_url = "/api/v2/location/#{@location_uuid}/"
     @api = Archivematica::ArchivematicaAPI.new(
       base_url: "http://archivematica.storage.api.org:8000",
       username: "youruser",
@@ -29,7 +30,7 @@ class ArchivematicaAPITest < Minitest::Test
         "size" => 1000,
         "stored_date" => "2024-01-17T00:00:00.000000",
         "status" => "UPLOADED",
-        "current_location" => "/api/v2/location/#{@location_uuid}/"
+        "current_location" => @location_uuid
       },
       {
         "uuid" => uuids[1],
@@ -37,7 +38,7 @@ class ArchivematicaAPITest < Minitest::Test
         "size" => 300000,
         "stored_date" => "2024-01-16T00:00:00.000000",
         "status" => "DELETED",
-        "current_location" => "/api/v2/location/#{@location_uuid}/"
+        "current_location" => @location_uuid
       },
       {
         "uuid" => uuids[2],
@@ -45,14 +46,16 @@ class ArchivematicaAPITest < Minitest::Test
         "size" => 5000000,
         "stored_date" => "2024-01-13T00:00:00.000000",
         "status" => "UPLOADED",
-        "current_location" => "/api/v2/location/#{SecureRandom.uuid}/"
+        "current_location" => @location_uuid
       }
     ]
 
     @api.stub :get_objects_from_pages, data do
-      packages = @api.get_packages(@location_uuid)
-      assert_equal 1, packages.length
-      assert_equal uuids[0], packages[0].uuid
+      packages = @api.get_packages(location_uuid: @location_uuid)
+      assert_equal 2, packages.length
+      if packages.length == 2
+        assert_equal [uuids[0], uuids[2]], packages.map { |p| p.uuid }
+      end
     end
   end
 end
