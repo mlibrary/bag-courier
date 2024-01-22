@@ -10,7 +10,7 @@ LOGGER = Logger.new($stdout)
 config = Config::ConfigService.from_file(File.join(".", "config", "config.yml"))
 LOGGER.info(config)
 
-dark_blue_api = Archivematica::ArchivematicaAPI.new(
+dark_blue_api = Archivematica::ArchivematicaAPI.from_config(
   base_url: config.archivematica.base_url,
   api_key: config.archivematica.api_key,
   username: config.archivematica.username
