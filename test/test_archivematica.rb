@@ -1,4 +1,3 @@
-require "logger"
 require "securerandom"
 
 require "minitest/autorun"
@@ -30,7 +29,7 @@ class ArchivematicaAPITest < Minitest::Test
         "size" => 1000,
         "stored_date" => "2024-01-17T00:00:00.000000",
         "status" => "UPLOADED",
-        "current_location" => @location_uuid
+        "current_location" => @location_url
       },
       {
         "uuid" => uuids[1],
@@ -38,7 +37,7 @@ class ArchivematicaAPITest < Minitest::Test
         "size" => 300000,
         "stored_date" => "2024-01-16T00:00:00.000000",
         "status" => "DELETED",
-        "current_location" => @location_uuid
+        "current_location" => @location_url
       },
       {
         "uuid" => uuids[2],
@@ -46,7 +45,7 @@ class ArchivematicaAPITest < Minitest::Test
         "size" => 5000000,
         "stored_date" => "2024-01-13T00:00:00.000000",
         "status" => "UPLOADED",
-        "current_location" => @location_uuid
+        "current_location" => @location_url
       }
     ]
 
