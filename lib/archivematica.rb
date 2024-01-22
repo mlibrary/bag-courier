@@ -76,7 +76,6 @@ module Archivematica
       end
       results
     end
-    private :get_objects_from_pages
 
     def get_packages(location_uuid:)
       objects = get_objects_from_pages(@@packages_endpoint, {
