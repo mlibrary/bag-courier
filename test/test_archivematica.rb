@@ -60,8 +60,9 @@ class ArchivematicaAPITest < Minitest::Test
 
       builder.adapter :test, @stubs
     end
-    @stubbed_api = ArchivematicaAPI.new(stubbed_test_conn)
 
+    # Using default api_prefix "/api/v2/"
+    @stubbed_api = ArchivematicaAPI.new(stubbed_test_conn)
     @api = ArchivematicaAPI.from_config(
       base_url: base_url,
       username: username,

@@ -25,13 +25,14 @@ module Archivematica
   class ArchivematicaAPI
     LOCATION_PATH = "location/"
     PACKAGE_PATH = "file/"
+    API_V2 = "/api/v2/"
 
-    def initialize(conn, api_prefix: "/api/v2/")
+    def initialize(conn, api_prefix: API_V2)
       @conn = conn
       @api_prefix = api_prefix
     end
 
-    def self.from_config(base_url:, username:, api_key:, api_prefix: "/api/v2/")
+    def self.from_config(base_url:, username:, api_key:, api_prefix: API_V2)
       conn = Faraday.new(
         url: "#{base_url}#{api_prefix}",
         headers: {"Authorization" => "ApiKey #{username}:#{api_key}"}
