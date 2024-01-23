@@ -14,12 +14,17 @@ module Archivematica
     keyword_init: true
   )
 
+  module PackageStatus
+    UPLOADED = "UPLOADED"
+    DELETED = "DELETED"
+  end
+
   class ArchivematicaAPIError < StandardError
   end
 
   class ArchivematicaAPI
-    @@location_endpoint = "location/"
-    @@packages_endpoint = "file/"
+    LOCATION_PATH = "location/"
+    PACKAGE_PATH = "file/"
 
     attr_reader :base_url
 
@@ -42,13 +47,12 @@ module Archivematica
     def get(url, params = nil)
       resp = @conn.get(url, params)
       JSON.parse(resp.body)
-    rescue Faraday::Error => e
-      raise ArchivematicaAPIError, (
-        "Error occurred while interacting with Archivematica API. " \
-        "Error type: #{e.class}; " \
-        "status code: #{e.response_status}; " \
-        "body: #{e.response_body}"
-      )
+    rescue Faraday::Error => error
+      message = "Error occurred while interacting with Archivematica API. " \
+        "Error type: #{error.class}; " \
+        "status code: #{error.response_status || "none"}; " \
+        "body: #{error.response_body || "none"}"
+      raise ArchivematicaAPIError, message
     end
 
     def get_next_url(meta)
@@ -78,12 +82,11 @@ module Archivematica
     end
 
     def get_packages(location_uuid:)
-      objects = get_objects_from_pages(@@packages_endpoint, {
+      package_objects = get_objects_from_pages(PACKAGE_PATH, {
         "current_location" => location_uuid
       })
-      LOGGER.debug("Total number of objects found: #{objects.length}")
-      uploaded_objects = objects.select { |o| o["status"] == "UPLOADED" }
-      packages = uploaded_objects.map do |o|
+      LOGGER.debug("Total number of package objects found: #{package_objects.length}")
+      packages = package_objects.select { |o| o["status"] == PackageStatus::UPLOADED }.map do |o|
         Package.new(
           uuid: o["uuid"],
           path: o["current_full_path"],
@@ -92,7 +95,7 @@ module Archivematica
         )
       end
       LOGGER.info(
-        "Number of packages found in target location with UPLOADED status: " +
+        "Number of packages found in location #{location_uuid} with UPLOADED status: " +
         packages.length.to_s
       )
       packages
