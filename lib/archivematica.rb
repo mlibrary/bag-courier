@@ -27,8 +27,8 @@ module Archivematica
     PACKAGE_PATH = "file/"
 
     def initialize(conn, api_prefix: "/api/v2/")
-      @api_prefix = api_prefix
       @conn = conn
+      @api_prefix = api_prefix
     end
 
     def self.from_config(base_url:, username:, api_key:, api_prefix: "/api/v2/")
