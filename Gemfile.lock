@@ -32,6 +32,7 @@ GEM
     minitest (5.20.0)
     net-http (0.4.1)
       uri
+    rake (13.1.0)
     uri (0.13.0)
     validatable (1.6.7)
 
@@ -45,6 +46,7 @@ DEPENDENCIES
   faraday-retry (~> 2.2)
   minitar (~> 0.9)
   minitest (~> 5.20)
+  rake (~> 13.1)
 
 BUNDLED WITH
    2.4.20
