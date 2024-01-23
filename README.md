@@ -31,6 +31,8 @@ bundle install
 There is not currently a default entrypoint for this application, but you can copy `run_example.rb` and modify it as necessary for testing purposes.
 ```sh
 cp run_example.rb run_test.rb
+# Tweak as necessary
+ruby run_test.rb
 ```
 
 ## Running tests
