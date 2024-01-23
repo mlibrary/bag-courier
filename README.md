@@ -43,4 +43,4 @@ ruby test/test_bag_adapter.rb
 ## Resources
 - [BagIt specification](https://datatracker.ietf.org/doc/html/rfc8493)
 - [APTrust User Guide](https://aptrust.github.io/userguide/)
-- [Archivematica Storage Service REST API docs](https://www.archivematica.org/en/docs/archivematica-1.15/dev-manual/api/api-reference-storage-service/#package)
+- [Archivematica Storage Service REST API docs](https://www.archivematica.org/en/docs/archivematica-1.15/dev-manual/api/api-reference-storage-service/)
