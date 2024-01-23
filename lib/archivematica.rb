@@ -26,8 +26,6 @@ module Archivematica
     LOCATION_PATH = "location/"
     PACKAGE_PATH = "file/"
 
-    attr_reader :base_url
-
     def initialize(conn, api_prefix: "/api/v2/")
       @api_prefix = api_prefix
       @conn = conn
