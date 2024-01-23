@@ -6,6 +6,8 @@ require "minitest/pride"
 require_relative "../lib/archivematica"
 
 class ArchivematicaAPITest < Minitest::Test
+  include Archivematica
+
   def make_path(uuid)
     uuid.delete("-").chars.each_slice(4).map(&:join).join("/")
   end
@@ -59,30 +61,30 @@ class ArchivematicaAPITest < Minitest::Test
 
       builder.adapter :test, @stubs
     end
-    @stubbed_api = Archivematica::ArchivematicaAPI.new(
+    @stubbed_api = ArchivematicaAPI.new(
       stubbed_test_conn,
       api_prefix: api_prefix
     )
 
-    @api = Archivematica::ArchivematicaAPI.from_config(
+    @api = ArchivematicaAPI.from_config(
       base_url: base_url,
       username: username,
       api_key: api_key
     )
   end
 
-  def test_get_throws_appropriate_error
+  def test_get_throws_unauthorized_error_with_response_info
     @stubs.get(@request_url_stem + "file/") do |env|
       [401, {"Content-Type": "text/plain"}, "Unauthorized"]
     end
-    error = assert_raises Archivematica::ArchivematicaAPIError do
+    error = assert_raises ArchivematicaAPIError do
       @stubbed_api.get("file/")
     end
-    message = "Error occurred while interacting with Archivematica API. " \
+    expected = "Error occurred while interacting with Archivematica API. " \
       "Error type: Faraday::UnauthorizedError; " \
       "status code: 401; " \
       "body: Unauthorized"
-    assert_equal message, error.message
+    assert_equal expected, error.message
   end
 
   def test_get_retries_on_timeout_to_failure
@@ -94,10 +96,14 @@ class ArchivematicaAPITest < Minitest::Test
     end
 
     # Final error is caught and transformed.
-    error = assert_raises Archivematica::ArchivematicaAPIError do
+    error = assert_raises ArchivematicaAPIError do
       @stubbed_api.get("file/")
     end
-    assert error.message.include?("Faraday::TimeoutError")
+    expected = "Error occurred while interacting with Archivematica API. " \
+      "Error type: Faraday::TimeoutError; " \
+      "status code: none; " \
+      "body: none"
+    assert_equal expected, error.message
 
     assert_equal 3, calls
   end
