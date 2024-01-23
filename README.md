@@ -7,9 +7,12 @@ APTrust and other locations.
 
 ### Prerequisite(s)
 
-The only current requirement for running this is that you have a way to run
+The main requirement for running this is that you have a way to run
 [Ruby 3.2](https://www.ruby-lang.org/en/downloads/) on your machine.
 It may work with earlier Ruby versions, but it has not been tested.
+
+Interactions with others services such as Archivematica may be IP address restricted,
+so ensure you have access to the proper network or VPN.
 
 ### Installation
 
