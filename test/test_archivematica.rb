@@ -55,7 +55,6 @@ class ArchivematicaAPITest < Minitest::Test
       url: "#{base_url}#{api_prefix}",
       headers: {"Authorization" => "ApiKey #{username}:#{api_key}"}
     ) do |builder|
-      # TO DO: These settings make the tests succeed, so how do I make them part of the class/constructor?
       builder.request :retry
       builder.response :raise_error
 
