@@ -1,6 +1,6 @@
 require "logger"
 
-require_relative "remote"
+require_relative "remote_client"
 
 LOGGER = Logger.new($stdout)
 
@@ -19,7 +19,8 @@ module DataTransfer
     end
 
     def transfer(target_dir)
-      Remote::FileSystemRemote.new(@source_dir).retrieve_dir(local_dir_path: target_dir)
+      RemoteClient::FileSystemRemoteClient.new(@source_dir)
+        .retrieve_dir(local_dir_path: target_dir)
     end
   end
 end

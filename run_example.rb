@@ -8,7 +8,7 @@ LOGGER = Logger.new($stdout)
 
 config = Config::ConfigService.from_file(File.join(".", "config", "config.yml"))
 
-destination = Remote::RemoteFactory.from_config(
+target_client = Remote::RemoteFactory.from_config(
   type: config.remote.type,
   settings: config.remote.settings
 )
@@ -16,7 +16,7 @@ destination = Remote::RemoteFactory.from_config(
 dispatcher = Dispatcher::APTrustDispatcher.new(
   settings: config.settings,
   repository: config.repository,
-  destination: destination
+  target_client: target_client
 )
 
 object_metadata = Dispatcher::ObjectMetadata.new(

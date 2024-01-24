@@ -4,11 +4,15 @@ require "aws-sdk-s3"
 
 LOGGER = Logger.new($stdout)
 
-module Remote
-  class RemoteError < StandardError
+module RemoteClient
+  class RemoteClientError < StandardError
   end
 
-  class RemoteBase
+  class RemoteClientBase
+    def remote_text
+      raise NotImplementedError
+    end
+
     def send_file(local_file_path:, remote_dir_path: "")
       raise NotImplementedError
     end
@@ -22,13 +26,13 @@ module Remote
     end
   end
 
-  class FileSystemRemote < RemoteBase
+  class FileSystemRemoteClient < RemoteClientBase
     def initialize(base_dir_path)
       @base_dir_path = base_dir_path
     end
 
-    def to_s
-      "<FileSystemRemote base_dir_path=\"#{@base_dir_path}\">"
+    def remote_text
+      "file system remote location at \"#{@base_dir_path}\""
     end
 
     def send_file(local_file_path:, remote_dir_path: nil)
@@ -61,7 +65,7 @@ module Remote
     end
   end
 
-  class AwsS3Remote < RemoteBase
+  class AwsS3RemoteClient < RemoteClientBase
     def self.update_config(access_key_id, secret_access_key)
       Aws.config.update(
         credentials: Aws::Credentials.new(access_key_id, secret_access_key)
@@ -73,8 +77,8 @@ module Remote
       @bucket = s3.bucket(bucket)
     end
 
-    def to_s
-      "<AwsS3Remote bucket=\"#{@bucket.name}\">"
+    def remote_text
+      "AWS S3 remote location in bucket \"#{@bucket.name}\""
     end
 
     def send_file(local_file_path:, remote_dir_path: nil)
@@ -84,32 +88,32 @@ module Remote
       aws_object = @bucket.object(object_key)
       aws_object.upload_file(local_file_path)
     rescue Aws::S3::Errors::ServiceError => e
-      raise RemoteError, "Error occurred while uploading file to AWS S3: #{e}"
+      raise RemoteClientError, "Error occurred while uploading file to AWS S3: #{e}"
     end
 
     def retrieve_file(remote_file_path:, local_dir_path:)
       aws_object = @bucket.object(remote_file_path)
       aws_object.download_file(local_dir_path)
     rescue Aws::S3::Errors::ServiceError => e
-      raise RemoteError, "Error occurred while downloading file from AWS S3: #{e}"
+      raise RemoteClientError, "Error occurred while downloading file from AWS S3: #{e}"
     end
 
     # def retrieve_dir(local_dir_path:, remote_dir_path: nil)
     # end
   end
 
-  class RemoteFactory
+  class RemoteClientFactory
     def self.from_config(type:, settings:)
       case type
       when :aptrust
         aws_config = settings
-        Remote::AwsS3Remote.update_config(aws_config.access_key_id, aws_config.secret_access_key)
-        Remote::AwsS3Remote.new(
+        AwsS3RemoteClient.update_config(aws_config.access_key_id, aws_config.secret_access_key)
+        AwsS3RemoteClient.new(
           region: aws_config.region,
           bucket: aws_config.receiving_bucket
         )
       when :file_system
-        Remote::FileSystemRemote.new(settings.remote_path)
+        FileSystemRemoteClient.new(settings.remote_path)
       end
     end
   end

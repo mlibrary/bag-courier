@@ -3,7 +3,7 @@ require "logger"
 require "minitar"
 
 require_relative "bag_adapter"
-require_relative "remote"
+require_relative "remote_client"
 
 LOGGER = Logger.new($stdout)
 
@@ -34,7 +34,7 @@ module BagCourier
       bag_info:,
       tags:,
       data_transfer:,
-      destination:,
+      target_client:,
       working_dir:,
       export_dir:,
       dry_run:,
@@ -45,7 +45,7 @@ module BagCourier
       @tags = tags
 
       @data_transfer = data_transfer
-      @destination = destination
+      @target_client = target_client
       @status_event_repo = status_event_repo
 
       @working_dir = working_dir
@@ -97,14 +97,14 @@ module BagCourier
         return bag_sent
       end
 
-      LOGGER.info("Sending bag to destination #{@destination}")
+      LOGGER.info("Sending bag to #{@target_client.remote_text}")
       begin
         # add timing
         track!(status: "sending")
-        @destination.send_file(local_file_path: file_path)
+        @target_client.send_file(local_file_path: file_path)
         bag_sent = true
         track!(status: "sent")
-      rescue Remote::RemoteError => e
+      rescue RemoteClient::RemoteClientError => e
         track!(status: "failed", note: "failed in #{e.context} with error #{e}")
         LOGGER.error(
           ["Sending of file #{filename} failed in #{e.context} with error #{e}"] +
