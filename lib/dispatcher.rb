@@ -1,7 +1,6 @@
 require_relative "bag_courier"
 require_relative "bag_tag"
 require_relative "data_transfer"
-require_relative "remote"
 require_relative "status_event"
 
 module Dispatcher
@@ -26,12 +25,12 @@ module Dispatcher
     def initialize(
       settings:,
       repository:,
-      destination:,
+      target_client:,
       status_event_repo: StatusEvent::StatusEventInMemoryRepository.new
     )
       @settings = settings
       @repository = repository
-      @destination = destination
+      @target_client = target_client
       @status_event_repo = status_event_repo
     end
 
@@ -57,7 +56,7 @@ module Dispatcher
         bag_id: bag_id,
         bag_info: bag_info,
         tags: tags,
-        destination: @destination,
+        target_client: @target_client,
         data_transfer: data_transfer,
         status_event_repo: @status_event_repo,
         working_dir: @settings.working_dir,

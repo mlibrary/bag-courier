@@ -3,9 +3,9 @@ require "logger"
 require "minitest/autorun"
 require "minitest/pride"
 
-require_relative "../lib/remote"
+require_relative "../lib/remote_client"
 
-module RemoteRoleTest
+module RemoteClientRoleTest
   def test_plays_remote_role
     assert_respond_to @role_player, :send_file
     assert_respond_to @role_player, :retrieve_file
@@ -13,8 +13,8 @@ module RemoteRoleTest
   end
 end
 
-class FileSystemRemoteTest < Minitest::Test
-  include RemoteRoleTest
+class FileSystemRemoteClientTest < Minitest::Test
+  include RemoteClientRoleTest
 
   def setup
     test_dir = File.join(__dir__, "remote_test")
@@ -22,7 +22,7 @@ class FileSystemRemoteTest < Minitest::Test
     @local_path = File.join(test_dir, "local")
     @test_file_name = "test.txt"
 
-    @role_player = Remote::FileSystemRemote.new(@remote_path)
+    @role_player = RemoteClient::FileSystemRemoteClient.new(@remote_path)
 
     # Reset directories
     FileUtils.rm_r(test_dir) if Dir.exist?(test_dir)
@@ -30,7 +30,7 @@ class FileSystemRemoteTest < Minitest::Test
     FileUtils.mkdir(@remote_path)
     FileUtils.mkdir(@local_path)
 
-    @remote = Remote::FileSystemRemote.new(@remote_path)
+    @remote_client = RemoteClient::FileSystemRemoteClient.new(@remote_path)
   end
 
   def add_test_file(dir_path)
@@ -42,7 +42,7 @@ class FileSystemRemoteTest < Minitest::Test
 
     expected_remote_path = File.join(@remote_path, @test_file_name)
     refute File.exist?(expected_remote_path)
-    @remote.send_file(local_file_path: File.join(@local_path, @test_file_name))
+    @remote_client.send_file(local_file_path: File.join(@local_path, @test_file_name))
     assert File.exist?(expected_remote_path)
   end
 
@@ -53,7 +53,7 @@ class FileSystemRemoteTest < Minitest::Test
 
     expected_remote_path = File.join(special_remote_subdir, @test_file_name)
     refute File.exist?(expected_remote_path)
-    @remote.send_file(
+    @remote_client.send_file(
       local_file_path: File.join(@local_path, @test_file_name),
       remote_dir_path: "special"
     )
@@ -64,7 +64,7 @@ class FileSystemRemoteTest < Minitest::Test
     add_test_file(@remote_path)
 
     refute File.exist?(File.join(@local_path, @test_file_name))
-    @remote.retrieve_file(remote_file_path: @test_file_name, local_dir_path: @local_path)
+    @remote_client.retrieve_file(remote_file_path: @test_file_name, local_dir_path: @local_path)
     assert File.exist?(File.join(@local_path, @test_file_name))
   end
 
@@ -75,7 +75,7 @@ class FileSystemRemoteTest < Minitest::Test
 
     special_local_dir = File.join(@local_path, "special")
     refute Dir.exist?(special_local_dir)
-    @remote.retrieve_dir(local_dir_path: @local_path, remote_dir_path: "special")
+    @remote_client.retrieve_dir(local_dir_path: @local_path, remote_dir_path: "special")
     assert Dir.exist?(special_local_dir)
     if Dir.exist?(special_local_dir)
       assert File.exist?(File.join(special_local_dir, @test_file_name))
