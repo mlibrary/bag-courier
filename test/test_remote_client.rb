@@ -37,6 +37,13 @@ class FileSystemRemoteClientTest < Minitest::Test
     File.write(File.join(dir_path, @test_file_name), "test")
   end
 
+  def test_remote_text
+    assert_equal(
+      "file system remote location at \"#{@remote_path}\"",
+      @remote_client.remote_text
+    )
+  end
+
   def test_send_file
     add_test_file(@local_path)
 
@@ -79,6 +86,103 @@ class FileSystemRemoteClientTest < Minitest::Test
     assert Dir.exist?(special_local_dir)
     if Dir.exist?(special_local_dir)
       assert File.exist?(File.join(special_local_dir, @test_file_name))
+    end
+  end
+end
+
+class AwsS3RemoteClientTest < Minitest::Test
+  # include RemoteClientRoleTest
+
+  def setup
+    @bucket_name = "aptrust.receiving.someorg.edu"
+    @region = "us-east-2"
+
+    @client = RemoteClient::AwsS3RemoteClient.from_config(
+      region: "us-east-2",
+      bucket_name: @bucket_name
+    )
+
+    @mock_bucket = Minitest::Mock.new
+    @mock_object = Minitest::Mock.new
+    @client_with_mock = RemoteClient::AwsS3RemoteClient.new(@mock_bucket)
+  end
+
+  def test_from_config
+    assert_equal Aws::S3::Bucket, @client.bucket.class
+    assert_equal @bucket_name, @client.bucket.name
+  end
+
+  def test_remote_text
+    assert_equal(
+      "AWS S3 remote location in bucket \"#{@bucket_name}\"",
+      @client.remote_text
+    )
+  end
+
+  def test_send_file_to_remote_root
+    local_file_path = "/export/file.txt"
+
+    @mock_bucket.expect(:object, @mock_object, ["file.txt"])
+    @mock_object.expect(:upload_file, true, [local_file_path])
+
+    @client_with_mock.send_file(local_file_path: local_file_path)
+    @mock_bucket.verify
+    @mock_object.verify
+  end
+
+  def test_send_file_to_remote_subdir
+    local_file_path = "/export/file.txt"
+    remote_subdir = "/special/"
+
+    @mock_bucket.expect(:object, @mock_object, ["/special/file.txt"])
+    @mock_object.expect(:upload_file, true, [local_file_path])
+
+    @client_with_mock.send_file(
+      local_file_path: local_file_path, remote_dir_path: remote_subdir
+    )
+    @mock_bucket.verify
+    @mock_object.verify
+  end
+
+  def test_retrieve_file
+    remote_file_path = "/special/file.txt"
+    local_dir_path = "/export/"
+
+    @mock_bucket.expect(:object, @mock_object, [remote_file_path])
+    @mock_object.expect(:download_file, true, [local_dir_path])
+
+    @client_with_mock.retrieve_file(
+      remote_file_path: remote_file_path,
+      local_dir_path: local_dir_path
+    )
+
+    @mock_bucket.verify
+    @mock_object.verify
+  end
+
+  def test_retrieve_file_with_no_key_error
+    remote_file_path = "/special/file.txt"
+    local_dir_path = "/export/"
+
+    raise_error = proc do
+      raise Aws::S3::Errors::NoSuchKey.new(
+        "some context", "Object key does not exist"
+      )
+    end
+
+    fake_object = Object.new
+    fake_object.define_singleton_method(:download_file) do |path|
+      "faking it!"
+    end
+
+    @mock_bucket.expect(:object, fake_object, [remote_file_path])
+    fake_object.stub :download_file, raise_error do
+      assert_raises RemoteClient::RemoteClientError do
+        @client_with_mock.retrieve_file(
+          remote_file_path: remote_file_path,
+          local_dir_path: local_dir_path
+        )
+      end
     end
   end
 end
