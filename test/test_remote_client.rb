@@ -9,7 +9,7 @@ module RemoteClientRoleTest
   def test_plays_remote_role
     assert_respond_to @role_player, :send_file
     assert_respond_to @role_player, :retrieve_file
-    assert_respond_to @role_player, :retrieve_dir
+    assert_respond_to @role_player, :retrieve_files
   end
 end
 
@@ -62,7 +62,7 @@ class FileSystemRemoteClientTest < Minitest::Test
     refute File.exist?(expected_remote_path)
     @remote_client.send_file(
       local_file_path: File.join(@local_path, @test_file_name),
-      remote_dir_path: "special"
+      remote_path: "special"
     )
     assert File.exist?(expected_remote_path)
   end
@@ -75,23 +75,31 @@ class FileSystemRemoteClientTest < Minitest::Test
     assert File.exist?(File.join(@local_path, @test_file_name))
   end
 
-  def test_retrieve_dir
-    special_remote_subdir = File.join(@remote_path, "special")
-    FileUtils.mkdir(special_remote_subdir)
-    add_test_file(special_remote_subdir)
+  def test_retrieve_files
+    special_remote_path = File.join(@remote_path, "special")
+    super_special_remote_path = File.join(special_remote_path, "super")
+    FileUtils.mkdir(special_remote_path)
+    FileUtils.mkdir(super_special_remote_path)
+    add_test_file(special_remote_path)
+    add_test_file(super_special_remote_path)
 
-    special_local_dir = File.join(@local_path, "special")
-    refute Dir.exist?(special_local_dir)
-    @remote_client.retrieve_dir(local_dir_path: @local_path, remote_dir_path: "special")
-    assert Dir.exist?(special_local_dir)
-    if Dir.exist?(special_local_dir)
-      assert File.exist?(File.join(special_local_dir, @test_file_name))
+    special_local_path = File.join(@local_path, "special")
+    super_special_local_path = File.join(special_local_path, "super")
+    refute Dir.exist?(special_local_path)
+    @remote_client.retrieve_files(local_path: @local_path, remote_path: "special")
+    assert Dir.exist?(special_local_path)
+    assert Dir.exist?(super_special_local_path)
+    if Dir.exist?(special_local_path)
+      assert File.exist?(File.join(special_local_path, @test_file_name))
+    end
+    if Dir.exist?(super_special_local_path)
+      assert File.exist?(File.join(super_special_local_path, @test_file_name))
     end
   end
 end
 
 class AwsS3RemoteClientTest < Minitest::Test
-  # include RemoteClientRoleTest
+  include RemoteClientRoleTest
 
   def setup
     @bucket_name = "aptrust.receiving.someorg.edu"
@@ -102,9 +110,14 @@ class AwsS3RemoteClientTest < Minitest::Test
       bucket_name: @bucket_name
     )
 
+    @role_player = @client
+
     @mock_bucket = Minitest::Mock.new
     @mock_object = Minitest::Mock.new
     @client_with_mock = RemoteClient::AwsS3RemoteClient.new(@mock_bucket)
+
+    @local_path = File.join(__dir__, "remote_test_aws", "local")
+    FileUtils.mkdir_p(@local_path)
   end
 
   def test_from_config
@@ -130,15 +143,15 @@ class AwsS3RemoteClientTest < Minitest::Test
     @mock_object.verify
   end
 
-  def test_send_file_to_remote_subdir
+  def test_send_file_to_remote_path
     local_file_path = "/export/file.txt"
-    remote_subdir = "/special/"
+    remote_path = "/special/"
 
     @mock_bucket.expect(:object, @mock_object, ["/special/file.txt"])
     @mock_object.expect(:upload_file, true, [local_file_path])
 
     @client_with_mock.send_file(
-      local_file_path: local_file_path, remote_dir_path: remote_subdir
+      local_file_path: local_file_path, remote_path: remote_path
     )
     @mock_bucket.verify
     @mock_object.verify
@@ -146,10 +159,10 @@ class AwsS3RemoteClientTest < Minitest::Test
 
   def test_retrieve_file
     remote_file_path = "/special/file.txt"
-    local_dir_path = "/export/"
+    local_dir_path = "/restore/"
 
-    @mock_bucket.expect(:object, @mock_object, [remote_file_path])
-    @mock_object.expect(:download_file, true, [local_dir_path])
+    @mock_bucket.expect(:object, @mock_object, ["/special/file.txt"])
+    @mock_object.expect(:download_file, true, ["/restore/file.txt"])
 
     @client_with_mock.retrieve_file(
       remote_file_path: remote_file_path,
@@ -184,5 +197,26 @@ class AwsS3RemoteClientTest < Minitest::Test
         )
       end
     end
+  end
+
+  def test_retrieve_files
+    remote_path = "/special/"
+
+    @mock_bucket.expect(
+      :objects,
+      [{key: "/special/one.txt"}, {key: "/special/two.txt"}],
+      [{prefix: remote_path}]
+    )
+
+    @client_with_mock.stub :retrieve_file, true do
+      @client_with_mock.retrieve_files(local_path: @local_path, remote_path: remote_path)
+    end
+
+    assert Dir.exist?(File.join(@local_path, "special"))
+    @mock_bucket.verify
+  end
+
+  def teardown
+    FileUtils.rm_r(@local_path)
   end
 end
