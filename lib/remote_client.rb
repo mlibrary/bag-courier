@@ -72,9 +72,16 @@ module RemoteClient
       )
     end
 
-    def initialize(region:, bucket:)
+    attr_reader :bucket
+
+    def initialize(bucket)
+      @bucket = bucket
+    end
+
+    def self.from_config(region:, bucket_name:)
       s3 = Aws::S3::Resource.new(region: region)
-      @bucket = s3.bucket(bucket)
+      bucket = s3.bucket(bucket_name)
+      new(bucket)
     end
 
     def remote_text
