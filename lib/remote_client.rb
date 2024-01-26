@@ -13,7 +13,7 @@ module RemoteClient
       raise NotImplementedError
     end
 
-    def send_file(local_file_path:, remote_dir_path: "")
+    def send_file(local_file_path:, remote_path: nil)
       raise NotImplementedError
     end
 
@@ -21,7 +21,7 @@ module RemoteClient
       raise NotImplementedError
     end
 
-    def retrieve_dir(local_dir_path:, remote_dir_path: "")
+    def retrieve_files(local_path:, remote_path: nil)
       raise NotImplementedError
     end
   end
@@ -35,9 +35,9 @@ module RemoteClient
       "file system remote location at \"#{@base_dir_path}\""
     end
 
-    def send_file(local_file_path:, remote_dir_path: nil)
+    def send_file(local_file_path:, remote_path: nil)
       file_name = File.basename(local_file_path)
-      new_remote_path = File.join(@base_dir_path, remote_dir_path || "")
+      new_remote_path = File.join(@base_dir_path, remote_path || "")
       LOGGER.debug("Sending file #{file_name} to #{new_remote_path}")
       FileUtils.cp(local_file_path, File.join(new_remote_path, file_name))
     end
@@ -51,16 +51,17 @@ module RemoteClient
       )
     end
 
-    def retrieve_dir(local_dir_path:, remote_dir_path: nil)
-      full_path = File.join(@base_dir_path, remote_dir_path || "")
-      dir_name = File.basename(full_path)
+    # Retrieves files including any directories they may be located within.
+    def retrieve_files(local_path:, remote_path: nil)
+      full_path = File.join(@base_dir_path, remote_path || "")
+      LOGGER.debug(full_path)
       file_paths = Dir[full_path + "/*"]
-      LOGGER.debug("Files found in directory #{dir_name} in remote: #{file_paths}")
+      LOGGER.debug("Files found at path \"#{remote_path}\" in remote: #{file_paths}")
 
       # Copies over current data
-      FileUtils.copy_entry(full_path, File.join(local_dir_path, dir_name))
+      FileUtils.cp_r(full_path, local_path)
       LOGGER.debug(
-        "Retrieving directory #{dir_name} and saving to #{local_dir_path}"
+        "Retrieving files (and parent directories) and placing at #{local_path}"
       )
     end
   end
@@ -88,10 +89,10 @@ module RemoteClient
       "AWS S3 remote location in bucket \"#{@bucket.name}\""
     end
 
-    def send_file(local_file_path:, remote_dir_path: nil)
+    def send_file(local_file_path:, remote_path: nil)
       file_name = File.basename(local_file_path)
       LOGGER.debug("file_name: " + file_name)
-      object_key = remote_dir_path ? File.join(remote_dir_path, file_name) : file_name
+      object_key = remote_path ? File.join(remote_path, file_name) : file_name
       aws_object = @bucket.object(object_key)
       aws_object.upload_file(local_file_path)
     rescue Aws::S3::Errors::ServiceError => e
@@ -99,14 +100,32 @@ module RemoteClient
     end
 
     def retrieve_file(remote_file_path:, local_dir_path:)
+      file_name = File.basename(remote_file_path)
       aws_object = @bucket.object(remote_file_path)
-      aws_object.download_file(local_dir_path)
+      aws_object.download_file(File.join(local_dir_path, file_name))
     rescue Aws::S3::Errors::ServiceError => e
       raise RemoteClientError, "Error occurred while downloading file from AWS S3: #{e}"
     end
 
-    # def retrieve_dir(local_dir_path:, remote_dir_path: nil)
-    # end
+    def get_files_at_path(remote_path = nil)
+      file_paths = @bucket.objects({prefix: remote_path}).map { |o| o[:key] }
+      LOGGER.debug("Files found at path \"#{remote_path}\" in remote: #{file_paths}")
+      file_paths
+    end
+    private :get_files_at_path
+
+    # Retrieves files at remote_path, creating directories as necessary.
+    def retrieve_files(local_path:, remote_path: nil)
+      get_files_at_path(remote_path).each do |remote_file_path|
+        dir_path = File.join(local_path, File.dirname(remote_file_path))
+        if !Dir.exist?(dir_path)
+          FileUtils.mkdir_p(dir_path)
+        end
+        retrieve_file(
+          remote_file_path: remote_file_path, local_dir_path: dir_path
+        )
+      end
+    end
   end
 
   class RemoteClientFactory
@@ -115,9 +134,9 @@ module RemoteClient
       when :aptrust
         aws_config = settings
         AwsS3RemoteClient.update_config(aws_config.access_key_id, aws_config.secret_access_key)
-        AwsS3RemoteClient.new(
+        AwsS3RemoteClient.from_config(
           region: aws_config.region,
-          bucket: aws_config.receiving_bucket
+          bucket_name: aws_config.receiving_bucket
         )
       when :file_system
         FileSystemRemoteClient.new(settings.remote_path)
