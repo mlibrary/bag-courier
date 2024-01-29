@@ -37,7 +37,7 @@ class ArchivematicaAPITest < Minitest::Test
         "current_full_path" => "/storage/#{make_path(uuids[1])}/identifier-two-#{uuids[1]}",
         "size" => 300000,
         "stored_date" => "2024-01-16T00:00:00.000000",
-        "status" => "DELETED",
+        "status" => "UPLOADED",
         "current_location" => @location_url
       },
       {
@@ -166,13 +166,8 @@ class ArchivematicaAPITest < Minitest::Test
   def test_get_packages
     @api.stub :get_objects_from_pages, @package_data do
       packages = @api.get_packages(location_uuid: @location_uuid)
-      assert_equal 2, packages.length
-      if packages.length == 2
-        assert_equal(
-          [@package_data[0]["uuid"], @package_data[2]["uuid"]],
-          packages.map { |p| p.uuid }
-        )
-      end
+      assert packages.all? { |p| p.is_a?(Archivematica::Package)}
+      assert_equal(@package_data.map { |p| p["uuid"] }, packages.map { |p| p.uuid })
     end
   end
 
