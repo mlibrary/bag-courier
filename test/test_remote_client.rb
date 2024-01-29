@@ -106,6 +106,8 @@ end
 class AwsS3RemoteClientTest < Minitest::Test
   include RemoteClientRoleTest
 
+  FakeObject = Struct.new(:key, keyword_init: true)
+
   def setup
     @bucket_name = "aptrust.receiving.someorg.edu"
     @region = "us-east-2"
@@ -210,7 +212,8 @@ class AwsS3RemoteClientTest < Minitest::Test
 
     @mock_bucket.expect(
       :objects,
-      [{key: "/special/one.txt"}, {key: "/special/two.txt"}],
+      # Approximating the structure of Aws::S3::ObjectSummary::Collection
+      [FakeObject.new(key: "/special/one.txt"), FakeObject.new(key: "/special/two.txt")].to_enum,
       [{prefix: remote_path}]
     )
 
