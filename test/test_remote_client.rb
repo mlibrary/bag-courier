@@ -17,16 +17,15 @@ class FileSystemRemoteClientTest < Minitest::Test
   include RemoteClientRoleTest
 
   def setup
-    test_dir = File.join(__dir__, "remote_test")
-    @remote_path = File.join(test_dir, "remote")
-    @local_path = File.join(test_dir, "local")
+    @test_dir = File.join(__dir__, "remote_test_fs")
+    @remote_path = File.join(@test_dir, "remote")
+    @local_path = File.join(@test_dir, "local")
     @test_file_name = "test.txt"
 
     @role_player = RemoteClient::FileSystemRemoteClient.new(@remote_path)
 
-    # Reset directories
-    FileUtils.rm_r(test_dir) if Dir.exist?(test_dir)
-    FileUtils.mkdir(test_dir)
+    # Set up directories
+    FileUtils.mkdir(@test_dir)
     FileUtils.mkdir(@remote_path)
     FileUtils.mkdir(@local_path)
 
@@ -96,6 +95,10 @@ class FileSystemRemoteClientTest < Minitest::Test
       assert File.exist?(File.join(super_special_local_path, @test_file_name))
     end
   end
+
+  def teardown
+    FileUtils.rm_r(@test_dir)
+  end
 end
 
 class AwsS3RemoteClientTest < Minitest::Test
@@ -116,7 +119,8 @@ class AwsS3RemoteClientTest < Minitest::Test
     @mock_object = Minitest::Mock.new
     @client_with_mock = RemoteClient::AwsS3RemoteClient.new(@mock_bucket)
 
-    @local_path = File.join(__dir__, "remote_test_aws", "local")
+    @test_dir = File.join(__dir__, "remote_test_aws")
+    @local_path = File.join(@test_dir, "local")
     FileUtils.mkdir_p(@local_path)
   end
 
@@ -217,6 +221,6 @@ class AwsS3RemoteClientTest < Minitest::Test
   end
 
   def teardown
-    FileUtils.rm_r(@local_path)
+    FileUtils.rm_r(@test_dir)
   end
 end
