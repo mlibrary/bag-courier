@@ -1,8 +1,10 @@
 require "logger"
 
+require "aws-sdk-s3"
 require "minitest/autorun"
 require "minitest/pride"
 
+require_relative "../lib/config"
 require_relative "../lib/remote_client"
 
 module RemoteClientRoleTest
@@ -222,5 +224,38 @@ class AwsS3RemoteClientTest < Minitest::Test
 
   def teardown
     FileUtils.rm_r(@test_dir)
+  end
+end
+
+class RemoteClientFactoryTest < Minitest::Test
+  def test_factory_creates_file_system_variant
+    remote_client = RemoteClient::RemoteClientFactory.from_config(
+      type: :file_system,
+      settings: Config::FileSystemRemoteConfig.new(
+        remote_path: "path/to/something"
+      )
+    )
+    assert remote_client.is_a?(RemoteClient::FileSystemRemoteClient)
+  end
+
+  def test_factory_creates_aws_s3_variant
+    access_key_id = "some-access-key"
+    secret_access_key = "some-secret-key"
+
+    remote_client = RemoteClient::RemoteClientFactory.from_config(
+      type: :aptrust,
+      settings: Config::AptrustAwsRemoteConfig.new(
+        region: "us-east-2",
+        receiving_bucket: "aptrust.receiving.someorg.edu",
+        restore_bucket: "aptrust.restore.someorg.edu",
+        access_key_id: access_key_id,
+        secret_access_key: secret_access_key
+      )
+    )
+    assert remote_client.is_a?(RemoteClient::AwsS3RemoteClient)
+
+    creds = Aws.config[:credentials]
+    assert_equal access_key_id, creds.access_key_id
+    assert_equal secret_access_key, creds.secret_access_key
   end
 end
