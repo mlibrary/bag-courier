@@ -82,10 +82,10 @@ module Archivematica
 
     def get_packages(location_uuid:)
       package_objects = get_objects_from_pages(PACKAGE_PATH, {
-        "current_location" => location_uuid
+        "current_location" => location_uuid,
+        "status" => PackageStatus::UPLOADED
       })
-      LOGGER.debug("Total number of package objects found: #{package_objects.length}")
-      packages = package_objects.select { |o| o["status"] == PackageStatus::UPLOADED }.map do |o|
+      packages = package_objects.map do |o|
         Package.new(
           uuid: o["uuid"],
           path: o["current_full_path"],
@@ -94,8 +94,8 @@ module Archivematica
         )
       end
       LOGGER.info(
-        "Number of packages found in location #{location_uuid} with UPLOADED status: " +
-        packages.length.to_s
+        "Number of packages found in location #{location_uuid} " \
+        "with #{PackageStatus::UPLOADED} status: #{packages.length}"
       )
       packages
     end
