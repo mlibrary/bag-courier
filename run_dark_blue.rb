@@ -19,7 +19,7 @@ packages = dark_blue_api.get_packages(
   location_uuid: config.archivematica.location_uuid
 )
 
-destination = Remote::RemoteFactory.from_config(
+target_client = RemoteClient::RemoteClientFactory.from_config(
   type: config.remote.type,
   settings: config.remote.settings
 )
@@ -27,7 +27,7 @@ destination = Remote::RemoteFactory.from_config(
 dispatcher = Dispatcher::APTrustDispatcher.new(
   settings: config.settings,
   repository: config.repository,
-  destination: destination
+  target_client: target_client
 )
 
 packages.each do |package|
