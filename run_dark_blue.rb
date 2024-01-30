@@ -39,8 +39,8 @@ packages.each do |package|
   # context = nil # maybe some way to determine what content type?
   # work = Dispatcher::Work.new(
   #   id: id,
-  #   creator: "Unknown",
-  #   description: "Unknown",
+  #   creator: "Not available",
+  #   description: "Not available",
   #   title: id
   # )
   # Dispatch courier and deliver
