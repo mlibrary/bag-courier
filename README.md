@@ -40,9 +40,21 @@ ruby run_test.rb
 
 ## Running tests
 
-`minitest` unit tests for classes are located in `/test`. A test runner will be added later. For now, run specific test files by executing the file directly, e.g.
+[`minitest`](https://github.com/minitest/minitest) unit tests for classes are located in the `test` directory.
+
+You can use a provided `rake` task to run all unit tests:
 ```sh
-ruby test/test_bag_adapter.rb
+rake test
+```
+
+Or to run a specific test:
+```sh
+rake test N="test_add_bag_info"
+```
+
+To run all tests in a single test file, use `ruby -Ilib {file path}`, e.g.
+```sh
+ruby -Ilib test/test_bag_adapter.rb
 ```
 
 ## Resources
