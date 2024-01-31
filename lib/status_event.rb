@@ -2,7 +2,15 @@ module StatusEvent
   class UnknownStatusError < StandardError
   end
 
-  StatusEvent = Struct.new(:id, :object_id, :bag_id, :status, :timestamp, keyword_init: true)
+  StatusEvent = Struct.new(
+    "StatusEvent",
+    :id,
+    :object_id,
+    :bag_id,
+    :status,
+    :timestamp,
+    keyword_init: true
+  )
 
   class StatusEventRepositoryBase
     def initialize(status_events = nil)

@@ -7,6 +7,7 @@ LOGGER = Logger.new($stdout)
 
 module Archivematica
   Package = Struct.new(
+    "Package",
     :uuid,
     :path,
     :size,
