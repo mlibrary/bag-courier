@@ -8,55 +8,86 @@ require_relative "../lib/bag_tag"
 LOGGER = Logger.new($stdout)
 
 class BagInfoBagTagTest < Minitest::Test
+  def setup
+    @time = Time.new(2023, 12, 7, 12, 0, 0, "UTC")
+  end
+
   def test_bag_info_tag_data
-    Time.stub :now, Time.new(2023, 12, 7, 12, 0, 0, "UTC") do
+    Time.stub :now, @time do
       bag_info = BagTag::BagInfoBagTag.new(
         identifier: "5494124",
         description: "Bag from repository X containing item to be preserved"
       )
-      data = {
+      expected = {
         "Source-Organization" => "University of Michigan",
         "Bag-Count" => "1 of 1",
         "Bagging-Date" => "2023-12-07T12:00:00Z",
         "Internal-Sender-Identifier" => "5494124",
         "Internal-Sender-Description" => "Bag from repository X containing item to be preserved"
       }
-      assert_equal data, bag_info.data
+      assert_equal expected, bag_info.data
+    end
+  end
+
+  def test_bag_info_tag_data_without_defaults
+    Time.stub :now, @time do
+      bag_info = BagTag::BagInfoBagTag.new(
+        identifier: "2124796",
+        description: "Bag from repository X containing item to be preserved",
+        bag_count: [2, 3],
+        organization: "Mythical University"
+      )
+      expected = {
+        "Source-Organization" => "Mythical University",
+        "Bag-Count" => "2 of 3",
+        "Bagging-Date" => "2023-12-07T12:00:00Z",
+        "Internal-Sender-Identifier" => "2124796",
+        "Internal-Sender-Description" => "Bag from repository X containing item to be preserved"
+      }
+      assert_equal expected, bag_info.data
     end
   end
 end
 
 class AptrustInfoBagTagTest < Minitest::Test
-  @@base_test_data = {
-    title: "Some Object",
-    description: "A bag from a repository containing preserved item",
-    item_description: "An item being preserved",
-    creator: "Unknown"
-  }
+  def setup
+    @base_test_data = {
+      title: "Some Object",
+      description: "A bag from a repository containing preserved item",
+      item_description: "An item being preserved",
+      creator: "Not available"
+    }
+  end
 
   def test_aptrust_tag_build
-    aptrust_info = BagTag::AptrustInfoBagTag.new(**@@base_test_data)
+    aptrust_info = BagTag::AptrustInfoBagTag.new(**@base_test_data)
     expected = <<~TEXT
       Title: Some Object
       Description: A bag from a repository containing preserved item
       Item Description: An item being preserved
-      Creator/Author: Unknown
+      Creator/Author: Not available
       Access: Institution
       Storage-Option: Standard
     TEXT
     assert_equal expected, aptrust_info.serialize
   end
 
-  def test_aptrust_tag_build_with_extra_data
-    test_data = @@base_test_data.merge({extra_data: {Context: "Some important detail"}})
+  def test_aptrust_tag_build_with_no_defaults
+    test_data = @base_test_data.merge({
+      access: "Consortia",
+      storage_option: "Glacier-OR",
+      extra_data: {
+        Context: "Some important detail"
+      }
+    })
     aptrust_info = BagTag::AptrustInfoBagTag.new(**test_data)
     expected = <<~TEXT
       Title: Some Object
       Description: A bag from a repository containing preserved item
       Item Description: An item being preserved
-      Creator/Author: Unknown
-      Access: Institution
-      Storage-Option: Standard
+      Creator/Author: Not available
+      Access: Consortia
+      Storage-Option: Glacier-OR
       Context: Some important detail
     TEXT
     assert_equal expected, aptrust_info.serialize

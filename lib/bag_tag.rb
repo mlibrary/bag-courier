@@ -2,12 +2,12 @@ require "time"
 
 module BagTag
   class BagInfoBagTag
-    KEY_SOURCE = "Source-Organization"
+    KEY_SOURCE_ORG = "Source-Organization"
     KEY_COUNT = "Bag-Count"
     KEY_DATE = "Bagging-Date"
     KEY_INTERNAL_SENDER_ID = "Internal-Sender-Identifier"
     KEY_INTERNAL_SENDER_DESC = "Internal-Sender-Description"
-    VALUE_SOURCE_DEFAULT = "University of Michigan"
+    VALUE_SOURCE_ORG_DEFAULT = "University of Michigan"
 
     @@file_name = "bag-info.txt"
 
@@ -20,7 +20,7 @@ module BagTag
       identifier:,
       description:,
       bag_count: [1, 1],
-      organization: VALUE_SOURCE_DEFAULT
+      organization: VALUE_SOURCE_ORG_DEFAULT
     )
       @identifier = identifier
       @description = description
@@ -30,7 +30,7 @@ module BagTag
 
     def data
       {
-        KEY_SOURCE => @organization,
+        KEY_SOURCE_ORG => @organization,
         KEY_COUNT => "#{@bag_count[0]} of #{@bag_count[1]}",
         KEY_DATE => BagInfoBagTag.datetime_now,
         KEY_INTERNAL_SENDER_ID => @identifier,
@@ -96,10 +96,10 @@ module BagTag
       extra_data: nil,
       serializer: TagSerializer
     )
-      @title = squish(title || work.title)
+      @title = squish(title)
       @description = squish(description || @@default_description)
-      @item_description = squish(item_description || work.description)
-      @creator = squish(creator || work.creator)
+      @item_description = squish(item_description)
+      @creator = squish(creator)
       @access = access || "Institution"
       @storage_option = squish(storage_option || "Standard")
       @extra_data = extra_data

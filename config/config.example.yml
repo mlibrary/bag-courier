@@ -4,7 +4,7 @@
 DryRun: false
 WorkingDir: "./prep"
 ExportDir: "./export"
-TestSourceDir: "./test_source/work_dir"
+TestSourceDir: "./test_source/object_dir"
 
 # Archivematica REST API
 ArchivematicaBaseURL:
