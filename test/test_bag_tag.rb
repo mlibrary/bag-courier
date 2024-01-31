@@ -59,7 +59,7 @@ class AptrustInfoBagTagTest < Minitest::Test
     }
   end
 
-  def test_aptrust_tag_build
+  def test_aptrust_tag_serialize
     aptrust_info = BagTag::AptrustInfoBagTag.new(**@base_test_data)
     expected = <<~TEXT
       Title: Some Object
@@ -72,7 +72,7 @@ class AptrustInfoBagTagTest < Minitest::Test
     assert_equal expected, aptrust_info.serialize
   end
 
-  def test_aptrust_tag_build_with_no_defaults
+  def test_aptrust_tag_serialize_with_no_data_defaults
     test_data = @base_test_data.merge({
       access: "Consortia",
       storage_option: "Glacier-OR",
@@ -91,5 +91,18 @@ class AptrustInfoBagTagTest < Minitest::Test
       Context: Some important detail
     TEXT
     assert_equal expected, aptrust_info.serialize
+  end
+
+  def test_aptrust_info_tag_squish
+    text = <<~TEXT
+      The quick brown fox jumps over the lazy dog.  The quick brown fox jumps over the lazy dog.
+      The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog.   
+      The quick brown fox jumps over the lazy dog.     The quick brown fox jumps over the lazy dog.
+      The quick brown fox jumps over the lazy dog.
+    TEXT
+
+    expected = ("The quick brown fox jumps over the lazy dog. " * 5) +  # 225
+      "The quick brown fox jumps over"  # 30
+    assert_equal expected, BagTag::AptrustInfoBagTag.squish(text)
   end
 end

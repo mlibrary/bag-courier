@@ -82,8 +82,8 @@ module BagTag
       @@file_name
     end
 
-    def squish(value)
-      value.strip.gsub(/\s+/, " ")[0..@@field_length]
+    def self.squish(value)
+      value.strip.gsub(/\s+/, " ")[0..(@@field_length - 1)]
     end
 
     def initialize(
@@ -96,12 +96,12 @@ module BagTag
       extra_data: nil,
       serializer: TagSerializer
     )
-      @title = squish(title)
-      @description = squish(description || @@default_description)
-      @item_description = squish(item_description)
-      @creator = squish(creator)
+      @title = AptrustInfoBagTag.squish(title)
+      @description = AptrustInfoBagTag.squish(description || @@default_description)
+      @item_description = AptrustInfoBagTag.squish(item_description)
+      @creator = AptrustInfoBagTag.squish(creator)
       @access = access || "Institution"
-      @storage_option = squish(storage_option || "Standard")
+      @storage_option = AptrustInfoBagTag.squish(storage_option || "Standard")
       @extra_data = extra_data
       @serializer = serializer
     end
