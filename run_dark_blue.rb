@@ -37,7 +37,7 @@ packages.each do |package|
   # Copy file to local source directory here, using SFTP or shared mount?
   # Extract metadata if possible?
   # context = nil # maybe some way to determine what content type?
-  # work = Dispatcher::Work.new(
+  # object_metadata = Dispatcher::ObjectMetadata.new(
   #   id: id,
   #   creator: "Not available",
   #   description: "Not available",
@@ -45,7 +45,7 @@ packages.each do |package|
   # )
   # Dispatch courier and deliver
   # courier = dispatcher.dispatch(
-  #   work: work,
+  #   object_metadata: object_metadata,
   #   data_transfer: DataTransfer::DirDataTransfer.new(some_local_path),
   #   context: context
   # )

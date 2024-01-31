@@ -5,22 +5,26 @@ LOGGER = Logger.new($stdout)
 
 module Config
   SettingsConfig = Struct.new(
+    "SettingsConfig",
     :dry_run,
     :working_dir,
     :export_dir
   )
 
   TestConfig = Struct.new(
-    :work_source_dir
+    "TestConfig",
+    :source_dir
   )
 
   RepositoryConfig = Struct.new(
+    "RepositoryConfig",
     :name,
     :description,
     keyword_init: true
   )
 
   AptrustAwsRemoteConfig = Struct.new(
+    "AptrustAwsRemoteConfig",
     :region,
     :receiving_bucket,
     :restore_bucket,
@@ -30,17 +34,20 @@ module Config
   )
 
   FileSystemRemoteConfig = Struct.new(
+    "FileSystemRemoteConfig",
     :remote_path,
     keyword_init: true
   )
 
   RemoteConfig = Struct.new(
+    "RemoteConfig",
     :type,
     :settings,
     keyword_init: true
   )
 
   ArchivematicaConfig = Struct.new(
+    "ArchivematicaConfig",
     :username,
     :base_url,
     :api_key,
@@ -49,6 +56,7 @@ module Config
   )
 
   Config = Struct.new(
+    "Config",
     :settings,
     :test,
     :repository,
@@ -109,7 +117,7 @@ module Config
           export_dir: verify_string("ExportDir", data["ExportDir"])
         ),
         test: TestConfig.new(
-          work_source_dir: verify_string("TestSourceDir", data["TestSourceDir"])
+          source_dir: verify_string("TestSourceDir", data["TestSourceDir"])
         ),
         repository: RepositoryConfig.new(
           name: verify_string("Repository", data["Repository"]),

@@ -5,10 +5,17 @@ require_relative "remote"
 require_relative "status_event"
 
 module Dispatcher
-  Work = Struct.new("Work", :id, :creator, :description, :title)
+  ObjectMetadata = Struct.new(
+    "ObjectMetadata",
+    :id,
+    :creator,
+    :description,
+    :title,
+    keyword_init: true
+  )
 
   class DispatcherBase
-    def dispatch(work:, data_transfer:, context: nil)
+    def dispatch(object_metadata:, data_transfer:, context: nil)
       raise NotImplementedError
     end
   end
@@ -28,21 +35,21 @@ module Dispatcher
       @status_event_repo = status_event_repo
     end
 
-    def dispatch(work:, data_transfer:, context: nil)
+    def dispatch(object_metadata:, data_transfer:, context: nil)
       bag_id = BagCourier::BagId.new(
         repository: @repository.name,
-        object_id: work.id,
+        object_id: object_metadata.id,
         context: context
       )
       bag_info = BagTag::BagInfoBagTag.new(
-        identifier: work.id,
+        identifier: object_metadata.id,
         description: @repository.description
       )
       tags = [
         BagTag::AptrustInfoBagTag.new(
-          title: work.title,
-          item_description: work.description,
-          creator: work.creator
+          title: object_metadata.title,
+          item_description: object_metadata.description,
+          creator: object_metadata.creator
         )
       ]
 

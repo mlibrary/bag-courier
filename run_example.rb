@@ -19,7 +19,7 @@ dispatcher = Dispatcher::APTrustDispatcher.new(
   destination: destination
 )
 
-work = Dispatcher::Work.new(
+object_metadata = Dispatcher::ObjectMetadata.new(
   id: "00001",
   title: "Some title",
   creator: "Some creator",
@@ -27,8 +27,8 @@ work = Dispatcher::Work.new(
 )
 
 courier = dispatcher.dispatch(
-  work: work,
-  data_transfer: DataTransfer::DirDataTransfer.new(config.test.work_source_dir),
+  object_metadata: object_metadata,
+  data_transfer: DataTransfer::DirDataTransfer.new(config.test.source_dir),
   context: "somecontext"
 )
 courier.deliver

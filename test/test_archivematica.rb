@@ -166,7 +166,7 @@ class ArchivematicaAPITest < Minitest::Test
   def test_get_packages
     @api.stub :get_objects_from_pages, @package_data do
       packages = @api.get_packages(location_uuid: @location_uuid)
-      assert packages.all? { |p| p.is_a?(Archivematica::Package)}
+      assert packages.all? { |p| p.is_a?(Archivematica::Package) }
       assert_equal(@package_data.map { |p| p["uuid"] }, packages.map { |p| p.uuid })
     end
   end
