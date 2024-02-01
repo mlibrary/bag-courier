@@ -262,3 +262,25 @@ class RemoteClientFactoryTest < Minitest::Test
     assert_equal secret_access_key, creds.secret_access_key
   end
 end
+
+class SftpRemoteClientTest < Minitest::Test
+  def setup
+    @test_dir = File.join(__dir__, "test_remote_sftp")
+    FileUtils.mkdir(@test_dir)
+
+    @client = RemoteClient::SftpRemoteClient.new(
+      user: "someuser",
+      host: "somehost",
+      key_path: "some/key/path.pub"
+    )
+  end
+
+  def test_remote_text
+    expected = "SFTP remote location at \"somehost\""
+    assert_equal expected, @client.remote_text
+  end
+
+  def teardown
+    FileUtils.rm_r(@test_dir)
+  end
+end

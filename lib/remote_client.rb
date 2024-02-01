@@ -1,8 +1,24 @@
 require "logger"
 
 require "aws-sdk-s3"
+require "bundler/setup"
+require "sftp"
 
 LOGGER = Logger.new($stdout)
+
+SFTP::Client.class_eval do
+  def get_r(path, destination)
+    run_an_sftp_command("$'@get -R #{path} #{destination}'")
+  end
+end
+
+SFTP::Shell.module_eval do
+  def self.run(array_of_commands)
+    command_str = [array_of_commands].join(" ")
+    p command_str
+    `bash  -c \"#{command_str}\"`
+  end
+end
 
 module RemoteClient
   class RemoteClientError < StandardError
@@ -122,6 +138,38 @@ module RemoteClient
         FileUtils.mkdir_p(dir_path) unless Dir.exist?(dir_path)
         retrieve_file(remote_file_path: remote_file_path, local_dir_path: dir_path)
       end
+    end
+  end
+
+  class SftpRemoteClient
+    def initialize(user:, host:, key_path:)
+      @user = user
+      @host = host
+      @key_path = key_path
+
+      SFTP.configure do |config|
+        config.host = @host
+        config.user = @user
+        config.key_path = @key_path
+      end
+
+      @client = SFTP.client
+    end
+
+    def remote_text
+      "SFTP remote location at \"#{@host}\""
+    end
+
+    def send_file(local_file_path:, remote_path: nil)
+      raise NotImplementedError
+    end
+
+    def retrieve_file(remote_file_path:, local_dir_path:)
+      raise NotImplementedError
+    end
+
+    def retrieve_files(local_path:, remote_path: nil)
+      @client.get_r(remote_path || ".", local_path)
     end
   end
 
