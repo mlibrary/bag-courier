@@ -6,6 +6,10 @@ gem "faraday", "~> 2.9"
 gem "faraday-retry", "~> 2.2"
 gem "minitar", "~> 0.9"
 
+gem "sftp",
+  git: "https://github.com/mlibrary/sftp",
+  tag: "v0.2.1"
+
 group :test do
   gem "minitest", "~> 5.20"
   gem "rake", "~> 13.1"

@@ -1,3 +1,10 @@
+GIT
+  remote: https://github.com/mlibrary/sftp
+  revision: 1e66aa5e2f48bf8c3d32a0966946c2ad7d706040
+  tag: v0.2.1
+  specs:
+    sftp (0.2.1)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -47,6 +54,7 @@ DEPENDENCIES
   minitar (~> 0.9)
   minitest (~> 5.20)
   rake (~> 13.1)
+  sftp!
 
 BUNDLED WITH
    2.4.20
