@@ -15,15 +15,22 @@ LocationUUID:
 Repository:
 RepositoryDescription:
 
-# Either aptrust or file_system
-RemoteType:
-
-# APTrust AWS remote settings
-ReceivingBucket:
-RestoreBucket:
-BucketRegion:
-AwsAccessKeyId:
-AwsSecretAccessKey:
-
-# File System remote settings
-FileSystemRemotePath:
+# Remotes
+SourceRemote:
+  RemoteType: file_system
+  RemoteSettings:
+    FileSystemRemotePath:
+  # RemoteType: sftp
+  # RemoteSettings:
+  #   SftpUser:
+  #   SftpHost:
+  #   SftpKeyPath:
+TargetRemote:
+  RemoteType: aptrust
+  RemoteSettings:
+    # APTrust AWS remote settings
+    ReceivingBucket:
+    RestoreBucket:
+    BucketRegion:
+    AwsAccessKeyId:
+    AwsSecretAccessKey:

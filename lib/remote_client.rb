@@ -185,6 +185,12 @@ module RemoteClient
         )
       when :file_system
         FileSystemRemoteClient.new(settings.remote_path)
+      when :sftp
+        SftpRemoteClient.new(
+          host: settings.host,
+          user: settings.user,
+          key_path: settings.key_path
+        )
       end
     end
   end
