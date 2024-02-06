@@ -46,6 +46,14 @@ module Config
     keyword_init: true
   )
 
+  SftpRemoteConfig = Struct.new(
+    "SftpRemoteConfig",
+    :host,
+    :user,
+    :key_path,
+    keyword_init: true
+  )
+
   ArchivematicaConfig = Struct.new(
     "ArchivematicaConfig",
     :username,
@@ -60,7 +68,8 @@ module Config
     :settings,
     :test,
     :repository,
-    :remote,
+    :source_remote,
+    :target_remote,
     :archivematica,
     keyword_init: true
   )
@@ -106,10 +115,41 @@ module Config
     # TO DO
     # Support config from environment?
 
+    def self.create_remote_config(data)
+      LOGGER.debug(data)
+      type = verify_string("RemoteType", data["RemoteType"]).to_sym
+      settings = data["RemoteSettings"]
+      RemoteConfig.new(
+        type: type,
+        settings: (
+          case type
+          when :aptrust
+            AptrustAwsRemoteConfig.new(
+              region: verify_string("BucketRegion", settings["BucketRegion"]),
+              receiving_bucket: verify_string("ReceivingBucket", settings["ReceivingBucket"]),
+              restore_bucket: verify_string("RestoreBucket", settings["RestoreBucket"]),
+              access_key_id: verify_string("AwsAccessKeyId", settings["AwsAccessKeyId"]),
+              secret_access_key: verify_string("AwsSecretAccessKey", settings["AwsSecretAccessKey"])
+            )
+          when :file_system
+            FileSystemRemoteConfig.new(
+              remote_path: verify_string("FileSystemRemotePath", settings["FileSystemRemotePath"])
+            )
+          when :sftp
+            SftpRemoteConfig.new(
+              user: verify_string("SftpUser", settings["SftpUser"]),
+              host: verify_string("SftpHost", settings["SftpHost"]),
+              key_path: verify_string("SftpKeyPath", settings["SftpKeyPath"])
+            )
+          else
+            raise ConfigError, "Remote type #{remote_type} is not supported"
+          end
+        )
+      )
+    end
+
     def self.create_config(data)
       LOGGER.debug(data)
-      remote_type = verify_string("RemoteType", data["RemoteType"]).to_sym
-
       Config.new(
         settings: SettingsConfig.new(
           dry_run: verify_boolean("DryRun", to_boolean(data["DryRun"])),
@@ -129,27 +169,8 @@ module Config
           api_key: verify_string("ArchivematicaAPIKey", data["ArchivematicaAPIKey"]),
           location_uuid: verify_string("LocationUUID", data["LocationUUID"])
         ),
-        remote: RemoteConfig.new(
-          type: remote_type,
-          settings: (
-            case remote_type
-            when :aptrust
-              AptrustAwsRemoteConfig.new(
-                region: verify_string("BucketRegion", data["BucketRegion"]),
-                receiving_bucket: verify_string("ReceivingBucket", data["ReceivingBucket"]),
-                restore_bucket: verify_string("RestoreBucket", data["RestoreBucket"]),
-                access_key_id: verify_string("AwsAccessKeyId", data["AwsAccessKeyId"]),
-                secret_access_key: verify_string("AwsSecretAccessKey", data["AwsSecretAccessKey"])
-              )
-            when :file_system
-              FileSystemRemoteConfig.new(
-                remote_path: verify_string("FileSystemRemotePath", data["FileSystemRemotePath"])
-              )
-            else
-              raise ConfigError, "Remote type #{remote_type} is not supported"
-            end
-          )
-        )
+        source_remote: create_remote_config(data["SourceRemote"]),
+        target_remote: create_remote_config(data["TargetRemote"])
       )
     end
 
