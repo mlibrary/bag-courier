@@ -8,7 +8,7 @@ gem "minitar", "~> 0.9"
 
 gem "sftp",
   git: "https://github.com/mlibrary/sftp",
-  tag: "v0.2.1"
+  tag: "v0.3.0"
 
 group :test do
   gem "minitest", "~> 5.20"
