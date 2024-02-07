@@ -6,12 +6,6 @@ require "sftp"
 
 LOGGER = Logger.new($stdout)
 
-SFTP::Client.class_eval do
-  def get_r(path, destination)
-    run_an_sftp_command("$'@get -R #{path} #{destination}'")
-  end
-end
-
 SFTP::Shell.module_eval do
   def self.run(array_of_commands)
     command_str = [array_of_commands].join(" ")

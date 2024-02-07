@@ -1,9 +1,9 @@
 GIT
   remote: https://github.com/mlibrary/sftp
-  revision: 1e66aa5e2f48bf8c3d32a0966946c2ad7d706040
-  tag: v0.2.1
+  revision: 82fa74105a034a7dd40c4f21f86a3f9d047a90d2
+  tag: v0.3.0
   specs:
-    sftp (0.2.1)
+    sftp (0.3.0)
 
 GEM
   remote: https://rubygems.org/
