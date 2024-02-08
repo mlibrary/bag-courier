@@ -20,7 +20,7 @@ module DataTransfer
 
     def transfer(target_dir)
       RemoteClient::FileSystemRemoteClient.new(@source_dir)
-        .retrieve_files(local_path: target_dir)
+        .retrieve_from_path(local_path: target_dir)
     end
   end
 end
