@@ -11,7 +11,7 @@ module RemoteClientRoleTest
   def test_plays_remote_role
     assert_respond_to @role_player, :send_file
     assert_respond_to @role_player, :retrieve_file
-    assert_respond_to @role_player, :retrieve_files
+    assert_respond_to @role_player, :retrieve_from_path
   end
 end
 
@@ -76,7 +76,7 @@ class FileSystemRemoteClientTest < Minitest::Test
     assert File.exist?(File.join(@local_path, @test_file_name))
   end
 
-  def test_retrieve_files
+  def test_retrieve_from_path
     special_remote_path = File.join(@remote_path, "special")
     super_special_remote_path = File.join(special_remote_path, "super")
     FileUtils.mkdir(special_remote_path)
@@ -87,7 +87,7 @@ class FileSystemRemoteClientTest < Minitest::Test
     special_local_path = File.join(@local_path, "special")
     super_special_local_path = File.join(special_local_path, "super")
     refute Dir.exist?(special_local_path)
-    @remote_client.retrieve_files(local_path: @local_path, remote_path: "special")
+    @remote_client.retrieve_from_path(local_path: @local_path, remote_path: "special")
     assert Dir.exist?(special_local_path)
     assert Dir.exist?(super_special_local_path)
     if Dir.exist?(special_local_path)
@@ -207,7 +207,7 @@ class AwsS3RemoteClientTest < Minitest::Test
     end
   end
 
-  def test_retrieve_files
+  def test_retrieve_from_path
     remote_path = "/special/"
 
     @mock_bucket.expect(
@@ -218,7 +218,7 @@ class AwsS3RemoteClientTest < Minitest::Test
     )
 
     @client_with_mock.stub :retrieve_file, true do
-      @client_with_mock.retrieve_files(local_path: @local_path, remote_path: remote_path)
+      @client_with_mock.retrieve_from_path(local_path: @local_path, remote_path: remote_path)
     end
 
     assert Dir.exist?(File.join(@local_path, "special"))
