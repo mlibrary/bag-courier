@@ -3,6 +3,8 @@ require "logger"
 require "aws-sdk-s3"
 require "minitest/autorun"
 require "minitest/pride"
+require "bundler/setup"
+require "sftp"
 
 require_relative "../lib/config"
 require_relative "../lib/remote_client"
@@ -116,7 +118,6 @@ class AwsS3RemoteClientTest < Minitest::Test
       region: "us-east-2",
       bucket_name: @bucket_name
     )
-
     @role_player = @client
 
     @mock_bucket = Minitest::Mock.new
@@ -230,6 +231,72 @@ class AwsS3RemoteClientTest < Minitest::Test
   end
 end
 
+class SftpRemoteClientTest < Minitest::Test
+  include RemoteClientRoleTest
+
+  def setup
+    @local_dir = "test_remote_sftp"
+    user = "someuser"
+    host = "something.org.edu"
+    key_path = "some/key/path"
+
+    @client = RemoteClient::SftpRemoteClient.from_config(
+      user: user, host: host, key_path: key_path
+    )
+    @role_player = @client
+
+    @mock_sftp_client = Minitest::Mock.new
+    @remote_client_with_mock = RemoteClient::SftpRemoteClient.new(
+      client: @mock_sftp_client, host: host
+    )
+  end
+
+  def test_remote_text
+    expected = "SFTP remote location at \"something.org.edu\""
+    assert_equal expected, @client.remote_text
+  end
+
+  def test_send_file
+    local_path = File.join(@local_dir, "file.txt")
+    @mock_sftp_client.expect(:put, "some string output", [local_path, "special"])
+    @remote_client_with_mock.send_file(
+      local_file_path: local_path, remote_path: "special"
+    )
+    @mock_sftp_client.verify
+  end
+
+  def test_send_file_to_root
+    local_path = File.join(@local_dir, "file.txt")
+    @mock_sftp_client.expect(:put, "some string output", [local_path, "."])
+    @remote_client_with_mock.send_file(local_file_path: local_path)
+    @mock_sftp_client.verify
+  end
+
+  def test_retrieve_file
+    remote_path = File.join("special", "file.txt")
+    @mock_sftp_client.expect(:get, "some string output", [remote_path, @local_dir])
+    @remote_client_with_mock.retrieve_file(
+      remote_file_path: remote_path, local_dir_path: @local_dir
+    )
+    @mock_sftp_client.verify
+  end
+
+  def test_retrieve_from_path
+    remote_path = File.join("special")
+    @mock_sftp_client.expect(:get_r, "some string output", [remote_path, @local_dir])
+    @remote_client_with_mock.retrieve_from_path(
+      remote_path: remote_path, local_path: @local_dir
+    )
+    @mock_sftp_client.verify
+  end
+
+  def test_retrieve_from_root_path
+    @mock_sftp_client.expect(:get_r, "some string output", [".", @local_dir])
+    @remote_client_with_mock.retrieve_from_path(local_path: @local_dir)
+    @mock_sftp_client.verify
+  end
+end
+
 class RemoteClientFactoryTest < Minitest::Test
   def test_factory_creates_file_system_variant
     remote_client = RemoteClient::RemoteClientFactory.from_config(
@@ -261,26 +328,16 @@ class RemoteClientFactoryTest < Minitest::Test
     assert_equal access_key_id, creds.access_key_id
     assert_equal secret_access_key, creds.secret_access_key
   end
-end
 
-class SftpRemoteClientTest < Minitest::Test
-  def setup
-    @test_dir = File.join(__dir__, "test_remote_sftp")
-    FileUtils.mkdir(@test_dir)
-
-    @client = RemoteClient::SftpRemoteClient.new(
-      user: "someuser",
-      host: "somehost",
-      key_path: "some/key/path.pub"
+  def test_factory_creates_sftp_variant
+    remote_client = RemoteClient::RemoteClientFactory.from_config(
+      type: :sftp,
+      settings: Config::SftpRemoteConfig.new(
+        user: "someuser",
+        host: "something.org.edu",
+        key_path: "some/key/path"
+      )
     )
-  end
-
-  def test_remote_text
-    expected = "SFTP remote location at \"somehost\""
-    assert_equal expected, @client.remote_text
-  end
-
-  def teardown
-    FileUtils.rm_r(@test_dir)
+    assert remote_client.is_a?(RemoteClient::SftpRemoteClient)
   end
 end
