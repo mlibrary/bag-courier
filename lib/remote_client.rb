@@ -162,7 +162,7 @@ module RemoteClient
       raise NotImplementedError
     end
 
-    def retrieve_files(local_path:, remote_path: nil)
+    def retrieve_from_path(local_path:, remote_path: nil)
       @client.get_r(remote_path || ".", local_path)
     end
   end
