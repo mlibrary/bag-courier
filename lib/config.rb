@@ -116,7 +116,6 @@ module Config
     # Support config from environment?
 
     def self.create_remote_config(data)
-      LOGGER.debug(data)
       type = verify_string("RemoteType", data["RemoteType"]).to_sym
       settings = data["RemoteSettings"]
       RemoteConfig.new(
