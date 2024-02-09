@@ -6,14 +6,6 @@ require "sftp"
 
 LOGGER = Logger.new($stdout)
 
-SFTP::Shell.module_eval do
-  def self.run(array_of_commands)
-    command_str = [array_of_commands].join(" ")
-    p command_str
-    `bash  -c \"#{command_str}\"`
-  end
-end
-
 module RemoteClient
   class RemoteClientError < StandardError
   end
