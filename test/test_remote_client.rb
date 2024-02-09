@@ -236,19 +236,26 @@ class SftpRemoteClientTest < Minitest::Test
 
   def setup
     @local_dir = "test_remote_sftp"
-    user = "someuser"
-    host = "something.org.edu"
-    key_path = "some/key/path"
+    @user = "someuser"
+    @host = "something.org.edu"
+    @key_path = "some/key/path"
 
     @client = RemoteClient::SftpRemoteClient.from_config(
-      user: user, host: host, key_path: key_path
+      user: @user, host: @host, key_path: @key_path
     )
     @role_player = @client
 
     @mock_sftp_client = Minitest::Mock.new
     @remote_client_with_mock = RemoteClient::SftpRemoteClient.new(
-      client: @mock_sftp_client, host: host
+      client: @mock_sftp_client, host: @host
     )
+  end
+
+  def test_from_config_sets_sftp_config
+    config = SFTP.configuration
+    assert_equal @host, config.host
+    assert_equal @user, config.user
+    assert_equal @key_path, config.key_path
   end
 
   def test_remote_text

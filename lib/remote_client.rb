@@ -135,7 +135,7 @@ module RemoteClient
 
     def self.from_config(user:, host:, key_path:)
       SFTP.configure do |config|
-        config.host = @host
+        config.host = host
         config.user = user
         config.key_path = key_path
       end
