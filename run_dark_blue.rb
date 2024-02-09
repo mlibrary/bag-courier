@@ -46,9 +46,9 @@ packages.select { |p| p.size < SIZE_LIMIT }.each do |package|
   LOGGER.info("Object ID/Title: #{id}")
 
   # Copy file to local source directory, using SFTP or shared mount
-  source_client.retrieve_files(
+  source_client.retrieve_from_path(
     remote_path: package.path,
-    local_path: config.test.work_source_dir
+    local_path: config.test.source_dir
   )
   # Extract metadata if possible?
   # context = nil # maybe some way to determine what content type?
