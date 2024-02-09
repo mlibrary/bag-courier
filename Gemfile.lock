@@ -40,6 +40,7 @@ GEM
     net-http (0.4.1)
       uri
     rake (13.1.0)
+    rexml (3.2.6)
     uri (0.13.0)
     validatable (1.6.7)
 
@@ -54,6 +55,7 @@ DEPENDENCIES
   minitar (~> 0.9)
   minitest (~> 5.20)
   rake (~> 13.1)
+  rexml (~> 3.2.6)
   sftp!
 
 BUNDLED WITH

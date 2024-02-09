@@ -1,9 +1,10 @@
 require "logger"
 
+require "bundler/setup"
+
 require "aws-sdk-s3"
 require "minitest/autorun"
 require "minitest/pride"
-require "bundler/setup"
 require "sftp"
 
 require_relative "../lib/config"
