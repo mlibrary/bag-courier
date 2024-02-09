@@ -1,7 +1,8 @@
 require "logger"
 
-require "aws-sdk-s3"
 require "bundler/setup"
+
+require "aws-sdk-s3"
 require "sftp"
 
 LOGGER = Logger.new($stdout)
