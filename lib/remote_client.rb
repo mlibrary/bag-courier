@@ -136,18 +136,18 @@ module RemoteClient
   end
 
   class SftpRemoteClient
-    def initialize(user:, host:, key_path:)
-      @user = user
+    def initialize(client:, host:)
+      @client = client
       @host = host
-      @key_path = key_path
+    end
 
+    def self.from_config(user:, host:, key_path:)
       SFTP.configure do |config|
         config.host = @host
-        config.user = @user
-        config.key_path = @key_path
+        config.user = user
+        config.key_path = key_path
       end
-
-      @client = SFTP.client
+      new(client: SFTP.client, host: host)
     end
 
     def remote_text
@@ -155,11 +155,11 @@ module RemoteClient
     end
 
     def send_file(local_file_path:, remote_path: nil)
-      raise NotImplementedError
+      @client.put(local_file_path, remote_path || ".")
     end
 
     def retrieve_file(remote_file_path:, local_dir_path:)
-      raise NotImplementedError
+      @client.get(remote_file_path, local_dir_path)
     end
 
     def retrieve_from_path(local_path:, remote_path: nil)
@@ -180,7 +180,7 @@ module RemoteClient
       when :file_system
         FileSystemRemoteClient.new(settings.remote_path)
       when :sftp
-        SftpRemoteClient.new(
+        SftpRemoteClient.from_config(
           host: settings.host,
           user: settings.user,
           key_path: settings.key_path
