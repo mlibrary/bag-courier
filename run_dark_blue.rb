@@ -42,32 +42,35 @@ dispatcher = Dispatcher::APTrustDispatcher.new(
 SIZE_LIMIT = GB * 2
 packages.select { |p| p.size < SIZE_LIMIT }.each do |package|
   LOGGER.info(package)
-  id = File.basename(package.path).gsub("-" + package.uuid, "")
-  LOGGER.info("Object ID/Title: #{id}")
+  inner_bag_dir_name = File.basename(package.path)
+  LOGGER.info("Inner bag name: #{inner_bag_dir_name}")
+  ingest_dir_name = inner_bag_dir_name.gsub("-" + package.uuid, "")
+  LOGGER.info("Directory name on Archivematica ingest: #{ingest_dir_name}")
 
   # Copy file to local source directory, using SFTP or shared mount
   source_client.retrieve_from_path(
     remote_path: package.path,
-    local_path: config.test.source_dir
+    local_path: config.settings.source_dir
   )
   # Extract metadata if possible?
   # context = nil # maybe some way to determine what content type?
-  # object_metadata = Dispatcher::ObjectMetadata.new(
-  #   id: id,
-  #   creator: "Not available",
-  #   description: "Not available",
-  #   title: id
-  # )
-  # Dispatch courier and deliver
-  # courier = dispatcher.dispatch(
-  #   object_metadata: object_metadata,
-  #   data_transfer: DataTransfer::DirDataTransfer.new(some_local_path),
-  #   context: context
-  # )
-  # courier.deliver
-end
+  object_metadata = Dispatcher::ObjectMetadata.new(
+    id: package.uuid,
+    creator: "Not available",
+    description: "Not available",
+    title: "#{package.uuid} / #{ingest_dir_name}"
+  )
 
-# LOGGER.info("Events")
-# courier.status_event_repo.get_all_by_bag_id(courier.bag_id.to_s).each do |e|
-#   LOGGER.info(e)
-# end
+  # Dispatch courier and deliver
+  inner_bag_source_path = File.join(config.settings.source_dir, inner_bag_dir_name)
+  courier = dispatcher.dispatch(
+    object_metadata: object_metadata,
+    data_transfer: DataTransfer::DirDataTransfer.new(inner_bag_source_path)
+    # context: nil
+  )
+  courier.deliver
+  LOGGER.info("Events")
+  courier.status_event_repo.get_all_by_bag_id(courier.bag_id.to_s).each do |e|
+    LOGGER.info(e)
+  end
+end

@@ -6,14 +6,10 @@ LOGGER = Logger.new($stdout)
 module Config
   SettingsConfig = Struct.new(
     "SettingsConfig",
-    :dry_run,
+    :source_dir,
     :working_dir,
-    :export_dir
-  )
-
-  TestConfig = Struct.new(
-    "TestConfig",
-    :source_dir
+    :export_dir,
+    :dry_run
   )
 
   RepositoryConfig = Struct.new(
@@ -151,12 +147,10 @@ module Config
       LOGGER.debug(data)
       Config.new(
         settings: SettingsConfig.new(
-          dry_run: verify_boolean("DryRun", to_boolean(data["DryRun"])),
+          source_dir: verify_string("SourceDir", data["SourceDir"]),
           working_dir: verify_string("WorkingDir", data["WorkingDir"]),
-          export_dir: verify_string("ExportDir", data["ExportDir"])
-        ),
-        test: TestConfig.new(
-          source_dir: verify_string("TestSourceDir", data["TestSourceDir"])
+          export_dir: verify_string("ExportDir", data["ExportDir"]),
+          dry_run: verify_boolean("DryRun", to_boolean(data["DryRun"]))
         ),
         repository: RepositoryConfig.new(
           name: verify_string("Repository", data["Repository"]),
