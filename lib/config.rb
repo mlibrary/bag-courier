@@ -9,7 +9,9 @@ module Config
     :source_dir,
     :working_dir,
     :export_dir,
-    :dry_run
+    :dry_run,
+    :object_size_limit,
+    keyword_init: true
   )
 
   RepositoryConfig = Struct.new(
@@ -85,6 +87,13 @@ module Config
       value
     end
 
+    def self.verify_int(key, value)
+      if !value.is_a?(Integer)
+        raise_error(key, value)
+      end
+      value
+    end
+
     def self.to_boolean(value)
       case value
       when true, "true", "1"
@@ -150,7 +159,7 @@ module Config
           source_dir: verify_string("SourceDir", data["SourceDir"]),
           working_dir: verify_string("WorkingDir", data["WorkingDir"]),
           export_dir: verify_string("ExportDir", data["ExportDir"]),
-          dry_run: verify_boolean("DryRun", to_boolean(data["DryRun"]))
+          object_size_limit: verify_int("ObjectSizeLimit", data["ObjectSizeLimit"])
         ),
         repository: RepositoryConfig.new(
           name: verify_string("Repository", data["Repository"]),

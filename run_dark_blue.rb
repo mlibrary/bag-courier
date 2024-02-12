@@ -6,10 +6,6 @@ require_relative "lib/data_transfer"
 require_relative "lib/dispatcher"
 require_relative "lib/remote_client"
 
-KB = 1000
-MB = KB * 1000
-GB = MB * 1000
-
 LOGGER = Logger.new($stdout)
 
 config = Config::ConfigService.from_file(File.join(".", "config", "config.yml"))
@@ -40,8 +36,10 @@ dispatcher = Dispatcher::APTrustDispatcher.new(
   target_client: target_client
 )
 
-SIZE_LIMIT = GB * 2
-packages.select { |p| p.size < SIZE_LIMIT }.each do |package|
+selected_packages = packages.select { |p| p.size < config.settings.object_size_limit }
+LOGGER.info("Number of packages below object size limit: #{selected_packages.length}")
+
+selected_packages.each do |package|
   LOGGER.info(package)
   inner_bag_dir_name = File.basename(package.path)
   LOGGER.info("Inner bag name: #{inner_bag_dir_name}")
