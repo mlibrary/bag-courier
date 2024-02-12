@@ -61,3 +61,5 @@ ruby -Ilib test/test_bag_adapter.rb
 - [BagIt specification](https://datatracker.ietf.org/doc/html/rfc8493)
 - [APTrust User Guide](https://aptrust.github.io/userguide/)
 - [Archivematica Storage Service REST API docs](https://www.archivematica.org/en/docs/archivematica-1.15/dev-manual/api/api-reference-storage-service/)
+- [aws-sdk-s3](https://docs.aws.amazon.com/sdk-for-ruby/v3/api/Aws/S3.html)
+- [mlibrary/sftp](https://github.com/mlibrary/sftp)
