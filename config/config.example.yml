@@ -1,10 +1,13 @@
 # Bag Courier Config Example/Template
 
-# Determines whether the process skips sending bag(s)
+# Settings
 SourceDir: "./test_source"
 WorkingDir: "./prep"
 ExportDir: "./export"
+# Determines whether the process skips sending bag(s)
 DryRun: false
+# Objects this size or larger in bytes will not be processed.
+ObjectSizeLimit: 2000000000
 
 # Archivematica REST API
 ArchivematicaBaseURL:
@@ -12,6 +15,7 @@ ArchivematicaUsername:
 ArchivematicaAPIKey:
 LocationUUID:
 
+# Repository
 Repository:
 RepositoryDescription:
 
