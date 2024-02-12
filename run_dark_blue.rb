@@ -4,6 +4,7 @@ require_relative "lib/archivematica"
 require_relative "lib/config"
 require_relative "lib/data_transfer"
 require_relative "lib/dispatcher"
+require_relative "lib/remote_client"
 
 KB = 1000
 MB = KB * 1000
