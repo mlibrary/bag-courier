@@ -1,10 +1,10 @@
 # Bag Courier Config Example/Template
 
 # Determines whether the process skips sending bag(s)
-DryRun: false
+SourceDir: "./test_source"
 WorkingDir: "./prep"
 ExportDir: "./export"
-TestSourceDir: "./test_source/object_dir"
+DryRun: false
 
 # Archivematica REST API
 ArchivematicaBaseURL:
