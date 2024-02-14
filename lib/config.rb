@@ -1,11 +1,11 @@
-require "logger"
 require "yaml"
 
-LOGGER = Logger.new($stdout)
+require "semantic_logger"
 
 module Config
   SettingsConfig = Struct.new(
     "SettingsConfig",
+    :log_level,
     :source_dir,
     :working_dir,
     :export_dir,
@@ -76,6 +76,8 @@ module Config
   end
 
   class ConfigService
+    include SemanticLogger::Loggable
+
     def self.raise_error(key, value)
       raise ConfigError, "Value for \"#{key}\" is not valid: #{value}"
     end
@@ -102,7 +104,7 @@ module Config
     end
 
     def self.read_data_from_file(yaml_path)
-      LOGGER.debug("yaml_path=#{yaml_path}")
+      logger.debug("yaml_path=#{yaml_path}")
       YAML.safe_load_file(yaml_path)
     end
 
@@ -142,9 +144,10 @@ module Config
     end
 
     def self.create_config(data)
-      LOGGER.debug(data)
+      logger.debug(data)
       Config.new(
         settings: SettingsConfig.new(
+          log_level: verify_string("LogLevel", data["LogLevel"]).to_sym,
           source_dir: verify_string("SourceDir", data["SourceDir"]),
           working_dir: verify_string("WorkingDir", data["WorkingDir"]),
           export_dir: verify_string("ExportDir", data["ExportDir"]),

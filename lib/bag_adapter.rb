@@ -1,9 +1,10 @@
 require "bagit"
-
-LOGGER = Logger.new($stdout)
+require "semantic_logger"
 
 module BagAdapter
   class BagAdapter
+    include SemanticLogger::Loggable
+
     attr_reader :additional_tag_files
 
     def initialize(target_dir)
@@ -30,7 +31,7 @@ module BagAdapter
     end
 
     def add_manifests
-      LOGGER.debug([
+      logger.debug([
         "bag.tag_files=#{@bag.tag_files}",
         "additional_tag_files=#{@additional_tag_files}"
       ])
@@ -39,7 +40,7 @@ module BagAdapter
       # Rewrite the tag manifest files to include extra tag files
       tag_files_set = Set.new(@bag.tag_files)
       new_tag_files_set = tag_files_set | Set.new(@additional_tag_files)
-      LOGGER.debug("new_tag_files_set=#{new_tag_files_set}")
+      logger.debug("new_tag_files_set=#{new_tag_files_set}")
       @bag.tagmanifest!(new_tag_files_set.to_a) unless (new_tag_files_set - tag_files_set).empty?
 
       # HELIO-4380 demo.aptrust.org doesn't like this file for some reason, gives an ingest error:

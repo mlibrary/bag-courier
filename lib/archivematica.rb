@@ -1,9 +1,6 @@
-require "logger"
-
 require "faraday"
 require "faraday/retry"
-
-LOGGER = Logger.new($stdout)
+require "semantic_logger"
 
 module Archivematica
   Package = Struct.new(
@@ -24,6 +21,8 @@ module Archivematica
   end
 
   class ArchivematicaAPI
+    include SemanticLogger::Loggable
+
     LOCATION_PATH = "location/"
     PACKAGE_PATH = "file/"
     API_V2 = "/api/v2/"
@@ -65,12 +64,12 @@ module Archivematica
       no_more_pages = false
       current_url = url
       results = []
-      LOGGER.debug("Starting URL: #{current_url}")
+      logger.debug("Starting URL: #{current_url}")
       until no_more_pages
         data = get(current_url, params)
         results += data["objects"]
         meta = data["meta"]
-        LOGGER.debug("Meta: #{meta}")
+        logger.debug("Meta: #{meta}")
         next_url = get_next_url(meta)
         if next_url.nil?
           no_more_pages = true
@@ -94,7 +93,7 @@ module Archivematica
           stored_date: o["stored_date"]
         )
       end
-      LOGGER.info(
+      logger.info(
         "Number of packages found in location #{location_uuid} " \
         "with #{PackageStatus::UPLOADED} status: #{packages.length}"
       )

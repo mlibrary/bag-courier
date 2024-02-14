@@ -1,8 +1,4 @@
-require "logger"
-
 require_relative "remote_client"
-
-LOGGER = Logger.new($stdout)
 
 module DataTransfer
   class DataTransferBase

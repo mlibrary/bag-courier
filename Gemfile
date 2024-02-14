@@ -6,6 +6,7 @@ gem "faraday", "~> 2.9"
 gem "faraday-retry", "~> 2.2"
 gem "minitar", "~> 0.9"
 gem "rexml", "~> 3.2.6"
+gem "semantic_logger", "~> 4.15"
 
 gem "sftp",
   git: "https://github.com/mlibrary/sftp",
