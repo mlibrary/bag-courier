@@ -27,6 +27,7 @@ GEM
     bagit (0.4.6)
       docopt (~> 0.5.0)
       validatable (~> 1.6)
+    concurrent-ruby (1.2.3)
     docopt (0.5.0)
     faraday (2.9.0)
       faraday-net_http (>= 2.0, < 3.2)
@@ -41,6 +42,8 @@ GEM
       uri
     rake (13.1.0)
     rexml (3.2.6)
+    semantic_logger (4.15.0)
+      concurrent-ruby (~> 1.0)
     uri (0.13.0)
     validatable (1.6.7)
 
@@ -56,6 +59,7 @@ DEPENDENCIES
   minitest (~> 5.20)
   rake (~> 13.1)
   rexml (~> 3.2.6)
+  semantic_logger (~> 4.15)
   sftp!
 
 BUNDLED WITH

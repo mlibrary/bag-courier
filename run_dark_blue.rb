@@ -1,4 +1,4 @@
-require "logger"
+require "semantic_logger"
 
 require_relative "lib/archivematica"
 require_relative "lib/config"
@@ -6,9 +6,12 @@ require_relative "lib/data_transfer"
 require_relative "lib/dispatcher"
 require_relative "lib/remote_client"
 
-LOGGER = Logger.new($stdout)
+SemanticLogger.add_appender(io: $stdout, formatter: :color)
 
 config = Config::ConfigService.from_file(File.join(".", "config", "config.yml"))
+
+SemanticLogger.default_level = config.settings.log_level
+logger = SemanticLogger["run_dark_blue"]
 
 dark_blue_api = Archivematica::ArchivematicaAPI.from_config(
   base_url: config.archivematica.base_url,
@@ -37,14 +40,14 @@ dispatcher = Dispatcher::APTrustDispatcher.new(
 )
 
 selected_packages = packages.select { |p| p.size < config.settings.object_size_limit }
-LOGGER.info("Number of packages below object size limit: #{selected_packages.length}")
+logger.info("Number of packages below object size limit: #{selected_packages.length}")
 
 selected_packages.each do |package|
-  LOGGER.info(package)
+  logger.info(package)
   inner_bag_dir_name = File.basename(package.path)
-  LOGGER.info("Inner bag name: #{inner_bag_dir_name}")
+  logger.info("Inner bag name: #{inner_bag_dir_name}")
   ingest_dir_name = inner_bag_dir_name.gsub("-" + package.uuid, "")
-  LOGGER.info("Directory name on Archivematica ingest: #{ingest_dir_name}")
+  logger.info("Directory name on Archivematica ingest: #{ingest_dir_name}")
 
   # Copy file to local source directory, using SFTP or shared mount
   source_client.retrieve_from_path(
@@ -68,8 +71,8 @@ selected_packages.each do |package|
     # context: nil
   )
   courier.deliver
-  LOGGER.info("Events")
+  logger.info("Events")
   courier.status_event_repo.get_all_by_bag_id(courier.bag_id.to_s).each do |e|
-    LOGGER.info(e)
+    logger.info(e)
   end
 end

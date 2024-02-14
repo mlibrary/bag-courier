@@ -1,11 +1,8 @@
-require "logger"
-
 require "minitar"
+require "semantic_logger"
 
 require_relative "bag_adapter"
 require_relative "remote_client"
-
-LOGGER = Logger.new($stdout)
 
 module BagCourier
   class BagId
@@ -25,6 +22,8 @@ module BagCourier
   end
 
   class BagCourier
+    include SemanticLogger::Loggable
+
     EXT_TAR = ".tar"
 
     attr_reader :bag_id, :status_event_repo
@@ -62,13 +61,13 @@ module BagCourier
     end
 
     def tar(target_path)
-      LOGGER.debug(["target_path=#{target_path}", "bag_id=#{@bag_id}"])
+      logger.debug(["target_path=#{target_path}", "bag_id=#{@bag_id}"])
 
       parent = File.dirname target_path
       Dir.chdir(parent) do
         tar_src = File.basename target_path
         tar_file = File.basename(target_path) + EXT_TAR
-        LOGGER.debug([
+        logger.debug([
           "target_path=#{target_path}",
           "parent=#{parent}",
           "tar_src=#{tar_src}",
@@ -79,7 +78,7 @@ module BagCourier
         track!(status: "packed")
       end
       new_path = target_path + EXT_TAR
-      LOGGER.debug([
+      logger.debug([
         "target_path=#{target_path}",
         "bag_id=#{@bag_id}",
         "new_path=#{new_path}"
@@ -88,16 +87,16 @@ module BagCourier
     end
 
     def send(file_path:)
-      LOGGER.debug(["file_path=#{file_path}", "bag_id=#{@bag_id}"])
+      logger.debug(["file_path=#{file_path}", "bag_id=#{@bag_id}"])
 
       bag_sent = false
-      LOGGER.debug("dry_run=#{@dry_run}")
+      logger.debug("dry_run=#{@dry_run}")
       if @dry_run
         track!(status: "delivery_skipped")
         return bag_sent
       end
 
-      LOGGER.info("Sending bag to #{@target_client.remote_text}")
+      logger.info("Sending bag to #{@target_client.remote_text}")
       begin
         # add timing
         track!(status: "sending")
@@ -106,7 +105,7 @@ module BagCourier
         track!(status: "sent")
       rescue RemoteClient::RemoteClientError => e
         track!(status: "failed", note: "failed in #{e.context} with error #{e}")
-        LOGGER.error(
+        logger.error(
           ["Sending of file #{filename} failed in #{e.context} with error #{e}"] +
           e.backtrace[0..20]
         )
@@ -115,7 +114,7 @@ module BagCourier
     end
 
     def deliver
-      LOGGER.debug("bag_id=#{@bag_id}")
+      logger.debug("bag_id=#{@bag_id}")
 
       begin
         track!(status: "delivering")
@@ -139,7 +138,7 @@ module BagCourier
 
         tar_file_path = tar(bag.bag_dir)
         export_tar_file_path = File.join(@export_dir, File.basename(tar_file_path))
-        LOGGER.debug([
+        logger.debug([
           "export_dir=#{@export_dir}",
           "tar_file_path=#{tar_file_path}",
           "export_tar_file_path=#{export_tar_file_path}"
@@ -150,7 +149,7 @@ module BagCourier
         delivered = send(file_path: export_tar_file_path)
         track!(status: "delivered") if delivered
       rescue => e
-        LOGGER.error(
+        logger.error(
           ["BagCourier.deliver error: #{e}"] + e.backtrace[0..20]
         )
       end

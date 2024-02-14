@@ -1,6 +1,8 @@
 # Bag Courier Config Example/Template
 
 # Settings
+# One of info, debug, error, warn, trace, fatal
+LogLevel: "info"
 SourceDir: "./test_source"
 WorkingDir: "./prep"
 ExportDir: "./export"

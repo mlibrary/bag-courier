@@ -1,13 +1,16 @@
-require "logger"
+require "semantic_logger"
 
 require_relative "lib/config"
 require_relative "lib/data_transfer"
 require_relative "lib/dispatcher"
 require_relative "lib/remote_client"
 
-LOGGER = Logger.new($stdout)
+SemanticLogger.add_appender(io: $stdout, formatter: :color)
 
 config = Config::ConfigService.from_file(File.join(".", "config", "config.yml"))
+
+SemanticLogger.default_level = config.settings.log_level
+logger = SemanticLogger["run_example"]
 
 target_client = RemoteClient::RemoteClientFactory.from_config(
   type: config.target_remote.type,
@@ -47,7 +50,7 @@ courier = dispatcher.dispatch(
 )
 courier.deliver
 
-LOGGER.info("Events")
+logger.info("Events")
 courier.status_event_repo.get_all_by_bag_id(courier.bag_id.to_s).each do |e|
-  LOGGER.info(e)
+  logger.info(e)
 end
