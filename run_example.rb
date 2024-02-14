@@ -3,15 +3,27 @@ require "logger"
 require_relative "lib/config"
 require_relative "lib/data_transfer"
 require_relative "lib/dispatcher"
+require_relative "lib/remote_client"
 
 LOGGER = Logger.new($stdout)
 
 config = Config::ConfigService.from_file(File.join(".", "config", "config.yml"))
 
-target_client = Remote::RemoteFactory.from_config(
-  type: config.remote.type,
-  settings: config.remote.settings
+target_client = RemoteClient::RemoteClientFactory.from_config(
+  type: config.target_remote.type,
+  settings: config.target_remote.settings
 )
+
+# Use a RemoteClient to move the object(s) to the source directory if it's in a remote
+# location
+# source_client = RemoteClient::RemoteClientFactory.from_config(
+#   type: config.source_remote.type,
+#   settings: config.source_remote.settings
+# )
+# source_client.retrieve_from_path(
+#   remote_path: "some/remote/path",
+#   local_path: config.settings.source_dir
+# )
 
 dispatcher = Dispatcher::APTrustDispatcher.new(
   settings: config.settings,
@@ -28,7 +40,9 @@ object_metadata = Dispatcher::ObjectMetadata.new(
 
 courier = dispatcher.dispatch(
   object_metadata: object_metadata,
-  data_transfer: DataTransfer::DirDataTransfer.new(config.test.source_dir),
+  data_transfer: DataTransfer::DirDataTransfer.new(
+    File.join(config.settings.source_dir, "some_directory")
+  ),
   context: "somecontext"
 )
 courier.deliver
