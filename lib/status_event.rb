@@ -25,7 +25,11 @@ module StatusEvent
       raise NotImplementedError
     end
 
-    def get_all_by_work_id(id)
+    def get_all
+      raise NotImplementedError
+    end
+
+    def get_all_by_bag_id(id)
       raise NotImplementedError
     end
   end
@@ -68,6 +72,10 @@ module StatusEvent
 
     def get_by_id(id)
       @status_events.find { |e| e.id == id }
+    end
+
+    def get_all
+      @status_events
     end
 
     def get_all_by_bag_id(bag_id)

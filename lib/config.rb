@@ -52,8 +52,8 @@ module Config
     keyword_init: true
   )
 
-  ArchivematicaConfig = Struct.new(
-    "ArchivematicaConfig",
+  ArchivematicaAPIConfig = Struct.new(
+    "ArchivematicaAPIConfig",
     :username,
     :base_url,
     :api_key,
@@ -61,14 +61,26 @@ module Config
     keyword_init: true
   )
 
+  ArchivematicaConfig = Struct.new(
+    "ArchivematicaConfig",
+    :name,
+    :api,
+    :remote,
+    keyword_init: true
+  )
+
+  DarkBlueConfig = Struct.new(
+    "DarkBlueConfig",
+    :archivematicas,
+    keyword_init: true
+  )
+
   Config = Struct.new(
     "Config",
     :settings,
-    :test,
     :repository,
-    :source_remote,
     :target_remote,
-    :archivematica,
+    :dark_blue,
     keyword_init: true
   )
 
@@ -112,8 +124,8 @@ module Config
     # Support config from environment?
 
     def self.create_remote_config(data)
-      type = verify_string("RemoteType", data["RemoteType"]).to_sym
-      settings = data["RemoteSettings"]
+      type = verify_string("Type", data["Type"]).to_sym
+      settings = data["Settings"]
       RemoteConfig.new(
         type: type,
         settings: (
@@ -132,12 +144,12 @@ module Config
             )
           when :sftp
             SftpRemoteConfig.new(
-              user: verify_string("SftpUser", settings["SftpUser"]),
-              host: verify_string("SftpHost", settings["SftpHost"]),
-              key_path: verify_string("SftpKeyPath", settings["SftpKeyPath"])
+              user: verify_string("User", settings["User"]),
+              host: verify_string("Host", settings["Host"]),
+              key_path: verify_string("KeyPath", settings["KeyPath"])
             )
           else
-            raise ConfigError, "Remote type #{remote_type} is not supported"
+            raise ConfigError, "Remote type #{type} is not supported"
           end
         )
       )
@@ -158,13 +170,24 @@ module Config
           name: verify_string("Repository", data["Repository"]),
           description: verify_string("RepositoryDescription", data["RepositoryDescription"])
         ),
-        archivematica: ArchivematicaConfig.new(
-          base_url: verify_string("ArchivematicaBaseURL", data["ArchivematicaBaseURL"]),
-          username: verify_string("ArchivematicaUsername", data["ArchivematicaUsername"]),
-          api_key: verify_string("ArchivematicaAPIKey", data["ArchivematicaAPIKey"]),
-          location_uuid: verify_string("LocationUUID", data["LocationUUID"])
+        dark_blue: DarkBlueConfig.new(
+          archivematicas: (
+            data["DarkBlue"]["Archivematicas"].map do |am|
+              api = am["API"]
+              remote = am["Remote"]
+              ArchivematicaConfig.new(
+                name: verify_string("Name", am["Name"]),
+                api: ArchivematicaAPIConfig.new(
+                  base_url: verify_string("BaseURL", api["BaseURL"]),
+                  username: verify_string("Username", api["Username"]),
+                  api_key: verify_string("APIKey", api["APIKey"]),
+                  location_uuid: verify_string("UUID", api["LocationUUID"])
+                ),
+                remote: create_remote_config(remote)
+              )
+            end
+          )
         ),
-        source_remote: create_remote_config(data["SourceRemote"]),
         target_remote: create_remote_config(data["TargetRemote"])
       )
     end

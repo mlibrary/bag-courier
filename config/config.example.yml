@@ -11,26 +11,29 @@ DryRun: false
 # Objects this size or larger in bytes will not be processed.
 ObjectSizeLimit: 2000000000
 
-# Archivematica REST API
-ArchivematicaBaseURL:
-ArchivematicaUsername:
-ArchivematicaAPIKey:
-LocationUUID:
+DarkBlue:
+  ArchivematicaInstances:
+    - Name:
+      API:
+        Username:
+        APIKey:
+        BaseURL:
+        LocationUUID:
+      Remote:
+        Type: file_system
+        Settings:
+          FileSystemRemotePath:
+        # Type: sftp
+        # Settings:
+        #   SftpUser:
+        #   SftpHost:
+        #   SftpKeyPath:
 
 # Repository
 Repository:
 RepositoryDescription:
 
-# Remotes
-SourceRemote:
-  RemoteType: file_system
-  RemoteSettings:
-    FileSystemRemotePath:
-  # RemoteType: sftp
-  # RemoteSettings:
-  #   SftpUser:
-  #   SftpHost:
-  #   SftpKeyPath:
+# Remote(s)
 TargetRemote:
   RemoteType: aptrust
   RemoteSettings:
