@@ -94,17 +94,6 @@ module Config
       value
     end
 
-    def self.to_boolean(value)
-      case value
-      when true, "true", "1"
-        true
-      when false, "false", "0"
-        false
-      else
-        raise TypeError, "Value \"#{value}\" could not be converted to true or false."
-      end
-    end
-
     def self.verify_boolean(key, value)
       if ![true, false].include?(value)
         raise_error(key, value)
@@ -159,6 +148,7 @@ module Config
           source_dir: verify_string("SourceDir", data["SourceDir"]),
           working_dir: verify_string("WorkingDir", data["WorkingDir"]),
           export_dir: verify_string("ExportDir", data["ExportDir"]),
+          dry_run: verify_boolean("DryRun", data["DryRun"]),
           object_size_limit: verify_int("ObjectSizeLimit", data["ObjectSizeLimit"])
         ),
         repository: RepositoryConfig.new(
