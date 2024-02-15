@@ -4,15 +4,6 @@ require_relative "data_transfer"
 require_relative "status_event"
 
 module Dispatcher
-  ObjectMetadata = Struct.new(
-    "ObjectMetadata",
-    :id,
-    :creator,
-    :description,
-    :title,
-    keyword_init: true
-  )
-
   class DispatcherBase
     def dispatch(object_metadata:, data_transfer:, context: nil)
       raise NotImplementedError
