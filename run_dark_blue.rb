@@ -3,6 +3,7 @@ require "semantic_logger"
 require_relative "lib/archivematica"
 require_relative "lib/config"
 require_relative "lib/data_transfer"
+require_relative "lib/digital_object"
 require_relative "lib/dispatcher"
 require_relative "lib/remote_client"
 
@@ -23,65 +24,31 @@ class DarkBlueJob
         settings: config.target_remote.settings
       )
     )
-    @source_dir = config.settings.source_dir
     @arch_configs = config.dark_blue.archivematicas
+    @source_dir = config.settings.source_dir
     @object_size_limit = config.settings.object_size_limit
   end
 
-  def process_arch_instance(arch_name:, arch_api:, location_uuid:, source_client:)
-    packages = arch_api.get_packages(location_uuid: location_uuid)
-    selected_packages = packages.select { |p| p.size < @object_size_limit }
-    logger.info("Number of packages below object size limit: #{selected_packages.length}")
+  def process
+    digital_objects = []
+    @arch_configs.each do |arch_config|
+      digital_objects += Archivematica::ArchivematicaService.from_config(
+        config: arch_config,
+        source_dir: @source_dir,
+        object_size_limit: @object_size_limit
+      ).get_digital_objects
+    end
+    logger.debug(digital_objects)
 
-    selected_packages.each do |package|
-      logger.info(package)
-      inner_bag_dir_name = File.basename(package.path)
-      logger.info("Inner bag name: #{inner_bag_dir_name}")
-      ingest_dir_name = inner_bag_dir_name.gsub("-" + package.uuid, "")
-      logger.info("Directory name on Archivematica ingest: #{ingest_dir_name}")
-
-      # Copy file to local source directory, using SFTP or shared mount
-      source_client.retrieve_from_path(
-        remote_path: package.path,
-        local_path: @source_dir
-      )
-      # Extract metadata if possible?
-      object_metadata = Dispatcher::ObjectMetadata.new(
-        id: package.uuid,
-        creator: "Not available",
-        description: "Not available",
-        title: "#{package.uuid} / #{ingest_dir_name}"
-      )
-
-      # Dispatch courier and deliver
-      inner_bag_source_path = File.join(@source_dir, inner_bag_dir_name)
+    digital_objects.each do |digital_object|
       courier = @dispatcher.dispatch(
-        object_metadata: object_metadata,
-        data_transfer: DataTransfer::DirDataTransfer.new(inner_bag_source_path),
-        context: arch_name
+        object_metadata: digital_object.metadata,
+        data_transfer: DataTransfer::DirDataTransfer.new(digital_object.path),
+        context: digital_object.context
       )
       courier.deliver
     end
-  end
 
-  def process
-    @arch_configs.each do |arch_config|
-      arch_api = Archivematica::ArchivematicaAPI.from_config(
-        base_url: arch_config.api.base_url,
-        api_key: arch_config.api.api_key,
-        username: arch_config.api.username
-      )
-      source_client = RemoteClient::RemoteClientFactory.from_config(
-        type: arch_config.remote.type,
-        settings: arch_config.remote.settings
-      )
-      process_arch_instance(
-        arch_name: arch_config.name,
-        arch_api: arch_api,
-        location_uuid: arch_config.api.location_uuid,
-        source_client: source_client
-      )
-    end
     logger.info("Events")
     @dispatcher.status_event_repo.get_all.each do |e|
       logger.info(e)

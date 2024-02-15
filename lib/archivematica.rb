@@ -2,6 +2,9 @@ require "faraday"
 require "faraday/retry"
 require "semantic_logger"
 
+require_relative "digital_object"
+require_relative "remote_client"
+
 module Archivematica
   Package = Struct.new(
     "Package",
@@ -98,6 +101,81 @@ module Archivematica
         "with #{PackageStatus::UPLOADED} status: #{packages.length}"
       )
       packages
+    end
+  end
+
+  class ArchivematicaService
+    include SemanticLogger::Loggable
+
+    attr_reader :name
+
+    def self.from_config(config:, source_dir:, object_size_limit:)
+      arch_api = ArchivematicaAPI.from_config(
+        base_url: config.api.base_url,
+        api_key: config.api.api_key,
+        username: config.api.username
+      )
+      source_client = RemoteClient::RemoteClientFactory.from_config(
+        type: config.remote.type,
+        settings: config.remote.settings
+      )
+      Archivematica::ArchivematicaService.new(
+        name: config.name,
+        api: arch_api,
+        location_uuid: config.api.location_uuid,
+        source_client: source_client,
+        source_dir: source_dir,
+        object_size_limit: object_size_limit
+      )
+    end
+
+    def initialize(
+      name:,
+      api:,
+      location_uuid:,
+      source_client:,
+      source_dir:,
+      object_size_limit:
+    )
+      @name = name
+      @api = api
+      @location_uuid = location_uuid
+      @source_client = source_client
+      @source_dir = source_dir
+      @object_size_limit = object_size_limit
+    end
+
+    def get_digital_objects
+      logger.info("Archivematica instance: #{@name}")
+      packages = @api.get_packages(location_uuid: @location_uuid)
+      selected_packages = packages.select { |p| p.size < @object_size_limit }
+      logger.info("Number of packages below object size limit: #{selected_packages.length}")
+
+      selected_packages.map do |package|
+        logger.info(package)
+        inner_bag_dir_name = File.basename(package.path)
+        logger.info("Inner bag name: #{inner_bag_dir_name}")
+        ingest_dir_name = inner_bag_dir_name.gsub("-" + package.uuid, "")
+        logger.info("Directory name on Archivematica ingest: #{ingest_dir_name}")
+
+        # Copy file to local source directory, using SFTP or shared mount
+        @source_client.retrieve_from_path(
+          remote_path: package.path,
+          local_path: @source_dir
+        )
+        # Extract metadata if possible?
+        object_metadata = DigitalObject::ObjectMetadata.new(
+          id: package.uuid,
+          creator: "Not available",
+          description: "Not available",
+          title: "#{package.uuid} / #{ingest_dir_name}"
+        )
+        DigitalObject::DigitalObject.new(
+          path: File.join(@source_dir, inner_bag_dir_name),
+          metadata: object_metadata,
+          context: @name
+        )
+      end
     end
   end
 end
