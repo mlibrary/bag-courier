@@ -1,0 +1,18 @@
+---
+name: bag-courier
+services:
+  dark-blue-dev:
+    build: 
+      context: .
+      target: development
+    volumes:
+      - .:/app
+      - ./config/config.yml:/app/config/config.yml
+      - ./.ssh/id_rsa:/.ssh/id_rsa
+    command: ["ruby", "run_dark_blue.rb"]
+  dark-blue-prod:
+    build:
+      context: .
+      target: production
+    volumes:
+      - ./config/config.yml:/app/config/config.yml
