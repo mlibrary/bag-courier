@@ -3,12 +3,10 @@ require "semantic_logger"
 require_relative "lib/archivematica"
 require_relative "lib/config"
 require_relative "lib/data_transfer"
-require_relative "lib/digital_object"
 require_relative "lib/dispatcher"
 require_relative "lib/remote_client"
 
 SemanticLogger.add_appender(io: $stderr, formatter: :color)
-
 config = Config::ConfigService.from_file(File.join(".", "config", "config.yml"))
 SemanticLogger.default_level = config.settings.log_level
 
