@@ -3,7 +3,7 @@
 # Settings
 # One of info, debug, error, warn, trace, fatal
 LogLevel: "info"
-SourceDir: "./test_source"
+SourceDir: "./source"
 WorkingDir: "./prep"
 ExportDir: "./export"
 # Determines whether the process skips sending bag(s)

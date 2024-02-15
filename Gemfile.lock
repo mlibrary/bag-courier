@@ -48,6 +48,7 @@ GEM
     validatable (1.6.7)
 
 PLATFORMS
+  aarch64-linux
   arm64-darwin-22
 
 DEPENDENCIES
@@ -63,4 +64,4 @@ DEPENDENCIES
   sftp!
 
 BUNDLED WITH
-   2.4.20
+   2.3.20
