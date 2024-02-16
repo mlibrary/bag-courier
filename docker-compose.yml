@@ -8,7 +8,7 @@ services:
     volumes:
       - .:/app
       - ./config/config.yml:/app/config/config.yml
-      - ./.ssh/id_rsa:/.ssh/id_rsa
+      - ./.ssh/:/app/.ssh/:ro
     command: ["ruby", "run_dark_blue.rb"]
   dark-blue-prod:
     build:

@@ -8,6 +8,18 @@ module RemoteClient
   class RemoteClientError < StandardError
   end
 
+  SFTP::Shell.module_eval do
+    def self.run(array_of_commands)
+      command_str = [array_of_commands].join(" ")
+      `bash  -c \"#{command_str}\"`
+      p command_str
+      p $?
+      if !$?.success?
+        raise RemoteClientError, "Error occurred during SFTP process: #{$?.exitstatus}"
+      end
+    end
+  end
+
   class RemoteClientBase
     def remote_text
       raise NotImplementedError
