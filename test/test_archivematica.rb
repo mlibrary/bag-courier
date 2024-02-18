@@ -4,13 +4,17 @@ require "minitest/autorun"
 require "minitest/pride"
 
 require_relative "../lib/archivematica"
+require_relative "../lib/digital_object"
 
-class ArchivematicaAPITest < Minitest::Test
-  include Archivematica
-
+module PackageTestUtils
   def make_path(uuid)
     uuid.delete("-").chars.each_slice(4).map(&:join).join("/")
   end
+end
+
+class ArchivematicaAPITest < Minitest::Test
+  include Archivematica
+  include PackageTestUtils
 
   def setup
     base_url = "http://archivematica.storage.api.org:8000"
@@ -173,5 +177,74 @@ class ArchivematicaAPITest < Minitest::Test
 
   def teardown
     Faraday.default_connection = nil
+  end
+end
+
+class ArchivematicaServiceTest < Minitest::Test
+  include Archivematica
+  include DigitalObject
+  include PackageTestUtils
+
+  def setup
+    @mock_api = Minitest::Mock.new
+    @mock_source_client = Minitest::Mock.new
+
+    @source_dir = "test_source"
+    @location_uuid = SecureRandom.uuid
+    @object_size_limit = 4000000
+  end
+
+  def test_digital_objects
+    service = ArchivematicaService.new(
+      name: "test",
+      api: @mock_api,
+      location_uuid: @location_uuid,
+      source_client: @mock_source_client,
+      source_dir: @source_dir,
+      object_size_limit: @object_size_limit
+    )
+
+    uuids = Array.new(2) { SecureRandom.uuid }
+    packages = [
+      Package.new(
+        uuid: uuids[0],
+        path: "/storage/#{make_path(uuids[0])}/identifier-one-#{uuids[0]}",
+        size: 200000,
+        stored_date: "2024-02-18T00:00:00.000000"
+      ),
+      Package.new(
+        uuid: uuids[1],
+        path: "/storage/#{make_path(uuids[1])}/identifier-two-#{uuids[1]}",
+        size: 500000000,
+        stored_date: "2024-02-18T00:00:00.000000"
+      )
+    ]
+
+    @mock_api.expect(:get_packages, packages, location_uuid: @location_uuid)
+    packages.each_with_index do |p, i|
+      @mock_source_client.expect(
+        :retrieve_from_path,
+        true,
+        remote_path: packages[i].path,
+        local_path: @source_dir
+      )
+    end
+    digital_objects = service.get_digital_objects
+
+    # filters out larger bag
+    assert_equal 1, digital_objects.length
+
+    first_package = packages[0]
+    expected = DigitalObject.new(
+      path: "test_source/identifier-one-#{uuids[0]}",
+      metadata: ObjectMetadata.new(
+        id: first_package.uuid,
+        title: "#{first_package.uuid} / identifier-one",
+        creator: "Not available",
+        description: "Not available"
+      ),
+      context: "test"
+    )
+    assert_equal expected, digital_objects[0]
   end
 end
