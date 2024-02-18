@@ -7,8 +7,11 @@ services:
       target: development
     volumes:
       - .:/app
-      - ./config/config.yml:/app/config/config.yml
-      - ./.ssh/:/app/.ssh/:ro
+      - type: bind
+        source: /run/host-services/ssh-auth.sock
+        target: /run/host-services/ssh-auth.sock
+    environment:
+     - SSH_AUTH_SOCK=/run/host-services/ssh-auth.sock
     command: ["ruby", "run_dark_blue.rb"]
   dark-blue-prod:
     build:

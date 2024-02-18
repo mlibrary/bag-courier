@@ -4,7 +4,7 @@ LABEL maintainer="ssciolla@umich.edu"
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    git ssh && \
+    git openssh-client && \
     apt-get upgrade -y && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/*
@@ -24,11 +24,6 @@ COPY . /app
 FROM base AS development
 
 RUN bundle install
-
-RUN groupadd -g ${GID} -o ${UNAME}
-RUN useradd -m -d /app -u ${UID} -g ${GID} -o -s /bin/bash ${UNAME}
-
-USER $UNAME
 
 CMD ["tail", "-f", "/dev/null"]
 
