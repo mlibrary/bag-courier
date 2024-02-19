@@ -30,8 +30,22 @@ class DarkBlueJob
   def process
     digital_objects = []
     @arch_configs.each do |arch_config|
-      digital_objects += Archivematica::ArchivematicaService.from_config(
-        config: arch_config,
+      api_config = arch_config.api
+      arch_api = Archivematica::ArchivematicaAPI.from_config(
+        base_url: api_config.base_url,
+        api_key: api_config.api_key,
+        username: api_config.username
+      )
+      remote_config = arch_config.remote
+      remote_client = RemoteClient::RemoteClientFactory.from_config(
+        type: remote_config.type,
+        settings: remote_config.settings
+      )
+      digital_objects += Archivematica::ArchivematicaService.new(
+        name: arch_config.name,
+        api: arch_api,
+        location_uuid: api_config.location_uuid,
+        remote_client: remote_client,
         source_dir: @source_dir,
         object_size_limit: @object_size_limit
       ).get_digital_objects
