@@ -145,12 +145,12 @@ module Archivematica
           remote_path: package.path,
           local_path: @source_dir
         )
-        # Extract metadata if possible?
+
         object_metadata = DigitalObject::ObjectMetadata.new(
           id: package.uuid,
+          title: "#{package.uuid} / #{ingest_dir_name}",
           creator: NA,
-          description: NA,
-          title: "#{package.uuid} / #{ingest_dir_name}"
+          description: NA
         )
         DigitalObject::DigitalObject.new(
           path: File.join(@source_dir, inner_bag_dir_name),

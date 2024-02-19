@@ -10,9 +10,9 @@ module DigitalObject
   ObjectMetadata = Struct.new(
     "ObjectMetadata",
     :id,
+    :title,
     :creator,
     :description,
-    :title,
     keyword_init: true
   )
 end
