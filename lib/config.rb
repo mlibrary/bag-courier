@@ -172,18 +172,18 @@ module Config
         ),
         dark_blue: DarkBlueConfig.new(
           archivematicas: (
-            data["DarkBlue"]["Archivematicas"].map do |am|
-              api = am["API"]
-              remote = am["Remote"]
+            data["DarkBlue"]["Archivematicas"].map do |arch_data|
+              api_data = arch_data["API"]
+              remote_data = arch_data["Remote"]
               ArchivematicaConfig.new(
-                name: verify_string("Name", am["Name"]),
+                name: verify_string("Name", arch_data["Name"]),
                 api: ArchivematicaAPIConfig.new(
-                  base_url: verify_string("BaseURL", api["BaseURL"]),
-                  username: verify_string("Username", api["Username"]),
-                  api_key: verify_string("APIKey", api["APIKey"]),
-                  location_uuid: verify_string("UUID", api["LocationUUID"])
+                  base_url: verify_string("BaseURL", api_data["BaseURL"]),
+                  username: verify_string("Username", api_data["Username"]),
+                  api_key: verify_string("APIKey", api_data["APIKey"]),
+                  location_uuid: verify_string("UUID", api_data["LocationUUID"])
                 ),
-                remote: create_remote_config(remote)
+                remote: create_remote_config(remote_data)
               )
             end
           )
