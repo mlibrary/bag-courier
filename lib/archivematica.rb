@@ -3,7 +3,6 @@ require "faraday/retry"
 require "semantic_logger"
 
 require_relative "digital_object"
-require_relative "remote_client"
 
 module Archivematica
   Package = Struct.new(
