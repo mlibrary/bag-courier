@@ -107,6 +107,8 @@ module Archivematica
   class ArchivematicaService
     include SemanticLogger::Loggable
 
+    NA = "Not available"
+
     attr_reader :name
 
     def initialize(
@@ -146,8 +148,8 @@ module Archivematica
         # Extract metadata if possible?
         object_metadata = DigitalObject::ObjectMetadata.new(
           id: package.uuid,
-          creator: "Not available",
-          description: "Not available",
+          creator: NA,
+          description: NA,
           title: "#{package.uuid} / #{ingest_dir_name}"
         )
         DigitalObject::DigitalObject.new(
