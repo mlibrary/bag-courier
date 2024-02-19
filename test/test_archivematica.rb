@@ -187,7 +187,7 @@ class ArchivematicaServiceTest < Minitest::Test
 
   def setup
     @mock_api = Minitest::Mock.new
-    @mock_source_client = Minitest::Mock.new
+    @mock_remote_client = Minitest::Mock.new
 
     @source_dir = "test_source"
     @location_uuid = SecureRandom.uuid
@@ -199,7 +199,7 @@ class ArchivematicaServiceTest < Minitest::Test
       name: "test",
       api: @mock_api,
       location_uuid: @location_uuid,
-      source_client: @mock_source_client,
+      remote_client: @mock_remote_client,
       source_dir: @source_dir,
       object_size_limit: @object_size_limit
     )
@@ -222,7 +222,7 @@ class ArchivematicaServiceTest < Minitest::Test
 
     @mock_api.expect(:get_packages, packages, location_uuid: @location_uuid)
     packages.each_with_index do |p, i|
-      @mock_source_client.expect(
+      @mock_remote_client.expect(
         :retrieve_from_path,
         true,
         remote_path: packages[i].path,
