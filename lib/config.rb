@@ -181,7 +181,7 @@ module Config
                   base_url: verify_string("BaseURL", api_data["BaseURL"]),
                   username: verify_string("Username", api_data["Username"]),
                   api_key: verify_string("APIKey", api_data["APIKey"]),
-                  location_uuid: verify_string("UUID", api_data["LocationUUID"])
+                  location_uuid: verify_string("LocationUUID", api_data["LocationUUID"])
                 ),
                 remote: create_remote_config(remote_data)
               )

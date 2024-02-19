@@ -25,9 +25,9 @@ DarkBlue:
           FileSystemRemotePath:
         # Type: sftp
         # Settings:
-        #   SftpUser:
-        #   SftpHost:
-        #   SftpKeyPath:
+        #   User:
+        #   Host:
+        #   KeyPath:
 
 # Repository
 Repository:
