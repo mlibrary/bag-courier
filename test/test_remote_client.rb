@@ -146,7 +146,12 @@ class AwsS3RemoteClientTest < Minitest::Test
     local_file_path = "/export/file.txt"
 
     @mock_bucket.expect(:object, @mock_object, ["file.txt"])
-    @mock_object.expect(:upload_file, true, [local_file_path])
+    @mock_object.expect(
+      :upload_file,
+      true,
+      [local_file_path],
+      progress_callback: ->(args) { RemoteClient::AwsS3RemoteClient::UPLOAD_PROGRESS }
+    )
 
     @client_with_mock.send_file(local_file_path: local_file_path)
     @mock_bucket.verify
@@ -158,7 +163,12 @@ class AwsS3RemoteClientTest < Minitest::Test
     remote_path = "/special/"
 
     @mock_bucket.expect(:object, @mock_object, ["/special/file.txt"])
-    @mock_object.expect(:upload_file, true, [local_file_path])
+    @mock_object.expect(
+      :upload_file,
+      true,
+      [local_file_path],
+      progress_callback: ->(args) { RemoteClient::AwsS3RemoteClient::UPLOAD_PROGRESS }
+    )
 
     @client_with_mock.send_file(
       local_file_path: local_file_path, remote_path: remote_path
