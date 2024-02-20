@@ -69,6 +69,11 @@ module RemoteClient
   class AwsS3RemoteClient < RemoteClientBase
     include SemanticLogger::Loggable
 
+    UPLOAD_PROGRESS = proc do |bytes, totals|
+      percentage = (100.0 * bytes.sum / totals.sum).round(2)
+      logger.debug("Progress: #{bytes.sum} / #{totals.sum} bytes; #{percentage} %")
+    end
+
     def self.update_config(access_key_id, secret_access_key)
       Aws.config.update(
         credentials: Aws::Credentials.new(access_key_id, secret_access_key)
@@ -96,12 +101,8 @@ module RemoteClient
       logger.debug("File name: #{file_name}")
       object_key = remote_path ? File.join(remote_path, file_name) : file_name
       logger.debug("Sending file \"#{file_name}\" to \"#{remote_path}\"")
-      log_progress = proc do |bytes, totals|
-        percentage = (100.0 * bytes.sum / totals.sum).round(2)
-        logger.debug("Progress: #{bytes.sum} / #{totals.sum} bytes; #{percentage} %")
-      end
       aws_object = @bucket.object(object_key)
-      aws_object.upload_file(local_file_path, progress_callback: log_progress)
+      aws_object.upload_file(local_file_path, progress_callback: UPLOAD_PROGRESS)
     rescue Aws::S3::Errors::ServiceError => e
       raise RemoteClientError, "Error occurred while uploading file to AWS S3: #{e}"
     end
