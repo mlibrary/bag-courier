@@ -85,7 +85,7 @@ docker compose up dark-blue
 
 [`minitest`](https://github.com/minitest/minitest) unit tests for classes are located in the `test` directory.
 
-When using Ruby on machine, you can use a provided `rake` task to run all unit tests:
+When executing with Ruby alone, you can use a provided `rake` task to run all unit tests:
 ```sh
 rake test
 ```
@@ -100,7 +100,7 @@ To run all tests in a single test file, use `ruby -Ilib {file path}`, e.g.
 ruby -Ilib test/test_bag_adapter.rb
 ```
 
-With Docker, you can run any of these commands as well by adding them after
+With Docker, you can run any of these commands by adding them after
 `docker compose run dark-blue`.
 ```sh
 docker compose run dark-blue rake test
