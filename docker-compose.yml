@@ -1,7 +1,7 @@
 ---
 name: bag-courier
 services:
-  dark-blue-dev:
+  dark-blue:
     build: 
       context: .
       target: development
@@ -13,9 +13,4 @@ services:
     environment:
      - SSH_AUTH_SOCK=/run/host-services/ssh-auth.sock
     command: ["ruby", "run_dark_blue.rb"]
-  dark-blue-prod:
-    build:
-      context: .
-      target: production
-    volumes:
-      - ./config/config.yml:/app/config/config.yml
+
