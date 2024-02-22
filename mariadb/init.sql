@@ -1,0 +1,2 @@
+GRANT ALL PRIVILEGES ON *.* TO dpact_user;
+CREATE DATABASE IF NOT EXISTS test_database;

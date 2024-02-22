@@ -4,7 +4,7 @@ LABEL maintainer="ssciolla@umich.edu"
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    git openssh-client && \
+    git openssh-client build-essential libmariadb-dev && \
     apt-get upgrade -y && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/*
