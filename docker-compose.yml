@@ -12,5 +12,22 @@ services:
         target: /run/host-services/ssh-auth.sock
     environment:
      - SSH_AUTH_SOCK=/run/host-services/ssh-auth.sock
-    command: ["ruby", "run_dark_blue.rb"]
-
+    # command: ["ruby", "run_dark_blue.rb"]
+  database:
+    image: mariadb:11
+    environment:
+      - MARIADB_ROOT_PASSWORD=root_pw
+      - MARIADB_DATABASE=dpact_pres_service
+      - MARIADB_USER=dpact_user
+      - MARIADB_PASSWORD=dpact_pw
+    command: [
+      '--character-set-server=utf8mb4',
+      '--collation-server=utf8mb4_unicode_ci'
+    ]
+    volumes:
+      - database:/var/lib/mysql
+      - ./mariadb:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "3306:3306"
+volumes:
+  database:

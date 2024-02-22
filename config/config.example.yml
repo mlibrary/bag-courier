@@ -10,6 +10,15 @@ DryRun: false
 # Objects this size or larger in bytes will not be processed.
 ObjectSizeLimit: 2000000000
 
+# Database
+# Values provided should work for local development with Docker
+Database:
+  Host: database
+  Database: dpact_pres_service
+  Port: 3306
+  User: dpact_user
+  Password: dpact_pw
+
 DarkBlue:
   ArchivematicaInstances:
     - Name:

@@ -29,6 +29,7 @@ GEM
       docopt (~> 0.5.0)
       validatable (~> 1.6)
     base64 (0.2.0)
+    bigdecimal (3.1.6)
     concurrent-ruby (1.2.3)
     docopt (0.5.0)
     faraday (2.9.0)
@@ -40,12 +41,15 @@ GEM
     jmespath (1.6.2)
     minitar (0.9)
     minitest (5.22.2)
+    mysql2 (0.5.6)
     net-http (0.4.1)
       uri
     rake (13.1.0)
     rexml (3.2.6)
     semantic_logger (4.15.0)
       concurrent-ruby (~> 1.0)
+    sequel (5.77.0)
+      bigdecimal
     uri (0.13.0)
     validatable (1.6.7)
 
@@ -61,9 +65,11 @@ DEPENDENCIES
   faraday-retry (~> 2.2)
   minitar (~> 0.9)
   minitest (~> 5.20)
+  mysql2 (~> 0.5.6)
   rake (~> 13.1)
   rexml (~> 3.2.6)
   semantic_logger (~> 4.15)
+  sequel (~> 5.77)
   sftp!
 
 BUNDLED WITH

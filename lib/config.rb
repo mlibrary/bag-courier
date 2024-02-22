@@ -13,6 +13,16 @@ module Config
     keyword_init: true
   )
 
+  DatabaseConfig = Struct.new(
+    "DatabaseConfig",
+    :host,
+    :database,
+    :user,
+    :password,
+    :port,
+    keyword_init: true
+  )
+
   RepositoryConfig = Struct.new(
     "RepositoryConfig",
     :name,
@@ -77,6 +87,7 @@ module Config
   Config = Struct.new(
     "Config",
     :settings,
+    :database,
     :repository,
     :target_remote,
     :dark_blue,
@@ -156,6 +167,7 @@ module Config
 
     def self.create_config(data)
       logger.debug(data)
+      db_data = data["Database"]
       Config.new(
         settings: SettingsConfig.new(
           log_level: verify_string("LogLevel", data["LogLevel"]).to_sym,
@@ -167,6 +179,13 @@ module Config
         repository: RepositoryConfig.new(
           name: verify_string("Repository", data["Repository"]),
           description: verify_string("RepositoryDescription", data["RepositoryDescription"])
+        ),
+        database: DatabaseConfig.new(
+          host: verify_string("Host", db_data["Host"]),
+          database: verify_string("Database", db_data["Database"]),
+          port: verify_int("Port", db_data["Port"]),
+          user: verify_string("User", db_data["User"]),
+          password: verify_string("Password", db_data["Password"])
         ),
         dark_blue: DarkBlueConfig.new(
           archivematicas: (
