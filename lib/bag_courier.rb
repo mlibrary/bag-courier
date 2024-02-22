@@ -53,7 +53,12 @@ module BagCourier
     end
 
     def track!(status:, note: nil)
-      status_event = {bag_id: @bag_id.to_s, object_id: @bag_id.object_id, status: status, timestamp: Time.now}
+      status_event = {
+        bag_id: @bag_id.to_s,
+        object_id: @bag_id.object_id,
+        status: status,
+        timestamp: Time.now.utc
+      }
       if !note.nil?
         status_event[:note] = note
       end

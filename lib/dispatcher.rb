@@ -1,4 +1,5 @@
 require_relative "bag_courier"
+require_relative "bag_repository"
 require_relative "bag_tag"
 require_relative "data_transfer"
 require_relative "status_event"
@@ -11,18 +12,20 @@ module Dispatcher
   end
 
   class APTrustDispatcher < DispatcherBase
-    attr_reader :status_event_repo
+    attr_reader :status_event_repo, :bag_repo
 
     def initialize(
       settings:,
       repository:,
       target_client:,
-      status_event_repo: StatusEvent::StatusEventInMemoryRepository.new
+      status_event_repo: StatusEvent::StatusEventInMemoryRepository.new,
+      bag_repo: BagRepository::BagInMemoryRepository.new
     )
       @settings = settings
       @repository = repository
       @target_client = target_client
       @status_event_repo = status_event_repo
+      @bag_repo = bag_repo
     end
 
     def dispatch(object_metadata:, data_transfer:, context: nil)
@@ -42,6 +45,8 @@ module Dispatcher
           creator: object_metadata.creator
         )
       ]
+
+      @bag_repo.create(identifier: bag_id.to_s, group_part: bag_id.part_id || 1)
 
       BagCourier::BagCourier.new(
         bag_id: bag_id,

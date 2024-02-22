@@ -16,7 +16,8 @@ DB = Sequel.connect(
   port: db_config.port,
   database: "test_database",
   user: db_config.user,
-  password: db_config.password
+  password: db_config.password,
+  fractional_seconds: true
 )
 
 Sequel::Migrator.run(DB, "db/migrations")

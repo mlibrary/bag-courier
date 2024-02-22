@@ -1,4 +1,7 @@
 require "minitest/test_task"
+require "semantic_logger"
+
+SemanticLogger.add_appender(io: $stderr, formatter: :color)
 
 Minitest::TestTask.create
 
@@ -23,7 +26,8 @@ namespace :db do
       port: db_config.port,
       database: db_config.database,
       user: db_config.user,
-      password: db_config.password
+      password: db_config.password,
+      fractional_seconds: true
     ) do |db|
       Sequel::Migrator.run(db, "db/migrations", target: version)
     end

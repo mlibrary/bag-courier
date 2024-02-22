@@ -1,14 +1,29 @@
 require "semantic_logger"
 
+require "sequel"
+
 require_relative "lib/archivematica"
+require_relative "lib/bag_repository"
 require_relative "lib/config"
 require_relative "lib/data_transfer"
 require_relative "lib/dispatcher"
 require_relative "lib/remote_client"
+require_relative "lib/status_event"
 
 SemanticLogger.add_appender(io: $stderr, formatter: :color)
 config = Config::ConfigService.from_file(File.join(".", "config", "config.yml"))
 SemanticLogger.default_level = config.settings.log_level
+
+db_config = config.database
+DB = Sequel.connect(
+  adapter: "mysql2",
+  host: db_config.host,
+  port: db_config.port,
+  database: db_config.database,
+  user: db_config.user,
+  password: db_config.password,
+  fractional_seconds: true
+)
 
 class DarkBlueJob
   include SemanticLogger::Loggable
@@ -20,7 +35,9 @@ class DarkBlueJob
       target_client: RemoteClient::RemoteClientFactory.from_config(
         type: config.target_remote.type,
         settings: config.target_remote.settings
-      )
+      ),
+      status_event_repo: StatusEvent::StatusEventDatabaseRepository.new(DB),
+      bag_repo: BagRepository::BagDatabaseRepository.new(DB)
     )
     @arch_configs = config.dark_blue.archivematicas
     @object_size_limit = config.settings.object_size_limit
