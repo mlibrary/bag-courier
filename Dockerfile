@@ -14,7 +14,6 @@ ARG UID=1000
 ARG GID=1000
 
 ENV BUNDLER_VERSION=2.5.6
-
 RUN gem install bundler -v 2.5.6
 
 WORKDIR /app
