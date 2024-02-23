@@ -12,7 +12,7 @@ The following sections cover how to configure, install, use, and test the projec
 Depending on the environment and configuration used with this project,
 you may need to install one or more of the following:
 - [Ruby 3.2](https://www.ruby-lang.org/en/downloads/)
-- An SFTP client like OpenSSH (usually included with most operating systems)
+- An SFTP client like OpenSSH (usually included with operating systems)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 
 The project may work with earlier Ruby versions, but it has not been tested.
