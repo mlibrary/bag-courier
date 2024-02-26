@@ -119,28 +119,42 @@ module StatusEvent
 
     def convert_to_struct(data)
       StatusEvent.new(
-        id: data[:id],
-        bag_id: data[:identifier],
-        status: data[:name],
-        timestamp: data[:timestamp],
-        note: data[:note]
+        id: data[:status_event_id],
+        bag_id: data[:bag_identifier],
+        status: data[:status_name],
+        timestamp: data[:status_event_timestamp],
+        note: data[:status_event_note]
       )
     end
     private :convert_to_struct
 
     def get_all
       status_events = @db.from(:status_event)
-        .join(:status, id: :status_id)
-        .join(:bag, id: Sequel[:bag][:id])
+        .join(:bag, id: :bag_id)
+        .join(:status, id: Sequel[:status_event][:status_id])
+        .select(
+          Sequel[:status_event][:id].as(:status_event_id),
+          Sequel[:status_event][:timestamp].as(:status_event_timestamp),
+          Sequel[:status_event][:note].as(:status_event_note),
+          Sequel[:status][:name].as(:status_name),
+          Sequel[:bag][:identifier].as(:bag_identifier)
+        )
         .all
       status_events.map { |se| convert_to_struct(se) }
     end
 
     def get_all_for_bag_id(id)
       status_events = @db.from(:status_event)
-        .join(:status, id: :status_id)
-        .join(:bag, id: Sequel[:bag][:id])
+        .join(:bag, id: :bag_id)
+        .join(:status, id: Sequel[:status_event][:status_id])
         .where(identifier: id)
+        .select(
+          Sequel[:status_event][:id].as(:status_event_id),
+          Sequel[:status_event][:timestamp].as(:status_event_timestamp),
+          Sequel[:status_event][:note].as(:status_event_note),
+          Sequel[:status][:name].as(:status_name),
+          Sequel[:bag][:identifier].as(:bag_identifier)
+        )
         .all
       status_events.map { |se| convert_to_struct(se) }
     end
