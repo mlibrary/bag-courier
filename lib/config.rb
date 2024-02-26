@@ -167,7 +167,7 @@ module Config
 
     def self.create_config(data)
       logger.debug(data)
-      db_data = data["Database"]
+      db_data = data.fetch("Database", nil)
       Config.new(
         settings: SettingsConfig.new(
           log_level: verify_string("LogLevel", data["LogLevel"]).to_sym,
@@ -180,7 +180,7 @@ module Config
           name: verify_string("Repository", data["Repository"]),
           description: verify_string("RepositoryDescription", data["RepositoryDescription"])
         ),
-        database: DatabaseConfig.new(
+        database: db_data && DatabaseConfig.new(
           host: verify_string("Host", db_data["Host"]),
           database: verify_string("Database", db_data["Database"]),
           port: verify_int("Port", db_data["Port"]),
