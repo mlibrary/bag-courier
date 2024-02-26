@@ -29,6 +29,9 @@ module StatusEventRepositorySharedTest
     status_events = mixin_repo.get_all
     assert_equal 4, status_events.size
     assert status_events.all? { |s| s.is_a?(StatusEvent::StatusEvent) }
+
+    event_ids = status_events.map { |se| se.id }
+    assert_equal event_ids, event_ids.uniq
   end
 
   def test_get_all_for_bag_id
@@ -42,13 +45,17 @@ module StatusEventRepositorySharedTest
     mixin_repo.create(status: "bagging", bag_id: bag_id_two, timestamp: Time.now.utc)
     mixin_repo.create(status: "bagged", bag_id: bag_id_two, timestamp: Time.now.utc)
 
-    mixin_repo.get_all_for_bag_id(bag_id_two)
-  end
+    events = mixin_repo.get_all_for_bag_id(bag_id_two)
 
+    assert events.all? { |s| s.is_a?(StatusEvent::StatusEvent) }
+    assert_equal 2, events.length
+    assert_equal ["bagging", "bagged"], events.map { |e| e.status }
+  end
 end
 
 class StatusEventInMemoryRepositoryTest < Minitest::Test
   include StatusEventRepositorySharedTest
+  include SemanticLogger::Loggable
 
   def setup
     @bag_id = "repository.context-001"
