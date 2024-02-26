@@ -9,12 +9,10 @@ module StatusEvent
 
   STATUSES = %w[
     bagged bagging
-    delivery_skipped delivered delivering
     copied copying
+    deposit_skipped deposited depositing
     failed
     packed packing
-    skipped
-    sent sending
   ]
 
   StatusEvent = Struct.new(
