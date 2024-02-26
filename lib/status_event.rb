@@ -90,19 +90,6 @@ module StatusEvent
       @db = db
     end
 
-    def convert_to_structs(data)
-      data.map do |se|
-        StatusEvent.new(
-          id: se[:id],
-          bag_id: se[:identifier],
-          status: se[:name],
-          timestamp: se[:timestamp],
-          note: se[:note]
-        )
-      end
-    end
-    private :convert_to_structs
-
     def create(event_data)
       logger.debug(event_data)
 
@@ -132,12 +119,23 @@ module StatusEvent
       )
     end
 
+    def convert_to_struct(data)
+      StatusEvent.new(
+        id: data[:id],
+        bag_id: data[:identifier],
+        status: data[:name],
+        timestamp: data[:timestamp],
+        note: data[:note]
+      )
+    end
+    private :convert_to_struct
+
     def get_all
       status_events = @db.from(:status_event)
         .join(:status, id: :status_id)
         .join(:bag, id: Sequel[:bag][:id])
         .all
-      convert_to_structs(status_events)
+      status_events.map { |se| convert_to_struct(se) }
     end
 
     def get_all_for_bag_id(id)
@@ -146,7 +144,7 @@ module StatusEvent
         .join(:bag, id: Sequel[:bag][:id])
         .where(identifier: id)
         .all
-      convert_to_structs(status_events)
+      status_events.map { |se| convert_to_struct(se) }
     end
   end
 end

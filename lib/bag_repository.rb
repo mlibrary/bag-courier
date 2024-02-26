@@ -69,23 +69,22 @@ module BagRepository
       end
     end
 
+    def convert_to_struct(data)
+      Bag.new(
+        id: data[:id],
+        identifier: data[:identifier],
+        group_part: data[:group_part]
+      )
+    end
+    private :convert_to_struct
+
     def get_by_identifier(identifier)
       bag_data = @db.from(:bag).first(identifier: identifier)
-      Bag.new(
-        id: bag_data[:id],
-        identifier: bag_data[:identifier],
-        group_part: bag_data[:group_part]
-      )
+      convert_to_struct(bag_data)
     end
 
     def get_all
-      @db.from(:bag).map do |bag_data|
-        Bag.new(
-          id: bag_data[:id],
-          identifier: bag_data[:identifier],
-          group_part: bag_data[:group_part]
-        )
-      end
+      @db.from(:bag).map { |bag_data| convert_to_struct(bag_data) }
     end
   end
 end
