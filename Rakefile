@@ -15,6 +15,9 @@ namespace :db do
       File.join(".", "config", "config.yml")
     )
     db_config = config.database
+    if !db_config
+      raise "Command failed. A database connection is not configured."
+    end
 
     version = args[:version].to_i if args[:version]
     Sequel.connect(

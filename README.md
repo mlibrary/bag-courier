@@ -41,6 +41,13 @@ For local development, you can set up the neccessary dependencies and
 execute processes from this project either with Ruby directly on your machine
 or by using the provided Docker artifacts. The following sections cover each approach.
 
+Note that the project can use a MariaDB database to store records about its runs.
+The recommended approach is to use the `database` service
+(defined in [`docker-compose.yml`](/docker-compose.yml) with the Docker approach described below.
+However, it is possible -- though not explicitly supported -- to use a MariaDB or MySQL
+database from a server running on your local machine or elsewhere.
+The following sections will assume you are not using a database with Ruby alone.
+
 ### Ruby
 
 #### Installation
@@ -76,6 +83,11 @@ docker compose build dark-blue
 
 #### Usage
 
+Run the migrations, if you configured the application to use a database:
+```sh
+docker compose run dark-blue rake db:migrate
+```
+
 Run the `dark-blue` service.
 ```sh
 docker compose up dark-blue
@@ -83,25 +95,18 @@ docker compose up dark-blue
 
 ## Running tests
 
-[`minitest`](https://github.com/minitest/minitest) unit tests for classes are located in the `test` directory.
+[`minitest`](https://github.com/minitest/minitest) unit tests for classes are
+located in the `test` directory.
 
-When executing with Ruby alone, you can use a provided `rake` task to run all unit tests:
+To run all tests in one or more test files, use `ruby -Ilib {file path} ...`, e.g.
 ```sh
-rake test
+ruby -Ilib test/test_bag_adapter.rb test/test_bag_tag.rb
 ```
+Note that some test files will throw an error if a database configuration has not been set up.
 
-Or to run a specific test:
-```sh
-rake test N="test_add_bag_info"
-```
-
-To run all tests in a single test file, use `ruby -Ilib {file path}`, e.g.
-```sh
-ruby -Ilib test/test_bag_adapter.rb
-```
-
-With Docker, you can run any of these commands by adding them after
-`docker compose run dark-blue`.
+With Docker, you can run the above command by adding it after `docker compose run dark-blue`.
+You can also use a provided `rake` task to run all unit tests
+(which, again, requires configuration of a database).
 ```sh
 docker compose run dark-blue rake test
 ```
@@ -112,3 +117,4 @@ docker compose run dark-blue rake test
 - [Archivematica Storage Service REST API docs](https://www.archivematica.org/en/docs/archivematica-1.15/dev-manual/api/api-reference-storage-service/)
 - [aws-sdk-s3](https://docs.aws.amazon.com/sdk-for-ruby/v3/api/Aws/S3.html)
 - [mlibrary/sftp](https://github.com/mlibrary/sftp)
+- [Sequel](http://sequel.jeremyevans.net/)

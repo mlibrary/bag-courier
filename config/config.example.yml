@@ -10,8 +10,9 @@ DryRun: false
 # Objects this size or larger in bytes will not be processed.
 ObjectSizeLimit: 2000000000
 
-# Database
+# Database (optional)
 # Values provided should work for local development with Docker
+# While technically optional, it is required when running all tests.
 Database:
   Host: database
   Database: dpact_pres_service
