@@ -97,4 +97,10 @@ module BagRepository
       @db.from(:bag).map { |bag_data| convert_to_struct(bag_data) }
     end
   end
+
+  class BagRepositoryFactory
+    def self.for(db)
+      db ? BagDatabaseRepository.new(db) : BagInMemoryRepository.new
+    end
+  end
 end

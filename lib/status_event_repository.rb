@@ -162,4 +162,10 @@ module StatusEventRepository
       status_events.map { |se| convert_to_struct(se) }
     end
   end
+
+  class StatusEventRepositoryFactory
+    def self.for(db)
+      db ? StatusEventDatabaseRepository.new(db) : StatusEventInMemoryRepository.new
+    end
+  end
 end
