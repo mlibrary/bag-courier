@@ -29,12 +29,7 @@ module StatusEventRepository
   )
 
   class StatusEventRepositoryBase
-    def create(
-      bag_identifier:,
-      status:,
-      timestamp:,
-      note: nil
-    )
+    def create(bag_identifier:, status:, timestamp:, note: nil)
       raise NotImplementedError
     end
 
@@ -62,12 +57,7 @@ module StatusEventRepository
     end
     private :get_next_id!
 
-    def create(
-      bag_identifier:,
-      status:,
-      timestamp:,
-      note: nil
-    )
+    def create(bag_identifier:, status:, timestamp:, note: nil)
       if !STATUSES.include?(status)
         raise UnknownStatusError
       end
@@ -115,12 +105,7 @@ module StatusEventRepository
     end
     private :create_status_if_needed
 
-    def create(
-      bag_identifier:,
-      status:,
-      timestamp:,
-      note: nil
-    )
+    def create(bag_identifier:, status:, timestamp:, note: nil)
       if !STATUSES.include?(status)
         raise UnknownStatusError
       end
