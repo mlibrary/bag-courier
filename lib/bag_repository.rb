@@ -1,3 +1,5 @@
+require "semantic_logger"
+
 module BagRepository
   Bag = Struct.new(
     "Bag",
@@ -22,6 +24,8 @@ module BagRepository
   end
 
   class BagInMemoryRepository < BagRepositoryBase
+    include SemanticLogger::Loggable
+
     attr_reader :bags
 
     def initialize
@@ -37,6 +41,12 @@ module BagRepository
     private :get_next_id!
 
     def create(identifier:, group_part:)
+      matching_bag = @bags.find { |b| b.identifier == identifier }
+      if matching_bag
+        logger.info("Bag with identifier #{identifier} already exists; creation skipped")
+        return
+      end
+
       bag = Bag.new(
         id: get_next_id!,
         identifier: identifier,
@@ -55,18 +65,17 @@ module BagRepository
   end
 
   class BagDatabaseRepository < BagRepositoryBase
+    include SemanticLogger::Loggable
+
     def initialize(db)
       @db = db
     end
 
     def create(identifier:, group_part:)
       bags = @db.from(:bag)
-      matching_bag = bags.first(identifier: identifier)
-      if matching_bag
-        logger.debug("Bag with identifier #{identifier} already exists: #{matching_bag}")
-      else
-        bags.insert(identifier: identifier, group_part: group_part)
-      end
+      bags.insert(identifier: identifier, group_part: group_part)
+    rescue Sequel::UniqueConstraintViolation
+      logger.info("Bag with identifier #{identifier} already exists; creation skipped")
     end
 
     def convert_to_struct(data)
