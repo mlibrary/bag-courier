@@ -2,7 +2,7 @@ require_relative "bag_courier"
 require_relative "bag_repository"
 require_relative "bag_tag"
 require_relative "data_transfer"
-require_relative "status_event"
+require_relative "status_event_repository"
 
 module Dispatcher
   class DispatcherBase
@@ -18,7 +18,7 @@ module Dispatcher
       settings:,
       repository:,
       target_client:,
-      status_event_repo: StatusEvent::StatusEventInMemoryRepository.new,
+      status_event_repo: StatusEventRepository::StatusEventInMemoryRepository.new,
       bag_repo: BagRepository::BagInMemoryRepository.new
     )
       @settings = settings

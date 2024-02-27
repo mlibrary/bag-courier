@@ -2,12 +2,12 @@ require "minitest/autorun"
 require "minitest/pride"
 
 require_relative "setup_db"
-require_relative "../lib/status_event"
+require_relative "../lib/status_event_repository"
 require_relative "../lib/bag_repository"
 
 module StatusEventRepositorySharedTest
   def test_create_with_unknown_status
-    assert_raises(StatusEvent::UnknownStatusError) do
+    assert_raises(StatusEventRepository::UnknownStatusError) do
       mixin_repo.create(
         bag_identifier: mixin_bag_identifier,
         status: "turned_inside_out",
@@ -28,7 +28,7 @@ module StatusEventRepositorySharedTest
     end
     status_events = mixin_repo.get_all
     assert_equal 4, status_events.size
-    assert status_events.all? { |s| s.is_a?(StatusEvent::StatusEvent) }
+    assert status_events.all? { |s| s.is_a?(StatusEventRepository::StatusEvent) }
 
     event_ids = status_events.map { |se| se.id }
     assert_equal event_ids, event_ids.uniq
@@ -47,7 +47,7 @@ module StatusEventRepositorySharedTest
 
     events = mixin_repo.get_all_for_bag_identifier(bag_identifier_two)
 
-    assert events.all? { |s| s.is_a?(StatusEvent::StatusEvent) }
+    assert events.all? { |s| s.is_a?(StatusEventRepository::StatusEvent) }
     assert_equal 2, events.length
     assert_equal ["bagging", "bagged"], events.map { |e| e.status }
   end
@@ -59,7 +59,7 @@ class StatusEventInMemoryRepositoryTest < Minitest::Test
 
   def setup
     @bag_identifier = "repository.context-001"
-    @repo = StatusEvent::StatusEventInMemoryRepository.new
+    @repo = StatusEventRepository::StatusEventInMemoryRepository.new
     @bag_repo = BagRepository::BagInMemoryRepository.new
   end
 
@@ -85,7 +85,7 @@ class StatusEventInMemoryRepositoryTest < Minitest::Test
     )
 
     expected = [
-      StatusEvent::StatusEvent.new(
+      StatusEventRepository::StatusEvent.new(
         id: 0,
         status: "bagged",
         bag_identifier: @bag_identifier,
@@ -102,7 +102,7 @@ class StatusEventDatabaseRepositoryTest < SequelTestCase
 
   def setup
     @bag_identifier = "repository.context-001"
-    @repo = StatusEvent::StatusEventDatabaseRepository.new(DB)
+    @repo = StatusEventRepository::StatusEventDatabaseRepository.new(DB)
     @bag_repo = BagRepository::BagDatabaseRepository.new(DB)
   end
 
