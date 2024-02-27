@@ -8,7 +8,6 @@ require_relative "../lib/bag_repository"
 module BagRepositorySharedTest
   def test_get_by_identifier
     mixin_repo.create(identifier: mixin_bag_id, group_part: 2)
-
     bag = mixin_repo.get_by_identifier(mixin_bag_id)
     assert bag.is_a?(BagRepository::Bag)
     assert_equal bag.identifier, mixin_bag_id
@@ -27,10 +26,11 @@ module BagRepositorySharedTest
         group_part: 1
       )
     end
-
     bags = mixin_repo.get_all
     assert_equal 5, bags.size
     assert bags.all? { |b| b.is_a?(BagRepository::Bag) }
+    bag_ids = bags.map { |b| b.id }
+    assert_equal bag_ids, bag_ids.uniq
   end
 end
 
@@ -60,10 +60,8 @@ class BagInMemoryRepositioryTest < Minitest::Test
       @repo.create(identifier: @bag_id, group_part: 2)
       @repo.create(identifier: @bag_id, group_part: 2)
     end
-
     bags = @repo.bags
     assert_equal 1, bags.size
-
     assert_equal 1, messages.size
     assert_semantic_logger_event(
       messages[0],
@@ -91,7 +89,6 @@ class BagDatabaseRepositoryTest < SequelTestCase
 
   def test_create
     @repo.create(identifier: @bag_id, group_part: 2)
-
     bags = DB.from(:bag)
     bag = bags.first(identifier: @bag_id)
     assert bag
@@ -104,10 +101,8 @@ class BagDatabaseRepositoryTest < SequelTestCase
       @repo.create(identifier: @bag_id, group_part: 2)
       @repo.create(identifier: @bag_id, group_part: 2)
     end
-
     bags = DB.from(:bag).all
     assert_equal 1, bags.size
-
     assert_equal 1, messages.size
     assert_semantic_logger_event(
       messages[0],
