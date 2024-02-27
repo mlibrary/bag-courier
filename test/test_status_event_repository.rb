@@ -138,3 +138,16 @@ class StatusEventDatabaseRepositoryTest < SequelTestCase
     assert_equal timestamp, status_event[:timestamp]
   end
 end
+
+class StatusEventRepositoryFactoryTest < Minitest::Test
+  def test_for_creates_db_repo
+    db = Sequel.connect("mock://mysql2")
+    repo = StatusEventRepository::StatusEventRepositoryFactory.for(db)
+    assert repo.is_a?(StatusEventRepository::StatusEventDatabaseRepository)
+  end
+
+  def test_for_creates_in_memory_repo
+    repo = StatusEventRepository::StatusEventRepositoryFactory.for(nil)
+    assert repo.is_a?(StatusEventRepository::StatusEventInMemoryRepository)
+  end
+end

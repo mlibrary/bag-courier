@@ -1,5 +1,4 @@
 require "semantic_logger"
-
 require "sequel"
 
 require_relative "lib/archivematica"
@@ -14,28 +13,20 @@ SemanticLogger.add_appender(io: $stderr, formatter: :color)
 config = Config::ConfigService.from_file(File.join(".", "config", "config.yml"))
 SemanticLogger.default_level = config.settings.log_level
 
+DB = config.database && Sequel.connect(
+  adapter: "mysql2",
+  host: config.database.host,
+  port: config.database.port,
+  database: config.database.database,
+  user: config.database.user,
+  password: config.database.password,
+  fractional_seconds: true
+)
+
 class DarkBlueJob
   include SemanticLogger::Loggable
 
   def initialize(config)
-    if config.database
-      db_config = config.database
-      db = Sequel.connect(
-        adapter: "mysql2",
-        host: db_config.host,
-        port: db_config.port,
-        database: db_config.database,
-        user: db_config.user,
-        password: db_config.password,
-        fractional_seconds: true
-      )
-      status_event_repo = StatusEventRepository::StatusEventDatabaseRepository.new(db)
-      bag_repo = BagRepository::BagDatabaseRepository.new(db)
-    else
-      status_event_repo = StatusEventRepository::StatusEventInMemoryRepository.new
-      bag_repo = BagRepository::BagInMemoryRepository.new
-    end
-
     @dispatcher = Dispatcher::APTrustDispatcher.new(
       settings: config.settings,
       repository: config.repository,
@@ -43,8 +34,8 @@ class DarkBlueJob
         type: config.target_remote.type,
         settings: config.target_remote.settings
       ),
-      status_event_repo: status_event_repo,
-      bag_repo: bag_repo
+      status_event_repo: StatusEventRepository::StatusEventRepositoryFactory.for(DB),
+      bag_repo: BagRepository::BagRepositoryFactory.for(DB)
     )
     @arch_configs = config.dark_blue.archivematicas
     @object_size_limit = config.settings.object_size_limit
