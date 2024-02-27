@@ -45,9 +45,9 @@ module StatusEventRepository
   class StatusEventInMemoryRepository < StatusEventRepositoryBase
     attr_reader :status_events
 
-    def initialize(status_events = nil)
+    def initialize
       @id = 0
-      @status_events = status_events.nil? ? [] : status_events
+      @status_events = []
     end
 
     def get_next_id!
