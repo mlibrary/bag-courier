@@ -3,7 +3,7 @@ require "sequel"
 
 Sequel.default_timezone = :utc
 
-module StatusEvent
+module StatusEventRepository
   class UnknownStatusError < StandardError
   end
 

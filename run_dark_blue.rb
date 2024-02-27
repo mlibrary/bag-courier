@@ -8,7 +8,7 @@ require_relative "lib/config"
 require_relative "lib/data_transfer"
 require_relative "lib/dispatcher"
 require_relative "lib/remote_client"
-require_relative "lib/status_event"
+require_relative "lib/status_event_repository"
 
 SemanticLogger.add_appender(io: $stderr, formatter: :color)
 config = Config::ConfigService.from_file(File.join(".", "config", "config.yml"))
@@ -29,10 +29,10 @@ class DarkBlueJob
         password: db_config.password,
         fractional_seconds: true
       )
-      status_event_repo = StatusEvent::StatusEventDatabaseRepository.new(db)
+      status_event_repo = StatusEventRepository::StatusEventDatabaseRepository.new(db)
       bag_repo = BagRepository::BagDatabaseRepository.new(db)
     else
-      status_event_repo = StatusEvent::StatusEventInMemoryRepository.new
+      status_event_repo = StatusEventRepository::StatusEventInMemoryRepository.new
       bag_repo = BagRepository::BagInMemoryRepository.new
     end
 
