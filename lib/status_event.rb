@@ -21,7 +21,7 @@ module StatusEvent
   StatusEvent = Struct.new(
     "StatusEvent",
     :id,
-    :bag_id,
+    :bag_identifier,
     :status,
     :timestamp,
     :note,
@@ -29,7 +29,12 @@ module StatusEvent
   )
 
   class StatusEventRepositoryBase
-    def create(event_data)
+    def create(
+      bag_identifier:,
+      status:,
+      timestamp:,
+      note: nil
+    )
       raise NotImplementedError
     end
 
@@ -37,7 +42,7 @@ module StatusEvent
       raise NotImplementedError
     end
 
-    def get_all_for_bag_id(id)
+    def get_all_for_bag_identifier(identifier)
       raise NotImplementedError
     end
   end
@@ -57,16 +62,21 @@ module StatusEvent
     end
     private :get_next_id!
 
-    def create(event_data)
-      if !STATUSES.include?(event_data[:status])
+    def create(
+      bag_identifier:,
+      status:,
+      timestamp:,
+      note: nil
+    )
+      if !STATUSES.include?(status)
         raise UnknownStatusError
       end
       event = StatusEvent.new(
         id: get_next_id!,
-        bag_id: event_data[:bag_id],
-        status: event_data[:status],
-        timestamp: event_data[:timestamp],
-        note: event_data[:note]
+        bag_identifier: bag_identifier,
+        status: status,
+        timestamp: timestamp,
+        note: note
       )
       @status_events << event
     end
@@ -79,8 +89,8 @@ module StatusEvent
       @status_events
     end
 
-    def get_all_for_bag_id(bag_id)
-      @status_events.select { |e| e.bag_id == bag_id }
+    def get_all_for_bag_identifier(identifier)
+      @status_events.select { |e| e.bag_identifier == identifier }
     end
   end
 
@@ -95,7 +105,9 @@ module StatusEvent
       statuses = @db.from(:status)
       matching_status = statuses.first(name: status_name)
       if matching_status
-        logger.info("Status for name #{status_name} already exists: #{matching_status} Skipping creation")
+        logger.info(
+          "Status for name #{status_name} already exists: #{matching_status} Skipping creation"
+        )
         matching_status[:id]
       else
         statuses.insert(name: status_name)
@@ -103,16 +115,17 @@ module StatusEvent
     end
     private :create_status_if_needed
 
-    def create(event_data)
-      logger.debug(event_data)
-
-      status_name = event_data[:status]
-      if !STATUSES.include?(status_name)
+    def create(
+      bag_identifier:,
+      status:,
+      timestamp:,
+      note: nil
+    )
+      if !STATUSES.include?(status)
         raise UnknownStatusError
       end
-      status_id = create_status_if_needed(status_name)
+      status_id = create_status_if_needed(status)
 
-      bag_identifier = event_data[:bag_id]
       bags = @db.from(:bag)
       bag = bags.first(identifier: bag_identifier)
       if !bag
@@ -124,15 +137,15 @@ module StatusEvent
       status_events.insert(
         bag_id: bag_id,
         status_id: status_id,
-        timestamp: event_data[:timestamp],
-        note: event_data[:note]
+        timestamp: timestamp,
+        note: note
       )
     end
 
     def convert_to_struct(data)
       StatusEvent.new(
         id: data[:status_event_id],
-        bag_id: data[:bag_identifier],
+        bag_identifier: data[:bag_identifier],
         status: data[:status_name],
         timestamp: data[:status_event_timestamp],
         note: data[:status_event_note]
@@ -159,8 +172,8 @@ module StatusEvent
       status_events.map { |se| convert_to_struct(se) }
     end
 
-    def get_all_for_bag_id(id)
-      status_events = base_dataset.where(identifier: id).all
+    def get_all_for_bag_identifier(identifier)
+      status_events = base_dataset.where(identifier: identifier).all
       status_events.map { |se| convert_to_struct(se) }
     end
   end

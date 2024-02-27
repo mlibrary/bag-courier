@@ -53,16 +53,12 @@ module BagCourier
     end
 
     def track!(status:, note: nil)
-      status_event = {
-        bag_id: @bag_id.to_s,
-        object_id: @bag_id.object_id,
+      @status_event_repo.create(
+        bag_identifier: @bag_id.to_s,
         status: status,
-        timestamp: Time.now.utc
-      }
-      if !note.nil?
-        status_event[:note] = note
-      end
-      @status_event_repo.create(status_event)
+        timestamp: Time.now.utc,
+        note: note
+      )
     end
 
     def tar(target_path)

@@ -9,7 +9,7 @@ module StatusEventRepositorySharedTest
   def test_create_with_unknown_status
     assert_raises(StatusEvent::UnknownStatusError) do
       mixin_repo.create(
-        bag_id: mixin_bag_id,
+        bag_identifier: mixin_bag_identifier,
         status: "turned_inside_out",
         timestamp: Time.now.utc
       )
@@ -17,12 +17,12 @@ module StatusEventRepositorySharedTest
   end
 
   def test_get_all
-    mixin_bag_repo.create(identifier: mixin_bag_id, group_part: 1)
+    mixin_bag_repo.create(identifier: mixin_bag_identifier, group_part: 1)
 
-    ["bagging", "copying", "copied", "bagged"].each do |s|
+    ["bagging", "copying", "copied", "bagged"].each do |status|
       mixin_repo.create(
-        status: s,
-        bag_id: mixin_bag_id,
+        status: status,
+        bag_identifier: mixin_bag_identifier,
         timestamp: Time.now.utc
       )
     end
@@ -34,18 +34,18 @@ module StatusEventRepositorySharedTest
     assert_equal event_ids, event_ids.uniq
   end
 
-  def test_get_all_for_bag_id
-    bag_id_one = mixin_bag_id
-    bag_id_two = "repository.context-002"
+  def test_get_all_for_bag_identifier
+    bag_identifier_one = mixin_bag_identifier
+    bag_identifier_two = "repository.context-002"
 
-    mixin_bag_repo.create(identifier: bag_id_one, group_part: 1)
-    mixin_bag_repo.create(identifier: bag_id_two, group_part: 1)
+    mixin_bag_repo.create(identifier: bag_identifier_one, group_part: 1)
+    mixin_bag_repo.create(identifier: bag_identifier_two, group_part: 1)
 
-    mixin_repo.create(status: "bagging", bag_id: bag_id_one, timestamp: Time.now.utc)
-    mixin_repo.create(status: "bagging", bag_id: bag_id_two, timestamp: Time.now.utc)
-    mixin_repo.create(status: "bagged", bag_id: bag_id_two, timestamp: Time.now.utc)
+    mixin_repo.create(status: "bagging", bag_identifier: bag_identifier_one, timestamp: Time.now.utc)
+    mixin_repo.create(status: "bagging", bag_identifier: bag_identifier_two, timestamp: Time.now.utc)
+    mixin_repo.create(status: "bagged", bag_identifier: bag_identifier_two, timestamp: Time.now.utc)
 
-    events = mixin_repo.get_all_for_bag_id(bag_id_two)
+    events = mixin_repo.get_all_for_bag_identifier(bag_identifier_two)
 
     assert events.all? { |s| s.is_a?(StatusEvent::StatusEvent) }
     assert_equal 2, events.length
@@ -58,13 +58,13 @@ class StatusEventInMemoryRepositoryTest < Minitest::Test
   include SemanticLogger::Loggable
 
   def setup
-    @bag_id = "repository.context-001"
+    @bag_identifier = "repository.context-001"
     @repo = StatusEvent::StatusEventInMemoryRepository.new
     @bag_repo = BagRepository::BagInMemoryRepository.new
   end
 
-  def mixin_bag_id
-    @bag_id
+  def mixin_bag_identifier
+    @bag_identifier
   end
 
   def mixin_repo
@@ -77,19 +77,18 @@ class StatusEventInMemoryRepositoryTest < Minitest::Test
 
   def test_create
     timestamp = Time.now.utc
-    event_data = {
+    @repo.create(
       status: "bagged",
-      bag_id: @bag_id,
+      bag_identifier: @bag_identifier,
       timestamp: timestamp,
       note: "something happening here"
-    }
-    @repo.create(event_data)
+    )
 
     expected = [
       StatusEvent::StatusEvent.new(
         id: 0,
         status: "bagged",
-        bag_id: @bag_id,
+        bag_identifier: @bag_identifier,
         timestamp: timestamp,
         note: "something happening here"
       )
@@ -102,13 +101,13 @@ class StatusEventDatabaseRepositoryTest < SequelTestCase
   include StatusEventRepositorySharedTest
 
   def setup
-    @bag_id = "repository.context-001"
+    @bag_identifier = "repository.context-001"
     @repo = StatusEvent::StatusEventDatabaseRepository.new(DB)
     @bag_repo = BagRepository::BagDatabaseRepository.new(DB)
   end
 
-  def mixin_bag_id
-    @bag_id
+  def mixin_bag_identifier
+    @bag_identifier
   end
 
   def mixin_repo
@@ -120,16 +119,16 @@ class StatusEventDatabaseRepositoryTest < SequelTestCase
   end
 
   def test_create
-    @bag_repo.create(identifier: @bag_id, group_part: 2)
-    bag_db_id = @bag_repo.get_by_identifier(@bag_id).id
+    @bag_repo.create(identifier: @bag_identifier, group_part: 2)
+    bag_db_id = @bag_repo.get_by_identifier(@bag_identifier).id
 
     timestamp = Time.now.utc.floor(6)
-    event_data = {
+    @repo.create(
       status: "bagged",
-      bag_id: @bag_id,
-      timestamp: timestamp
-    }
-    @repo.create(event_data)
+      bag_identifier: @bag_identifier,
+      timestamp: timestamp,
+      note: nil
+    )
 
     status_events = DB.from(:status_event).join(:status, id: :status_id).all
     assert_equal 1, status_events.length
