@@ -7,6 +7,9 @@ module StatusEvent
   class UnknownStatusError < StandardError
   end
 
+  class StatusEventRepositoryError < StandardError
+  end
+
   STATUSES = %w[
     bagged bagging
     copied copying
@@ -88,29 +91,38 @@ module StatusEvent
       @db = db
     end
 
-    def create(event_data)
-      logger.debug(event_data)
-
-      # Handle statuses
-      status_name = event_data[:status]
-      if !STATUSES.include?(status_name)
-        raise UnknownStatusError
-      end
+    def create_status_if_needed(status_name)
       statuses = @db.from(:status)
       matching_status = statuses.first(name: status_name)
-      status_id = if matching_status
+      if matching_status
+        logger.info("Status for name #{status_name} already exists: #{matching_status} Skipping creation")
         matching_status[:id]
       else
         statuses.insert(name: status_name)
       end
+    end
+    private :create_status_if_needed
+
+    def create(event_data)
+      logger.debug(event_data)
+
+      status_name = event_data[:status]
+      if !STATUSES.include?(status_name)
+        raise UnknownStatusError
+      end
+      status_id = create_status_if_needed(status_name)
 
       bag_identifier = event_data[:bag_id]
       bags = @db.from(:bag)
       bag = bags.first(identifier: bag_identifier)
+      if !bag
+        raise StatusEventRepositoryError, "Bag with #{bag_identifier} does not exist."
+      end
+      bag_id = bag[:id]
 
       status_events = @db.from(:status_event)
       status_events.insert(
-        bag_id: bag[:id],
+        bag_id: bag_id,
         status_id: status_id,
         timestamp: event_data[:timestamp],
         note: event_data[:note]
