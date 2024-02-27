@@ -1,4 +1,5 @@
 require "semantic_logger"
+require "sequel"
 
 module BagRepository
   Bag = Struct.new(
@@ -89,7 +90,7 @@ module BagRepository
 
     def get_by_identifier(identifier)
       bag_data = @db.from(:bag).first(identifier: identifier)
-      convert_to_struct(bag_data)
+      bag_data && convert_to_struct(bag_data)
     end
 
     def get_all

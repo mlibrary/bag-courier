@@ -15,6 +15,11 @@ module BagRepositorySharedTest
     assert_equal bag.group_part, 2
   end
 
+  def test_get_by_identifier_finds_nothing
+    result = mixin_repo.get_by_identifier("repository.context-200")
+    assert_nil result
+  end
+
   def test_get_all
     1.upto(5) do |i|
       mixin_repo.create(
