@@ -2,6 +2,7 @@ require "minitest/autorun"
 require "minitest/pride"
 
 require_relative "setup_db"
+require_relative "test_helper"
 require_relative "../lib/bag_repository"
 
 module BagRepositorySharedTest
@@ -48,6 +49,23 @@ class BagInMemoryRepositioryTest < Minitest::Test
     @repo.create(identifier: @bag_id, group_part: 2)
     assert_equal [BagRepository::Bag.new(id: 0, identifier: @bag_id, group_part: 2)], @repo.bags
   end
+
+  def test_create_when_already_exists
+    messages = semantic_logger_events do
+      @repo.create(identifier: @bag_id, group_part: 2)
+      @repo.create(identifier: @bag_id, group_part: 2)
+    end
+
+    bags = @repo.bags
+    assert_equal 1, bags.size
+
+    assert_equal 1, messages.size
+    assert_semantic_logger_event(
+      messages[0],
+      level: :info,
+      message: "Bag with identifier repository.context-001 already exists; creation skipped"
+    )
+  end
 end
 
 class BagDatabaseRepositoryTest < SequelTestCase
@@ -74,5 +92,22 @@ class BagDatabaseRepositoryTest < SequelTestCase
     assert bag
     assert_equal @bag_id, bag[:identifier]
     assert_equal 2, bag[:group_part]
+  end
+
+  def test_create_when_already_exists
+    messages = semantic_logger_events do
+      @repo.create(identifier: @bag_id, group_part: 2)
+      @repo.create(identifier: @bag_id, group_part: 2)
+    end
+
+    bags = DB.from(:bag).all
+    assert_equal 1, bags.size
+
+    assert_equal 1, messages.size
+    assert_semantic_logger_event(
+      messages[0],
+      level: :info,
+      message: "Bag with identifier repository.context-001 already exists; creation skipped"
+    )
   end
 end

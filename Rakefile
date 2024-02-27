@@ -1,7 +1,4 @@
 require "minitest/test_task"
-require "semantic_logger"
-
-SemanticLogger.add_appender(io: $stderr, formatter: :color)
 
 Minitest::TestTask.create
 
