@@ -10,6 +10,10 @@ config = Config::ConfigService.from_file(
 )
 
 db_config = config.database
+if !db_config
+  raise "Database configuration is required for some tests."
+end
+
 DB = Sequel.connect(
   adapter: "mysql2",
   host: db_config.host,
