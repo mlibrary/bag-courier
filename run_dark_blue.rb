@@ -23,7 +23,6 @@ class DarkBlueJob
       )
     )
     @arch_configs = config.dark_blue.archivematicas
-    @source_dir = config.settings.source_dir
     @object_size_limit = config.settings.object_size_limit
   end
 
