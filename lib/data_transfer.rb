@@ -6,7 +6,7 @@ module DataTransfer
   end
 
   class RemoteClientDataTransfer < DataTransferBase
-    def initialize(remote_client:, remote_path:)
+    def initialize(remote_client:, remote_path: nil)
       @remote_client = remote_client
       @remote_path = remote_path
     end

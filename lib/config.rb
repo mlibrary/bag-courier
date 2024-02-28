@@ -6,7 +6,6 @@ module Config
   SettingsConfig = Struct.new(
     "SettingsConfig",
     :log_level,
-    :source_dir,
     :working_dir,
     :export_dir,
     :dry_run,
@@ -160,7 +159,6 @@ module Config
       Config.new(
         settings: SettingsConfig.new(
           log_level: verify_string("LogLevel", data["LogLevel"]).to_sym,
-          source_dir: verify_string("SourceDir", data["SourceDir"]),
           working_dir: verify_string("WorkingDir", data["WorkingDir"]),
           export_dir: verify_string("ExportDir", data["ExportDir"]),
           dry_run: verify_boolean("DryRun", data["DryRun"]),
