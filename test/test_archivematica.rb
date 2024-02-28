@@ -199,8 +199,6 @@ class ArchivematicaServiceTest < Minitest::Test
       name: "test",
       api: @mock_api,
       location_uuid: @location_uuid,
-      remote_client: @mock_remote_client,
-      source_dir: @source_dir,
       object_size_limit: @object_size_limit
     )
 
@@ -221,14 +219,6 @@ class ArchivematicaServiceTest < Minitest::Test
     ]
 
     @mock_api.expect(:get_packages, packages, location_uuid: @location_uuid)
-    packages.each_with_index do |p, i|
-      @mock_remote_client.expect(
-        :retrieve_from_path,
-        true,
-        remote_path: packages[i].path,
-        local_path: @source_dir
-      )
-    end
     digital_objects = service.get_digital_objects
 
     # filters out larger bag
@@ -236,7 +226,7 @@ class ArchivematicaServiceTest < Minitest::Test
 
     first_package = packages[0]
     expected = DigitalObject.new(
-      path: "test_source/identifier-one-#{uuids[0]}",
+      remote_path: first_package.path,
       metadata: ObjectMetadata.new(
         id: first_package.uuid,
         title: "#{first_package.uuid} / identifier-one",
