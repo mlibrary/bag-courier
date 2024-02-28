@@ -41,24 +41,26 @@ class DarkBlueJob
         type: remote_config.type,
         settings: remote_config.settings
       )
-      digital_objects += Archivematica::ArchivematicaService.new(
+
+      digital_objects = Archivematica::ArchivematicaService.new(
         name: arch_config.name,
         api: arch_api,
         location_uuid: api_config.location_uuid,
-        remote_client: remote_client,
-        source_dir: @source_dir,
         object_size_limit: @object_size_limit
       ).get_digital_objects
-    end
-    logger.debug(digital_objects)
+      logger.debug(digital_objects)
 
-    digital_objects.each do |digital_object|
-      courier = @dispatcher.dispatch(
-        object_metadata: digital_object.metadata,
-        data_transfer: DataTransfer::DirDataTransfer.new(digital_object.path),
-        context: digital_object.context
-      )
-      courier.deliver
+      digital_objects.each do |obj|
+        courier = @dispatcher.dispatch(
+          object_metadata: obj.metadata,
+          data_transfer: DataTransfer::RemoteClientDataTransfer.new(
+            remote_client: remote_client,
+            remote_path: obj.remote_path
+          ),
+          context: obj.context
+        )
+        courier.deliver
+      end
     end
 
     logger.info("Events")

@@ -114,15 +114,11 @@ module Archivematica
       name:,
       api:,
       location_uuid:,
-      remote_client:,
-      source_dir:,
       object_size_limit:
     )
       @name = name
       @api = api
       @location_uuid = location_uuid
-      @remote_client = remote_client
-      @source_dir = source_dir
       @object_size_limit = object_size_limit
     end
 
@@ -138,13 +134,6 @@ module Archivematica
         logger.info("Inner bag name: #{inner_bag_dir_name}")
         ingest_dir_name = inner_bag_dir_name.gsub("-" + package.uuid, "")
         logger.info("Directory name on Archivematica ingest: #{ingest_dir_name}")
-
-        # Copy file to local source directory, using SFTP or shared mount
-        @remote_client.retrieve_from_path(
-          remote_path: package.path,
-          local_path: @source_dir
-        )
-
         object_metadata = DigitalObject::ObjectMetadata.new(
           id: package.uuid,
           title: "#{package.uuid} / #{ingest_dir_name}",
@@ -152,7 +141,7 @@ module Archivematica
           description: NA
         )
         DigitalObject::DigitalObject.new(
-          path: File.join(@source_dir, inner_bag_dir_name),
+          remote_path: package.path,
           metadata: object_metadata,
           context: @name
         )

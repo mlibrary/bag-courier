@@ -1,7 +1,7 @@
 module DigitalObject
   DigitalObject = Struct.new(
     "DigitalObject",
-    :path,
+    :remote_path,
     :metadata,
     :context,
     keyword_init: true
