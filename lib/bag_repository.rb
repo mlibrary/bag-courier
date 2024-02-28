@@ -1,5 +1,6 @@
 require "semantic_logger"
-require "sequel"
+
+require_relative "../db/schema"
 
 module BagRepository
   Bag = Struct.new(
@@ -73,28 +74,27 @@ module BagRepository
     end
 
     def create(identifier:, group_part:)
-      bags = @db.from(:bag)
-      bags.insert(identifier: identifier, group_part: group_part)
+      Schema::Bag.create(identifier: identifier, group_part: group_part)
     rescue Sequel::UniqueConstraintViolation
       logger.info("Bag with identifier #{identifier} already exists; creation skipped")
     end
 
-    def convert_to_struct(data)
+    def convert_to_struct(bag)
       Bag.new(
-        id: data[:id],
-        identifier: data[:identifier],
-        group_part: data[:group_part]
+        id: bag.id,
+        identifier: bag.identifier,
+        group_part: bag.group_part
       )
     end
     private :convert_to_struct
 
     def get_by_identifier(identifier)
-      bag_data = @db.from(:bag).first(identifier: identifier)
-      bag_data && convert_to_struct(bag_data)
+      bag = Schema::Bag.first(identifier: identifier)
+      bag && convert_to_struct(bag)
     end
 
     def get_all
-      @db.from(:bag).map { |bag_data| convert_to_struct(bag_data) }
+      Schema::Bag.map { |bag| convert_to_struct(bag) }
     end
   end
 

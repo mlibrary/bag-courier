@@ -1,5 +1,6 @@
 require "semantic_logger"
-require "sequel"
+
+require_relative "../db/schema"
 
 Sequel.default_timezone = :utc
 
@@ -91,72 +92,52 @@ module StatusEventRepository
       @db = db
     end
 
-    def create_status_if_needed(status_name)
-      statuses = @db.from(:status)
-      matching_status = statuses.first(name: status_name)
-      if matching_status
-        matching_status[:id]
-      else
-        statuses.insert(name: status_name)
-      end
+    def find_or_create_status(status_name)
+      Schema::Status.find_or_create(name: status_name)
     end
-    private :create_status_if_needed
+    private :find_or_create_status
 
     def create(bag_identifier:, status:, timestamp:, note: nil)
       if !STATUSES.include?(status)
         raise UnknownStatusError
       end
-      status_id = create_status_if_needed(status)
+      status = find_or_create_status(status)
 
-      bags = @db.from(:bag)
-      bag = bags.first(identifier: bag_identifier)
+      bag = Schema::Bag.first(identifier: bag_identifier)
       if !bag
         raise StatusEventRepositoryError, "Bag with #{bag_identifier} does not exist."
       end
-      bag_id = bag[:id]
 
-      status_events = @db.from(:status_event)
-      status_events.insert(
-        bag_id: bag_id,
-        status_id: status_id,
-        timestamp: timestamp,
-        note: note
-      )
+      status_event = Schema::StatusEvent.new(timestamp: timestamp, note: note)
+      status_event.status = status
+      status_event.bag = bag
+      status_event.save
     end
 
-    def convert_to_struct(data)
+    def convert_to_struct(status_event)
       StatusEvent.new(
-        id: data[:status_event_id],
-        bag_identifier: data[:bag_identifier],
-        status: data[:status_name],
-        timestamp: data[:status_event_timestamp],
-        note: data[:status_event_note]
+        id: status_event.id,
+        bag_identifier: status_event.bag.identifier,
+        status: status_event.status.name,
+        timestamp: status_event.timestamp,
+        note: status_event.note
       )
     end
     private :convert_to_struct
 
-    def base_dataset
-      @db.from(:status_event)
-        .join(:bag, id: :bag_id)
-        .join(:status, id: Sequel[:status_event][:status_id])
-        .select(
-          Sequel[:status_event][:id].as(:status_event_id),
-          Sequel[:status_event][:timestamp].as(:status_event_timestamp),
-          Sequel[:status_event][:note].as(:status_event_note),
-          Sequel[:status][:name].as(:status_name),
-          Sequel[:bag][:identifier].as(:bag_identifier)
-        )
+    def base_query
+      Schema::StatusEvent.eager(:bag, :status)
     end
-    private :base_dataset
+    private :base_query
 
     def get_all
-      status_events = base_dataset.all
-      status_events.map { |se| convert_to_struct(se) }
+      base_query.map { |se| convert_to_struct(se) }
     end
 
     def get_all_for_bag_identifier(identifier)
-      status_events = base_dataset.where(identifier: identifier).all
-      status_events.map { |se| convert_to_struct(se) }
+      base_query
+        .where(bag: Schema::Bag.where(identifier: identifier))
+        .map { |se| convert_to_struct(se) }
     end
   end
 

@@ -29,9 +29,20 @@ module StatusEventRepositorySharedTest
     status_events = mixin_repo.get_all
     assert_equal 4, status_events.size
     assert status_events.all? { |s| s.is_a?(StatusEventRepository::StatusEvent) }
-
     event_ids = status_events.map { |se| se.id }
     assert_equal event_ids, event_ids.uniq
+
+    expected = [
+      {status: "bagging", bag_identifier: mixin_bag_identifier},
+      {status: "copying", bag_identifier: mixin_bag_identifier},
+      {status: "copied", bag_identifier: mixin_bag_identifier},
+      {status: "bagged", bag_identifier: mixin_bag_identifier}
+    ]
+
+    assert_equal(
+      expected,
+      status_events.map { |se| {status: se.status, bag_identifier: se.bag_identifier} }
+    )
   end
 
   def test_get_all_for_bag_identifier
