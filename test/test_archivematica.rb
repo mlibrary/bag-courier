@@ -187,9 +187,6 @@ class ArchivematicaServiceTest < Minitest::Test
 
   def setup
     @mock_api = Minitest::Mock.new
-    @mock_remote_client = Minitest::Mock.new
-
-    @source_dir = "test_source"
     @location_uuid = SecureRandom.uuid
     @object_size_limit = 4000000
   end
