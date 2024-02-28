@@ -95,9 +95,6 @@ module StatusEventRepository
       statuses = @db.from(:status)
       matching_status = statuses.first(name: status_name)
       if matching_status
-        logger.info(
-          "Status for name #{status_name} already exists: #{matching_status} Skipping creation"
-        )
         matching_status[:id]
       else
         statuses.insert(name: status_name)
