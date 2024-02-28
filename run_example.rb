@@ -17,16 +17,13 @@ target_client = RemoteClient::RemoteClientFactory.from_config(
   settings: config.target_remote.settings
 )
 
-# Use a RemoteClient to move the object(s) to the source directory if it's in a remote
-# location
-# source_client = RemoteClient::RemoteClientFactory.from_config(
-#   type: config.source_remote.type,
-#   settings: config.source_remote.settings
-# )
-# source_client.retrieve_from_path(
-#   remote_path: "some/remote/path",
-#   local_path: config.settings.source_dir
-# )
+# A RemoteClient will be used to copy your object into the bag
+source_client = RemoteClient::RemoteClientFactory.from_config(
+  type: :file_system,
+  settings: Config::FileSystemRemoteConfig.new(
+    remote_path: "some/source/path/for/object"
+  )
+)
 
 dispatcher = Dispatcher::APTrustDispatcher.new(
   settings: config.settings,
@@ -43,8 +40,9 @@ object_metadata = Dispatcher::ObjectMetadata.new(
 
 courier = dispatcher.dispatch(
   object_metadata: object_metadata,
-  data_transfer: DataTransfer::DirDataTransfer.new(
-    File.join(config.settings.source_dir, "some_directory")
+  data_transfer: DataTransfer::RemoteClientDataTransfer.new(
+    source_client
+    # remote_path: # use this if your object isn't at the root of the remote
   ),
   context: "somecontext"
 )
