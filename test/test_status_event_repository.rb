@@ -153,12 +153,12 @@ end
 class StatusEventRepositoryFactoryTest < Minitest::Test
   def test_for_creates_db_repo
     db = Sequel.connect("mock://mysql2")
-    repo = StatusEventRepository::StatusEventRepositoryFactory.for(db)
+    repo = StatusEventRepository::StatusEventRepositoryFactory.for(use_db: db)
     assert repo.is_a?(StatusEventRepository::StatusEventDatabaseRepository)
   end
 
   def test_for_creates_in_memory_repo
-    repo = StatusEventRepository::StatusEventRepositoryFactory.for(nil)
+    repo = StatusEventRepository::StatusEventRepositoryFactory.for(use_db: nil)
     assert repo.is_a?(StatusEventRepository::StatusEventInMemoryRepository)
   end
 end

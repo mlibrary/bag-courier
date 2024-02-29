@@ -95,8 +95,8 @@ module BagRepository
   end
 
   class BagRepositoryFactory
-    def self.for(db)
-      db ? BagDatabaseRepository.new : BagInMemoryRepository.new
+    def self.for(use_db:)
+      use_db ? BagDatabaseRepository.new : BagInMemoryRepository.new
     end
   end
 end
