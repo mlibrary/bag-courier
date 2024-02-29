@@ -1,6 +1,7 @@
 require "minitest"
 require "sequel/core"
 
+require_relative "../db/database_error"
 require_relative "../lib/config"
 
 Sequel.extension :migration
@@ -11,7 +12,8 @@ config = Config::ConfigService.from_file(
 
 db_config = config.database
 if !db_config
-  raise "Database configuration is required for some tests."
+  message = "A database connection is not configured. This is required for some tests."
+  raise DatabaseError, message
 end
 
 DB = Sequel.connect(

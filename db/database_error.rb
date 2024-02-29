@@ -1,0 +1,2 @@
+class DatabaseError < StandardError
+end

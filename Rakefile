@@ -8,7 +8,9 @@ namespace :db do
   desc "Run migrations"
   task :migrate, [:version] do |t, args|
     require "sequel/core"
+    require_relative "db/database_error"
     require_relative "lib/config"
+
     Sequel.extension :migration
 
     config = Config::ConfigService.from_file(
@@ -16,7 +18,7 @@ namespace :db do
     )
     db_config = config.database
     if !db_config
-      raise "Command failed. A database connection is not configured."
+      raise DatabaseError, "Migration failed. A database connection is not configured."
     end
 
     version = args[:version].to_i if args[:version]
