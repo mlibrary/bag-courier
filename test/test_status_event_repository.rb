@@ -113,8 +113,8 @@ class StatusEventDatabaseRepositoryTest < SequelTestCase
 
   def setup
     @bag_identifier = "repository.context-001"
-    @repo = StatusEventRepository::StatusEventDatabaseRepository.new(DB)
-    @bag_repo = BagRepository::BagDatabaseRepository.new(DB)
+    @repo = StatusEventRepository::StatusEventDatabaseRepository.new
+    @bag_repo = BagRepository::BagDatabaseRepository.new
   end
 
   def mixin_bag_identifier

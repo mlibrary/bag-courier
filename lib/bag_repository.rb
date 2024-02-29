@@ -1,6 +1,6 @@
 require "semantic_logger"
 
-require_relative "../db/schema" if DB
+require_relative "../db/database_schema" if DB
 
 module BagRepository
   Bag = Struct.new(
@@ -69,12 +69,8 @@ module BagRepository
   class BagDatabaseRepository < BagRepositoryBase
     include SemanticLogger::Loggable
 
-    def initialize(db)
-      @db = db
-    end
-
     def create(identifier:, group_part:)
-      Schema::Bag.create(identifier: identifier, group_part: group_part)
+      DatabaseSchema::Bag.create(identifier: identifier, group_part: group_part)
     rescue Sequel::UniqueConstraintViolation
       logger.info("Bag with identifier #{identifier} already exists; creation skipped")
     end
@@ -89,18 +85,18 @@ module BagRepository
     private :convert_to_struct
 
     def get_by_identifier(identifier)
-      bag = Schema::Bag.first(identifier: identifier)
+      bag = DatabaseSchema::Bag.first(identifier: identifier)
       bag && convert_to_struct(bag)
     end
 
     def get_all
-      Schema::Bag.map { |bag| convert_to_struct(bag) }
+      DatabaseSchema::Bag.map { |bag| convert_to_struct(bag) }
     end
   end
 
   class BagRepositoryFactory
     def self.for(db)
-      db ? BagDatabaseRepository.new(db) : BagInMemoryRepository.new
+      db ? BagDatabaseRepository.new : BagInMemoryRepository.new
     end
   end
 end

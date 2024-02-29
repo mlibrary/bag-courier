@@ -76,7 +76,7 @@ class BagDatabaseRepositoryTest < SequelTestCase
 
   def setup
     @bag_id = "repository.context-001"
-    @repo = BagRepository::BagDatabaseRepository.new(DB)
+    @repo = BagRepository::BagDatabaseRepository.new
   end
 
   def mixin_bag_id
