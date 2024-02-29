@@ -1,13 +1,7 @@
 require "semantic_logger"
 require "sequel"
 
-require_relative "lib/archivematica"
-require_relative "lib/bag_repository"
 require_relative "lib/config"
-require_relative "lib/data_transfer"
-require_relative "lib/dispatcher"
-require_relative "lib/remote_client"
-require_relative "lib/status_event_repository"
 
 SemanticLogger.add_appender(io: $stderr, formatter: :color)
 config = Config::ConfigService.from_file(File.join(".", "config", "config.yml"))
@@ -22,6 +16,13 @@ DB = config.database && Sequel.connect(
   password: config.database.password,
   fractional_seconds: true
 )
+
+require_relative "lib/archivematica"
+require_relative "lib/bag_repository"
+require_relative "lib/data_transfer"
+require_relative "lib/dispatcher"
+require_relative "lib/remote_client"
+require_relative "lib/status_event_repository"
 
 class DarkBlueJob
   include SemanticLogger::Loggable
