@@ -129,12 +129,13 @@ module StatusEventRepository
     private :base_query
 
     def get_all
-      base_query.map { |se| convert_to_struct(se) }
+      base_query.all.map { |se| convert_to_struct(se) }
     end
 
     def get_all_for_bag_identifier(identifier)
       base_query
         .where(bag: DatabaseSchema::Bag.where(identifier: identifier))
+        .all
         .map { |se| convert_to_struct(se) }
     end
   end
