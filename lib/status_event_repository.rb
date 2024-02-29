@@ -1,6 +1,6 @@
 require "semantic_logger"
 
-require_relative "../db/schema"
+require_relative "../db/schema" if DB
 
 Sequel.default_timezone = :utc
 
