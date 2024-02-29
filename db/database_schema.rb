@@ -1,6 +1,6 @@
 require "sequel"
 
-module Schema
+module DatabaseSchema
   class Bag < Sequel::Model(:bag)
     one_to_many :status_events
   end
