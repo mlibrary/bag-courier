@@ -87,7 +87,6 @@ class StatusEventInMemoryRepositoryTest < Minitest::Test
       timestamp: timestamp,
       note: "something happening here"
     )
-
     expected = [
       StatusEventRepository::StatusEvent.new(
         id: 0,
