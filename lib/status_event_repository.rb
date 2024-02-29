@@ -140,8 +140,8 @@ module StatusEventRepository
   end
 
   class StatusEventRepositoryFactory
-    def self.for(db)
-      db ? StatusEventDatabaseRepository.new : StatusEventInMemoryRepository.new
+    def self.for(use_db:)
+      use_db ? StatusEventDatabaseRepository.new : StatusEventInMemoryRepository.new
     end
   end
 end

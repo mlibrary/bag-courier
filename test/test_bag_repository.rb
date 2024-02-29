@@ -115,12 +115,12 @@ end
 class BagRepositoryFactoryTest < Minitest::Test
   def test_for_creates_db_repo
     db = Sequel.connect("mock://mysql2")
-    repo = BagRepository::BagRepositoryFactory.for(db)
+    repo = BagRepository::BagRepositoryFactory.for(use_db: db)
     assert repo.is_a?(BagRepository::BagDatabaseRepository)
   end
 
   def test_for_creates_in_memory_repo
-    repo = BagRepository::BagRepositoryFactory.for(nil)
+    repo = BagRepository::BagRepositoryFactory.for(use_db: nil)
     assert repo.is_a?(BagRepository::BagInMemoryRepository)
   end
 end

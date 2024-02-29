@@ -35,8 +35,8 @@ class DarkBlueJob
         type: config.target_remote.type,
         settings: config.target_remote.settings
       ),
-      status_event_repo: StatusEventRepository::StatusEventRepositoryFactory.for(DB),
-      bag_repo: BagRepository::BagRepositoryFactory.for(DB)
+      status_event_repo: StatusEventRepository::StatusEventRepositoryFactory.for(use_db: DB),
+      bag_repo: BagRepository::BagRepositoryFactory.for(use_db: DB)
     )
     @arch_configs = config.dark_blue.archivematicas
     @object_size_limit = config.settings.object_size_limit
