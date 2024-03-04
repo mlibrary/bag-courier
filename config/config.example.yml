@@ -56,3 +56,9 @@ TargetRemote:
     BucketRegion:
     AwsAccessKeyId:
     AwsSecretAccessKey:
+
+# APTrust
+APTrust:
+  Username:
+  APIKey:
+  BaseURL:

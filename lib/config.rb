@@ -85,6 +85,14 @@ module Config
     keyword_init: true
   )
 
+  APTrustAPIConfig = Struct.new(
+    "APTrustConfig",
+    :username,
+    :base_url,
+    :api_key,
+    keyword_init: true
+  )
+
   Config = Struct.new(
     "Config",
     :settings,
@@ -92,6 +100,7 @@ module Config
     :repository,
     :target_remote,
     :dark_blue,
+    :aptrust_api,
     keyword_init: true
   )
 
@@ -207,7 +216,12 @@ module Config
             end
           )
         ),
-        target_remote: create_remote_config(data["TargetRemote"])
+        target_remote: create_remote_config(data["TargetRemote"]),
+        aptrust_api: APTrustAPIConfig.new(
+          username: verify_string("Username", data["APTrust"]["Username"]),
+          api_key: verify_string("APIKey", data["APTrust"]["APIKey"]),
+          base_url: verify_string("BaseURL", data["APTrust"]["BaseURL"])
+        )
       )
     end
 
