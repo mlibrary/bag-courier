@@ -230,6 +230,7 @@ class ArchivematicaServiceTest < Minitest::Test
         creator: "Not available",
         description: "Not available"
       ),
+      stored_time: Time.utc(2024, 2, 18),
       context: "test"
     )
     assert_equal expected, digital_objects[0]

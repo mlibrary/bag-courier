@@ -143,7 +143,8 @@ module Archivematica
         DigitalObject::DigitalObject.new(
           remote_path: package.path,
           metadata: object_metadata,
-          context: @name
+          context: @name,
+          stored_time: Time.parse(package.stored_date)
         )
       end
     end

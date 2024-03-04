@@ -18,6 +18,7 @@ DB = config.database && Sequel.connect(
 )
 
 require_relative "lib/archivematica"
+require_relative "lib/bag_courier"
 require_relative "lib/bag_repository"
 require_relative "lib/data_transfer"
 require_relative "lib/dispatcher"
@@ -28,14 +29,16 @@ class DarkBlueJob
   include SemanticLogger::Loggable
 
   def initialize(config)
+    @status_event_repo = StatusEventRepository::StatusEventRepositoryFactory.for(use_db: DB)
+    @repository = config.repository
     @dispatcher = Dispatcher::APTrustDispatcher.new(
       settings: config.settings,
-      repository: config.repository,
+      repository: @repository,
       target_client: RemoteClient::RemoteClientFactory.from_config(
         type: config.target_remote.type,
         settings: config.target_remote.settings
       ),
-      status_event_repo: StatusEventRepository::StatusEventRepositoryFactory.for(use_db: DB),
+      status_event_repo: @status_event_repo,
       bag_repo: BagRepository::BagRepositoryFactory.for(use_db: DB)
     )
     @arch_configs = config.dark_blue.archivematicas
@@ -52,7 +55,7 @@ class DarkBlueJob
         username: api_config.username
       )
       remote_config = arch_config.remote
-      remote_client = RemoteClient::RemoteClientFactory.from_config(
+      source_client = RemoteClient::RemoteClientFactory.from_config(
         type: remote_config.type,
         settings: remote_config.settings
       )
@@ -63,18 +66,35 @@ class DarkBlueJob
         location_uuid: api_config.location_uuid,
         object_size_limit: @object_size_limit
       ).get_digital_objects
-      logger.debug(digital_objects)
 
       digital_objects.each do |obj|
-        courier = @dispatcher.dispatch(
-          object_metadata: obj.metadata,
-          data_transfer: DataTransfer::RemoteClientDataTransfer.new(
-            remote_client: remote_client,
-            remote_path: obj.remote_path
-          ),
+        logger.debug(obj)
+        bag_id = BagCourier::BagId.new(
+          repository: @repository.name,
+          object_id: obj.metadata.id,
           context: obj.context
         )
-        courier.deliver
+
+        logger.debug(bag_id.to_s)
+        logger.debug(obj.stored_date)
+        copied_event = @status_event_repo.get_latest_event_for_bag(
+          status_name: "copied",
+          bag_identifier: bag_id.to_s
+        )
+        logger.debug(copied_event)
+        if !copied_event || copied_event.timestamp < obj.stored_date
+          logger.info "Found new or updated object for #{bag_id}. Bagging and sending..."
+          courier = @dispatcher.dispatch(
+            bag_id: bag_id,
+            object_metadata: obj.metadata,
+            data_transfer: DataTransfer::RemoteClientDataTransfer.new(
+              remote_client: source_client,
+              remote_path: obj.remote_path
+            ),
+            context: obj.context
+          )
+          courier.deliver
+        end
       end
     end
 

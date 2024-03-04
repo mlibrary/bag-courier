@@ -55,6 +55,30 @@ module StatusEventRepositorySharedTest
     assert_equal 2, events.length
     assert_equal ["bagging", "bagged"], events.map { |e| e.status }
   end
+
+  def test_get_latest_event_for_bag
+    bag_identifier_one = mixin_bag_identifier
+    bag_identifier_two = "repository.context-002"
+    start_time = Time.utc(2024, 3, 4, 12, 0, 0, 0)
+    mixin_bag_repo.create(identifier: bag_identifier_one, group_part: 1)
+    mixin_bag_repo.create(identifier: bag_identifier_two, group_part: 1)
+    mixin_repo.create(status: "copying", bag_identifier: bag_identifier_one, timestamp: start_time)
+    mixin_repo.create(status: "copied", bag_identifier: bag_identifier_one, timestamp: start_time + 30)
+    mixin_repo.create(status: "copying", bag_identifier: bag_identifier_one, timestamp: start_time + 60)
+    mixin_repo.create(status: "copied", bag_identifier: bag_identifier_one, timestamp: start_time + 90)
+    mixin_repo.create(status: "copying", bag_identifier: bag_identifier_two, timestamp: start_time + 100)
+    mixin_repo.create(status: "copied", bag_identifier: bag_identifier_two, timestamp: start_time + 120)
+    event = mixin_repo.get_latest_event_for_bag(bag_identifier: bag_identifier_one, status_name: "copied")
+    assert event.is_a?(StatusEventRepository::StatusEvent)
+    assert_equal bag_identifier_one, event.bag_identifier
+    assert_equal "copied", event.status
+    assert_equal start_time + 90, event.timestamp
+  end
+
+  def test_get_latest_event_for_bag_when_nil
+    event = mixin_repo.get_latest_event_for_bag(bag_identifier: mixin_bag_identifier, status_name: "copied")
+    refute event
+  end
 end
 
 class StatusEventInMemoryRepositoryTest < Minitest::Test

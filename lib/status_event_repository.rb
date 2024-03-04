@@ -41,6 +41,9 @@ module StatusEventRepository
     def get_all_for_bag_identifier(identifier)
       raise NotImplementedError
     end
+
+    def get_latest_event_for_bag(bag_identifier:, status_name:)
+    end
   end
 
   class StatusEventInMemoryRepository < StatusEventRepositoryBase
@@ -82,6 +85,13 @@ module StatusEventRepository
 
     def get_all_for_bag_identifier(identifier)
       @status_events.select { |e| e.bag_identifier == identifier }
+    end
+
+    def get_latest_event_for_bag(bag_identifier:, status_name:)
+      events = @status_events
+        .select { |e| e.bag_identifier == bag_identifier && e.status == status_name }
+        .sort_by(&:timestamp).reverse
+      (events.length > 0) ? events[0] : nil
     end
   end
 
@@ -137,6 +147,15 @@ module StatusEventRepository
         .where(bag: DatabaseSchema::Bag.where(identifier: identifier))
         .all
         .map { |se| convert_to_struct(se) }
+    end
+
+    def get_latest_event_for_bag(bag_identifier:, status_name:)
+      event = base_query
+        .where(bag: DatabaseSchema::Bag.where(identifier: bag_identifier))
+        .where(status: DatabaseSchema::Status.where(name: status_name))
+        .order(Sequel.desc(:timestamp))
+        .first
+      event && convert_to_struct(event)
     end
   end
 
