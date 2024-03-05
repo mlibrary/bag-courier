@@ -5,22 +5,6 @@ require_relative "bag_adapter"
 require_relative "remote_client"
 
 module BagCourier
-  class BagId
-    attr_reader :repository, :object_id, :context, :part_id
-
-    def initialize(repository:, object_id:, context: nil, part_id: nil)
-      @repository = repository
-      @context = context
-      @object_id = object_id
-      @part_id = part_id
-    end
-
-    def to_s
-      segments = [@context, @object_id, @part_id].select { |segment| !segment.nil? }
-      "#{@repository}.#{segments.join "-"}"
-    end
-  end
-
   class BagCourier
     include SemanticLogger::Loggable
 

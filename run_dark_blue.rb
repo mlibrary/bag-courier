@@ -18,7 +18,7 @@ DB = config.database && Sequel.connect(
 )
 
 require_relative "lib/archivematica"
-require_relative "lib/bag_courier"
+require_relative "lib/bag_id"
 require_relative "lib/bag_repository"
 require_relative "lib/data_transfer"
 require_relative "lib/dispatcher"
@@ -69,20 +69,20 @@ class DarkBlueJob
 
       digital_objects.each do |obj|
         logger.debug(obj)
-        bag_id = BagCourier::BagId.new(
+        bag_id = BagId::BagId.new(
           repository: @repository.name,
           object_id: obj.metadata.id,
           context: obj.context
         )
 
         logger.debug(bag_id.to_s)
-        logger.debug(obj.stored_date)
+        logger.debug(obj.stored_time)
         copied_event = @status_event_repo.get_latest_event_for_bag(
           status_name: "copied",
           bag_identifier: bag_id.to_s
         )
         logger.debug(copied_event)
-        if !copied_event || copied_event.timestamp < obj.stored_date
+        if !copied_event || copied_event.timestamp < obj.stored_time
           logger.info "Found new or updated object for #{bag_id}. Bagging and sending..."
           courier = @dispatcher.dispatch(
             bag_id: bag_id,
