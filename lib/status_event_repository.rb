@@ -14,7 +14,8 @@ module StatusEventRepository
   STATUSES = %w[
     bagged bagging
     copied copying
-    deposit_skipped deposited depositing
+    deposited depositing deposit_skipped
+    deposit_verified deposit_failed
     failed
     packed packing
   ]
