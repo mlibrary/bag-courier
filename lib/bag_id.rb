@@ -1,4 +1,3 @@
-
 module BagId
   class BagId
     attr_reader :repository, :object_id, :context, :part_id
