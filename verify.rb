@@ -47,7 +47,6 @@ class APTrustVerificationJob
         status_name: "deposit_verified"
       )
       next if verified_event && verified_event.timestamp > deposited_event.timestamp
-
       failed_event = @status_event_repo.get_latest_event_for_bag(
         bag_identifier: bag.identifier,
         status_name: "deposit_failed"
@@ -55,7 +54,6 @@ class APTrustVerificationJob
       next if failed_event && failed_event.timestamp > deposited_event.timestamp
 
       logger.info("Deposit with pending verification found.")
-
       status = @aptrust_api.get_ingest_status(bag.identifier)
       logger.debug("Ingest status from APTrust: #{status}")
       case status
