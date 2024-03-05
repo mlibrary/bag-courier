@@ -43,6 +43,7 @@ module StatusEventRepository
     end
 
     def get_latest_event_for_bag(bag_identifier:, status_name:)
+      raise NotImplementedError
     end
   end
 
