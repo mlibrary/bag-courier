@@ -54,76 +54,17 @@ class ArchivematicaAPITest < Minitest::Test
       }
     ]
 
-    @stubs = Faraday::Adapter::Test::Stubs.new
-    stubbed_test_conn = Faraday.new(
-      url: "#{base_url}#{api_prefix}",
-      headers: {"Authorization" => "ApiKey #{username}:#{api_key}"}
-    ) do |builder|
-      builder.request :retry
-      builder.response :raise_error
+    @mock_backend = Minitest::Mock.new
+    @mocked_api = ArchivematicaAPI.new(
+      api_backend: @mock_backend
+    )
 
-      builder.adapter :test, @stubs
-    end
-
-    # Using default api_prefix "/api/v2/"
-    @stubbed_api = ArchivematicaAPI.new(stubbed_test_conn)
+    # Using default api_backend class and api_prefix "/api/v2/"
     @api = ArchivematicaAPI.from_config(
       base_url: base_url,
       username: username,
       api_key: api_key
     )
-  end
-
-  def test_get_throws_unauthorized_error_with_response_info
-    @stubs.get(@request_url_stem + "file/") do |env|
-      [401, {"Content-Type": "text/plain"}, "Unauthorized"]
-    end
-    error = assert_raises ArchivematicaAPIError do
-      @stubbed_api.get("file/")
-    end
-    expected = "Error occurred while interacting with Archivematica API. " \
-      "Error type: Faraday::UnauthorizedError; " \
-      "status code: 401; " \
-      "body: Unauthorized"
-    assert_equal expected, error.message
-  end
-
-  def test_get_retries_on_timeout_to_failure
-    calls = 0
-    @stubs.get(@request_url_stem + "file/") do |env|
-      calls += 1
-      env[:body] = nil
-      raise Faraday::TimeoutError
-    end
-
-    # Final error is caught and transformed.
-    error = assert_raises ArchivematicaAPIError do
-      @stubbed_api.get("file/")
-    end
-    expected = "Error occurred while interacting with Archivematica API. " \
-      "Error type: Faraday::TimeoutError; " \
-      "status code: none; " \
-      "body: none"
-    assert_equal expected, error.message
-
-    assert_equal 3, calls
-  end
-
-  def test_get_retries_on_timeout_failing_once_then_succeeding
-    calls = 0
-    @stubs.get(@request_url_stem + "file/") do |env|
-      env[:body] = nil
-      calls += 1
-      if calls < 2
-        raise Faraday::TimeoutError
-      else
-        [200, {"Content-Type": "application/json"}, "{}"]
-      end
-    end
-
-    data = @stubbed_api.get("file/")
-    assert_equal 2, calls
-    assert_equal ({}), data
   end
 
   def test_get_objects_from_pages
@@ -158,13 +99,29 @@ class ArchivematicaAPITest < Minitest::Test
       },
       "objects" => [@package_data[2]]
     }
-    stubbed_values = [first_data, second_data, third_data]
-    @api.stub :get, proc { stubbed_values.shift } do
-      objects = @api.get_objects_from_pages("file/", {
-        "current_location" => @location_uuid
-      })
-      assert_equal objects, @package_data
-    end
+
+    expected_params = {"current_location" => @location_uuid, "limit" => 1}
+    @mock_backend.expect(
+      :get,
+      first_data,
+      ["file/", expected_params]
+    )
+    @mock_backend.expect(
+      :get,
+      second_data,
+      ["file/?current_location=#{@location_uuid}&limit=1&offset=1", expected_params]
+    )
+    @mock_backend.expect(
+      :get,
+      third_data,
+      ["file/?current_location=#{@location_uuid}&limit=1&offset=2", expected_params]
+    )
+    objects = @mocked_api.get_objects_from_pages("file/", {
+      "current_location" => @location_uuid,
+      "limit" => 1
+    })
+    @mock_backend.verify
+    assert_equal objects, @package_data
   end
 
   def test_get_packages
