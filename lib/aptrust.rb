@@ -5,9 +5,6 @@ require "semantic_logger"
 require_relative "api_backend"
 
 module APTrust
-  class APTrustAPIError < StandardError
-  end
-
   module IngestStatus
     CANCELLED = "cancelled"
     FAILED = "failed"
