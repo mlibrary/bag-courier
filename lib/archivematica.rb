@@ -2,6 +2,7 @@ require "faraday"
 require "faraday/retry"
 require "semantic_logger"
 
+require_relative "api_backend"
 require_relative "repository_data"
 
 module Archivematica
@@ -29,31 +30,23 @@ module Archivematica
     PACKAGE_PATH = "file/"
     API_V2 = "/api/v2/"
 
-    def initialize(conn, api_prefix: API_V2)
-      @conn = conn
+    def initialize(api_backend:, api_prefix: API_V2)
+      @backend = api_backend
       @api_prefix = api_prefix
     end
 
-    def self.from_config(base_url:, username:, api_key:, api_prefix: API_V2)
-      conn = Faraday.new(
-        url: "#{base_url}#{api_prefix}",
+    def self.from_config(
+      base_url:,
+      username:,
+      api_key:,
+      api_backend: APIBackend::FaradayAPIBackend,
+      api_prefix: API_V2
+    )
+      backend = api_backend.new(
+        base_url: "#{base_url}#{api_prefix}",
         headers: {"Authorization" => "ApiKey #{username}:#{api_key}"}
-      ) do |builder|
-        builder.request :retry
-        builder.response :raise_error
-      end
-      new(conn, api_prefix: api_prefix)
-    end
-
-    def get(url, params = nil)
-      resp = @conn.get(url, params)
-      JSON.parse(resp.body)
-    rescue Faraday::Error => error
-      message = "Error occurred while interacting with Archivematica API. " \
-        "Error type: #{error.class}; " \
-        "status code: #{error.response_status || "none"}; " \
-        "body: #{error.response_body || "none"}"
-      raise ArchivematicaAPIError, message
+      )
+      new(api_backend: backend, api_prefix: api_prefix)
     end
 
     def get_next_url(meta)
@@ -68,7 +61,7 @@ module Archivematica
       results = []
       logger.debug("Starting URL: #{current_url}")
       until no_more_pages
-        data = get(current_url, params)
+        data = @backend.get(current_url, params)
         results += data["objects"]
         meta = data["meta"]
         logger.debug("Meta: #{meta}")
