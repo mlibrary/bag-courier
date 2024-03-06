@@ -12,7 +12,6 @@ class APTrustAPITest < Minitest::Test
     api_key = "some-secret-key"
     api_prefix = "/member-api/v3/"
     @request_url_stem = base_url + api_prefix
-
     @bag_identifier = "repository.context-001"
 
     @stubs = Faraday::Adapter::Test::Stubs.new
@@ -94,40 +93,35 @@ class APTrustAPITest < Minitest::Test
   def test_get_ingest_status_not_found
     data = {"results" => []}
     @api.stub :get, data do
-      status = @api.get_ingest_status(@bag_identifier)
-      assert "not found", status
+      assert_equal "not found", @api.get_ingest_status(@bag_identifier)
     end
   end
 
   def test_get_ingest_status_failed
     data = {"results" => [{"status" => "faiLed"}]}
     @api.stub :get, data do
-      status = @api.get_ingest_status(@bag_identifier)
-      assert "failed", status
+      assert_equal "failed", @api.get_ingest_status(@bag_identifier)
     end
   end
 
   def test_get_ingest_status_cancelled
-    data = {"results" => [{"status" =>"Cancelled"}]}
+    data = {"results" => [{"status" => "Cancelled"}]}
     @api.stub :get, data do
-      status = @api.get_ingest_status(@bag_identifier)
-      assert "cancelled", status
+      assert_equal "cancelled", @api.get_ingest_status(@bag_identifier)
     end
   end
 
   def test_get_ingest_status_success
     data = {"results" => [{"status" => "Success", "stage" => "Cleanup"}]}
     @api.stub :get, data do
-      status = @api.get_ingest_status(@bag_identifier)
-      assert "success", status
+      assert_equal "success", @api.get_ingest_status(@bag_identifier)
     end
   end
 
   def test_get_ingest_status_processing
     data = {"results" => [{"status" => "something_unexpected"}]}
     @api.stub :get, data do
-      status = @api.get_ingest_status(@bag_identifier)
-      assert "processing", status
+      assert_equal "processing", @api.get_ingest_status(@bag_identifier)
     end
   end
 
