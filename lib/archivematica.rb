@@ -20,9 +20,6 @@ module Archivematica
     DELETED = "DELETED"
   end
 
-  class ArchivematicaAPIError < StandardError
-  end
-
   class ArchivematicaAPI
     include SemanticLogger::Loggable
 
