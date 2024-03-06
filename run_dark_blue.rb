@@ -68,22 +68,19 @@ class DarkBlueJob
       ).get_digital_objects
 
       digital_objects.each do |obj|
-        logger.debug(obj)
+        logger.debug("Digital object: #{obj}")
         bag_id = BagId::BagId.new(
           repository: @repository.name,
           object_id: obj.metadata.id,
           context: obj.context
         )
-
-        logger.debug(bag_id.to_s)
-        logger.debug(obj.stored_time)
         copied_event = @status_event_repo.get_latest_event_for_bag(
           status_name: "copied",
           bag_identifier: bag_id.to_s
         )
-        logger.debug(copied_event)
+        logger.debug("Latest \"copied\" event for bag_id #{bag_id}: #{copied_event}")
         if !copied_event || copied_event.timestamp < obj.stored_time
-          logger.info "Found new or updated object for #{bag_id}. Bagging and sending..."
+          logger.info("Found new or updated object for #{bag_id}. Bagging and sending...")
           courier = @dispatcher.dispatch(
             bag_id: bag_id,
             object_metadata: obj.metadata,
@@ -96,11 +93,6 @@ class DarkBlueJob
           courier.deliver
         end
       end
-    end
-
-    logger.info("Events")
-    @dispatcher.status_event_repo.get_all.each do |e|
-      logger.info(e)
     end
   end
 end
