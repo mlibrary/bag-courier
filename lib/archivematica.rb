@@ -55,10 +55,11 @@ module Archivematica
     def get_objects_from_pages(url, params = nil)
       no_more_pages = false
       current_url = url
+      current_params = params
       results = []
       logger.debug("Starting URL: #{current_url}")
       until no_more_pages
-        data = @backend.get(current_url, params)
+        data = @backend.get(current_url, current_params)
         results += data["objects"]
         meta = data["meta"]
         logger.debug("Meta: #{meta}")
@@ -67,6 +68,7 @@ module Archivematica
           no_more_pages = true
         else
           current_url = next_url
+          current_params = nil
         end
       end
       results
