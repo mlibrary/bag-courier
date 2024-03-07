@@ -21,6 +21,9 @@ require_relative "lib/aptrust"
 require_relative "lib/bag_repository"
 require_relative "lib/status_event_repository"
 
+class APTrustVerificationError < StandardError
+end
+
 class APTrustVerificationJob
   include SemanticLogger::Loggable
 
@@ -64,13 +67,17 @@ class APTrustVerificationJob
           timestamp: Time.now.utc,
           note: "Ingest to APTrust verified"
         )
-      when APTrust::IngestStatus::FAILED
+      when APTrust::IngestStatus::FAILED, APTrust::IngestStatus::CANCELLED
         @status_event_repo.create(
           bag_identifier: bag.identifier,
           status: "deposit_failed",
           timestamp: Time.now.utc,
-          note: "Ingest to APTrust failed"
+          note: "Ingest to APTrust failed with status \"#{status}\""
         )
+      when APTrust::IngestStatus::NOT_FOUND
+        raise APTrustVerificationError, "No record of deposit for #{bag.identifier} found"
+      when APTrust::IngestStatus::PROCESSING
+        logger.debug("Deposit for #{bag.identifier} is still being processed.")
       end
     end
   end
