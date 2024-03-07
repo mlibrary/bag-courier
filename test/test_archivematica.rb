@@ -109,12 +109,12 @@ class ArchivematicaAPITest < Minitest::Test
     @mock_backend.expect(
       :get,
       second_data,
-      ["file/?current_location=#{@location_uuid}&limit=1&offset=1", expected_params]
+      ["file/?current_location=#{@location_uuid}&limit=1&offset=1", nil]
     )
     @mock_backend.expect(
       :get,
       third_data,
-      ["file/?current_location=#{@location_uuid}&limit=1&offset=2", expected_params]
+      ["file/?current_location=#{@location_uuid}&limit=1&offset=2", nil]
     )
     objects = @mocked_api.get_objects_from_pages("file/", {
       "current_location" => @location_uuid,
