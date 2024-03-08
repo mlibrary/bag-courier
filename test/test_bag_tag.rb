@@ -75,7 +75,7 @@ class AptrustInfoBagTagTest < Minitest::Test
   def test_aptrust_tag_serialize_with_no_data_defaults
     test_data = @base_test_data.merge({
       access: "Consortia",
-      storage_option: "Glacier-OR",
+      storage_option: "Glacier-Deep-OR",
       extra_data: {
         Context: "Some important detail"
       }
@@ -87,7 +87,7 @@ class AptrustInfoBagTagTest < Minitest::Test
       Item Description: An item being preserved
       Creator/Author: Not available
       Access: Consortia
-      Storage-Option: Glacier-OR
+      Storage-Option: Glacier-Deep-OR
       Context: Some important detail
     TEXT
     assert_equal expected, aptrust_info.serialize

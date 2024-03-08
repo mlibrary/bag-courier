@@ -66,6 +66,15 @@ module BagTag
   end
 
   class AptrustInfoBagTag < SerializableBagTag
+    module StorageOption
+      STANDARD = "Standard"
+      GLACIER_DEEP_OR = "Glacier-Deep-OR"
+    end
+
+    module Access
+      INSTITUTION = "Institution"
+    end
+
     @@file_name = "aptrust-info.txt"
     @@default_description = "Bag deposited to APTrust"
     @@field_length = 255
@@ -91,8 +100,8 @@ module BagTag
       item_description:,
       creator:,
       description: nil,
-      access: nil,
-      storage_option: nil,
+      access: Access::INSTITUTION,
+      storage_option: StorageOption::STANDARD,
       extra_data: nil,
       serializer: TagSerializer
     )
@@ -100,8 +109,8 @@ module BagTag
       @description = AptrustInfoBagTag.squish(description || @@default_description)
       @item_description = AptrustInfoBagTag.squish(item_description)
       @creator = AptrustInfoBagTag.squish(creator)
-      @access = access || "Institution"
-      @storage_option = AptrustInfoBagTag.squish(storage_option || "Standard")
+      @access = access
+      @storage_option = storage_option
       @extra_data = extra_data
       @serializer = serializer
     end
