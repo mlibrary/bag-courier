@@ -42,7 +42,8 @@ module Dispatcher
         BagTag::AptrustInfoBagTag.new(
           title: object_metadata.title,
           item_description: object_metadata.description,
-          creator: object_metadata.creator
+          creator: object_metadata.creator,
+          storage_option: BagTag::AptrustInfoBagTag::StorageOption::GLACIER_DEEP_OR
         )
       ]
 
