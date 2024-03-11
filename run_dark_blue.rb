@@ -20,6 +20,7 @@ DB = config.database && Sequel.connect(
 require_relative "lib/archivematica"
 require_relative "lib/bag_repository"
 require_relative "lib/data_transfer"
+require_relative "lib/digital_object_repository"
 require_relative "lib/dispatcher"
 require_relative "lib/remote_client"
 require_relative "lib/status_event_repository"
@@ -28,6 +29,7 @@ class DarkBlueJob
   include SemanticLogger::Loggable
 
   def initialize(config)
+    @dobj_repo = DigitalObjectRepository::DigitalObjectRepositoryFactory.for(use_db: DB)
     @dispatcher = Dispatcher::APTrustDispatcher.new(
       settings: config.settings,
       repository: config.repository,
@@ -66,6 +68,17 @@ class DarkBlueJob
       logger.debug(digital_objects)
 
       digital_objects.each do |obj|
+        logger.debug("Digital object: #{obj}")
+
+        created = @dobj_repo.create(
+          identifier: obj.metadata.id,
+          system_name: arch_config.system_name,
+          updated_at: obj.stored_time
+        )
+        if !created
+          @dobj_repo.update_updated_at(identifier: obj.metadata.id, updated_at: obj.stored_time)
+        end
+
         courier = @dispatcher.dispatch(
           object_metadata: obj.metadata,
           data_transfer: DataTransfer::RemoteClientDataTransfer.new(

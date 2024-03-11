@@ -4,6 +4,7 @@ module DigitalObject
     :remote_path,
     :metadata,
     :context,
+    :stored_time,
     keyword_init: true
   )
 

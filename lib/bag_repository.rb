@@ -8,11 +8,15 @@ module BagRepository
     :id,
     :identifier,
     :group_part,
+    :digital_object_identifier,
     keyword_init: true
   )
 
+  class BagRepositoryError < StandardError
+  end
+
   class BagRepositoryBase
-    def create(identifier:, group_part:)
+    def create(identifier:, group_part:, digital_object_identifier:)
       raise NotImplementedError
     end
 
@@ -42,7 +46,7 @@ module BagRepository
     end
     private :get_next_id!
 
-    def create(identifier:, group_part:)
+    def create(identifier:, group_part:, digital_object_identifier:)
       matching_bag = @bags.find { |b| b.identifier == identifier }
       if matching_bag
         logger.info("Bag with identifier #{identifier} already exists; creation skipped")
@@ -52,7 +56,8 @@ module BagRepository
       bag = Bag.new(
         id: get_next_id!,
         identifier: identifier,
-        group_part: group_part
+        group_part: group_part,
+        digital_object_identifier: digital_object_identifier
       )
       @bags << bag
     end
@@ -69,28 +74,44 @@ module BagRepository
   class BagDatabaseRepository < BagRepositoryBase
     include SemanticLogger::Loggable
 
-    def create(identifier:, group_part:)
-      DatabaseSchema::Bag.create(identifier: identifier, group_part: group_part)
-    rescue Sequel::UniqueConstraintViolation
-      logger.info("Bag with identifier #{identifier} already exists; creation skipped")
+    def create(identifier:, group_part:, digital_object_identifier:)
+      dobj = DatabaseSchema::DigitalObject.find(identifier: digital_object_identifier)
+      if !dobj
+        raise BagRepositoryError, "No digital object with identifier #{digital_object_identifier} found."
+      end
+
+      begin
+        DatabaseSchema::Bag.create(
+          identifier: identifier,
+          group_part: group_part,
+          digital_object: dobj
+        )
+      rescue Sequel::UniqueConstraintViolation
+        logger.info("Bag with identifier #{identifier} already exists; creation skipped")
+      end
     end
 
     def convert_to_struct(bag)
       Bag.new(
         id: bag.id,
         identifier: bag.identifier,
-        group_part: bag.group_part
+        group_part: bag.group_part,
+        digital_object_identifier: bag.digital_object.identifier
       )
     end
     private :convert_to_struct
 
+    def base_query
+      DatabaseSchema::Bag.eager(:digital_object)
+    end
+
     def get_by_identifier(identifier)
-      bag = DatabaseSchema::Bag.first(identifier: identifier)
+      bag = base_query.first(identifier: identifier)
       bag && convert_to_struct(bag)
     end
 
     def get_all
-      DatabaseSchema::Bag.map { |bag| convert_to_struct(bag) }
+      base_query.all.map { |bag| convert_to_struct(bag) }
     end
   end
 
