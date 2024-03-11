@@ -36,6 +36,32 @@ module DigitalObjectRepositorySharedTest
     assert_equal ["000001", "000002", "000003"], dobjs.map { |dobj| dobj.identifier }
     assert_equal ["repository-1"], dobjs.map { |dobj| dobj.system_name }.uniq
   end
+
+  def test_get_max_updated_at_for_system
+    timestamp = Time.utc(2024, 3, 11, 12)
+    mixin_repo.create(
+      identifier: mixin_dobj_identifier,
+      system_name: "repository-1",
+      updated_at: timestamp
+    )
+    mixin_repo.create(
+      identifier: "000002",
+      system_name: "repository-2",
+      updated_at: timestamp + 5
+    )
+    mixin_repo.create(
+      identifier: "000003",
+      system_name: "repository-1",
+      updated_at: timestamp + 2
+    )
+
+    max_updated_at = mixin_repo.get_max_updated_at_for_system("repository-1")
+    assert_equal Time.utc(2024, 3, 11, 12, 0, 2), max_updated_at
+  end
+
+  def test_get_max_updated_at_for_system_with_no_objects
+    assert_nil nil, mixin_repo.get_max_updated_at_for_system("repository-1")
+  end
 end
 
 class DigitalObjectInMemoryRepositoryTest < Minitest::Test

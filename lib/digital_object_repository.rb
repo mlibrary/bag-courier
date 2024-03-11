@@ -31,6 +31,10 @@ module DigitalObjectRepository
     def update_updated_at(identifier:, updated_at:)
       raise NotImplementedError
     end
+
+    def get_max_updated_at_for_system(system_name)
+      raise NotImplementedError
+    end
   end
 
   class DigitalObjectInMemoryRepository < DigitalObjectRepositoryBase
@@ -83,6 +87,12 @@ module DigitalObjectRepository
 
       dobj.updated_at = updated_at
     end
+
+    def get_max_updated_at_for_system(system_name)
+      max_obj = @digital_objects.select { |dobj| dobj.system_name == system_name }
+        .max_by(&:updated_at)
+      max_obj&.updated_at
+    end
   end
 
   class DigitalObjectDatabaseRepository < DigitalObjectRepositoryBase
@@ -132,6 +142,11 @@ module DigitalObjectRepository
 
     def get_all
       base_query.all.map { |dobj| convert_to_struct(dobj) }
+    end
+
+    def get_max_updated_at_for_system(system_name)
+      base_query.where(system: DatabaseSchema::System.where(name: system_name))
+        .max(:updated_at)
     end
   end
 
