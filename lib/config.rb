@@ -73,6 +73,7 @@ module Config
   ArchivematicaConfig = Struct.new(
     "ArchivematicaConfig",
     :name,
+    :system_name,
     :api,
     :remote,
     keyword_init: true
@@ -194,6 +195,7 @@ module Config
               remote_data = arch_data["Remote"]
               ArchivematicaConfig.new(
                 name: verify_string("Name", arch_data["Name"]),
+                system_name: verify_string("SystemName", arch_data["SystemName"]),
                 api: ArchivematicaAPIConfig.new(
                   base_url: verify_string("BaseURL", api_data["BaseURL"]),
                   username: verify_string("Username", api_data["Username"]),

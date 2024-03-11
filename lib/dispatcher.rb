@@ -46,7 +46,11 @@ module Dispatcher
         )
       ]
 
-      @bag_repo.create(identifier: bag_id.to_s, group_part: bag_id.part_id || 1)
+      @bag_repo.create(
+        identifier: bag_id.to_s,
+        group_part: bag_id.part_id || 1,
+        digital_object_identifier: bag_id.object_id
+      )
 
       BagCourier::BagCourier.new(
         bag_id: bag_id,
