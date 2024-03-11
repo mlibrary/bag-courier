@@ -44,8 +44,8 @@ RepositoryDescription:
 
 # Remote(s)
 TargetRemote:
-  RemoteType: aptrust
-  RemoteSettings:
+  Type: aptrust
+  Settings:
     # APTrust AWS remote settings
     ReceivingBucket:
     RestoreBucket:
