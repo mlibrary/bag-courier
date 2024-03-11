@@ -189,7 +189,7 @@ module Config
         ),
         dark_blue: DarkBlueConfig.new(
           archivematicas: (
-            data["DarkBlue"]["Archivematicas"].map do |arch_data|
+            data["DarkBlue"]["ArchivematicaInstances"].map do |arch_data|
               api_data = arch_data["API"]
               remote_data = arch_data["Remote"]
               ArchivematicaConfig.new(
