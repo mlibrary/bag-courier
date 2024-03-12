@@ -9,8 +9,12 @@ require_relative "../lib/repository_package_repository"
 
 module BagRepositorySharedTest
   def test_get_by_identifier
-    mixin_package_repo.create(identifier: mixin_package_identifier, repository_name: mixin_repository_name, updated_at: Time.now.utc)
-    mixin_repo.create(identifier: mixin_bag_id, group_part: 2, repository_package_identifier: mixin_package_identifier)
+    mixin_package_repo.create(
+      identifier: mixin_package_identifier, repository_name: mixin_repository_name, updated_at: Time.now.utc
+    )
+    mixin_repo.create(
+      identifier: mixin_bag_id, group_part: 2, repository_package_identifier: mixin_package_identifier
+    )
     bag = mixin_repo.get_by_identifier(mixin_bag_id)
     assert bag.is_a?(BagRepository::Bag)
     assert_equal bag.identifier, mixin_bag_id
@@ -47,20 +51,20 @@ class BagInMemoryRepositioryTest < Minitest::Test
   include BagRepositorySharedTest
 
   def setup
-    @package_identifier = "00001"
-    @repository_name = "repository-1"
-    @package_repo = RepositoryPackageRepository::RepositoryPackageInMemoryRepository.new
-
     @bag_id = "repository.context-001"
     @repo = BagRepository::BagInMemoryRepository.new
-  end
 
-  def mixin_bag_id
-    @bag_id
+    @package_repo = RepositoryPackageRepository::RepositoryPackageInMemoryRepository.new
+    @package_identifier = "00001"
+    @repository_name = "repository-1"
   end
 
   def mixin_repo
     @repo
+  end
+
+  def mixin_bag_id
+    @bag_id
   end
 
   def mixin_package_repo
@@ -84,6 +88,11 @@ class BagInMemoryRepositioryTest < Minitest::Test
   end
 
   def test_create_when_already_exists
+    @package_repo.create(
+      identifier: @package_identifier,
+      repository_name: @repository_name,
+      updated_at: Time.now.utc
+    )
     messages = semantic_logger_events do
       @repo.create(identifier: @bag_id, group_part: 2, repository_package_identifier: @package_identifier)
       @repo.create(identifier: @bag_id, group_part: 2, repository_package_identifier: @package_identifier)
@@ -103,20 +112,20 @@ class BagDatabaseRepositoryTest < SequelTestCase
   include BagRepositorySharedTest
 
   def setup
+    @repo = BagRepository::BagDatabaseRepository.new
+    @bag_id = "repository.context-001"
+
+    @package_repo = RepositoryPackageRepository::RepositoryPackageDatabaseRepository.new
     @package_identifier = "00001"
     @repository_name = "repository-1"
-    @package_repo = RepositoryPackageRepository::RepositoryPackageDatabaseRepository.new
-
-    @bag_id = "repository.context-001"
-    @repo = BagRepository::BagDatabaseRepository.new
-  end
-
-  def mixin_bag_id
-    @bag_id
   end
 
   def mixin_repo
     @repo
+  end
+
+  def mixin_bag_id
+    @bag_id
   end
 
   def mixin_package_repo
@@ -150,8 +159,8 @@ class BagDatabaseRepositoryTest < SequelTestCase
     bag = DatabaseSchema::Bag.eager(:repository_package).first
 
     assert bag
-    assert_equal @bag_id, bag[:identifier]
-    assert_equal 2, bag[:group_part]
+    assert_equal @bag_id, bag.identifier
+    assert_equal 2, bag.group_part
     assert_equal @package_identifier, bag.repository_package.identifier
   end
 
@@ -172,7 +181,7 @@ class BagDatabaseRepositoryTest < SequelTestCase
       @repo.create(identifier: @bag_id, group_part: 2, repository_package_identifier: @package_identifier)
       @repo.create(identifier: @bag_id, group_part: 2, repository_package_identifier: @package_identifier)
     end
-    bags = DB.from(:bag).all
+    bags = DatabaseSchema::Bag.eager(:repository_package).all
     assert_equal 1, bags.size
     assert_equal 1, messages.size
     assert_semantic_logger_event(

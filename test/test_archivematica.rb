@@ -228,6 +228,7 @@ class ArchivematicaServiceTest < Minitest::Test
 
     @mock_api.expect(:get_packages, test_packages, location_uuid: @location_uuid, stored_date: @stored_date)
     repository_packages = service.get_repository_packages
+    @mock_api.verify
 
     # filters out larger bag
     assert_equal 1, repository_packages.length
