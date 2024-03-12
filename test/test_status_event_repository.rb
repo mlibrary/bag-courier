@@ -77,14 +77,12 @@ class StatusEventInMemoryRepositoryTest < Minitest::Test
 
   def setup
     @repo = StatusEventRepository::StatusEventInMemoryRepository.new
+
     @bag_repo = BagRepository::BagInMemoryRepository.new
     @bag_identifier = "repository.context-001"
+
     @package_repo = RepositoryPackageRepository::RepositoryPackageInMemoryRepository.new
     @package_identifier = "000001"
-  end
-
-  def mixin_bag_identifier
-    @bag_identifier
   end
 
   def mixin_repo
@@ -95,12 +93,16 @@ class StatusEventInMemoryRepositoryTest < Minitest::Test
     @bag_repo
   end
 
-  def mixin_package_identifier
-    @package_identifier
+  def mixin_bag_identifier
+    @bag_identifier
   end
 
   def mixin_package_repo
     @package_repo
+  end
+
+  def mixin_package_identifier
+    @package_identifier
   end
 
   def test_create
@@ -129,14 +131,12 @@ class StatusEventDatabaseRepositoryTest < SequelTestCase
 
   def setup
     @repo = StatusEventRepository::StatusEventDatabaseRepository.new
+
     @bag_repo = BagRepository::BagDatabaseRepository.new
     @bag_identifier = "repository.context-001"
+
     @package_repo = RepositoryPackageRepository::RepositoryPackageDatabaseRepository.new
     @package_identifier = "000001"
-  end
-
-  def mixin_bag_identifier
-    @bag_identifier
   end
 
   def mixin_repo
@@ -147,12 +147,16 @@ class StatusEventDatabaseRepositoryTest < SequelTestCase
     @bag_repo
   end
 
-  def mixin_package_identifier
-    @package_identifier
+  def mixin_bag_identifier
+    @bag_identifier
   end
 
   def mixin_package_repo
     @package_repo
+  end
+
+  def mixin_package_identifier
+    @package_identifier
   end
 
   def test_create
