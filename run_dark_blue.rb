@@ -60,35 +60,35 @@ class DarkBlueJob
 
       max_updated_at = @package_repo.get_max_updated_at_for_repository(arch_config.repository_name)
 
-      repository_packages = Archivematica::ArchivematicaService.new(
+      package_data_objs = Archivematica::ArchivematicaService.new(
         name: arch_config.name,
         api: arch_api,
         location_uuid: api_config.location_uuid,
         stored_date: max_updated_at&.iso8601,
         object_size_limit: @object_size_limit
-      ).get_repository_packages
+      ).get_package_data_objects
 
-      repository_packages.each do |package|
-        logger.debug(package)
+      package_data_objs.each do |package_data|
+        logger.debug(package_data)
         created = @package_repo.create(
-          identifier: package.metadata.id,
+          identifier: package_data.metadata.id,
           repository_name: arch_config.repository_name,
-          updated_at: package.stored_time
+          updated_at: package_data.stored_time
         )
         if !created
           @package_repo.update_updated_at(
-            identifier: package.metadata.id,
-            updated_at: package.stored_time
+            identifier: package_data.metadata.id,
+            updated_at: package_data.stored_time
           )
         end
 
         courier = @dispatcher.dispatch(
-          object_metadata: package.metadata,
+          object_metadata: package_data.metadata,
           data_transfer: DataTransfer::RemoteClientDataTransfer.new(
             remote_client: remote_client,
-            remote_path: package.remote_path
+            remote_path: package_data.remote_path
           ),
-          context: package.context
+          context: package_data.context
         )
         courier.deliver
       end

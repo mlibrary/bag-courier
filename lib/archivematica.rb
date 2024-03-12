@@ -2,7 +2,7 @@ require "faraday"
 require "faraday/retry"
 require "semantic_logger"
 
-require_relative "repository_package"
+require_relative "repository_data"
 
 module Archivematica
   Package = Struct.new(
@@ -131,7 +131,7 @@ module Archivematica
       @object_size_limit = object_size_limit
     end
 
-    def get_repository_packages
+    def get_package_data_objects
       logger.info("Archivematica instance: #{@name}")
       packages = @api.get_packages(location_uuid: @location_uuid, stored_date: @stored_date)
       selected_packages = packages.select { |p| p.size < @object_size_limit }
@@ -143,13 +143,13 @@ module Archivematica
         logger.info("Inner bag name: #{inner_bag_dir_name}")
         ingest_dir_name = inner_bag_dir_name.gsub("-" + package.uuid, "")
         logger.info("Directory name on Archivematica ingest: #{ingest_dir_name}")
-        object_metadata = RepositoryPackage::ObjectMetadata.new(
+        object_metadata = RepositoryData::ObjectMetadata.new(
           id: package.uuid,
           title: "#{package.uuid} / #{ingest_dir_name}",
           creator: NA,
           description: NA
         )
-        RepositoryPackage::RepositoryPackage.new(
+        RepositoryData::RepositoryPackageData.new(
           remote_path: package.path,
           metadata: object_metadata,
           context: @name,
