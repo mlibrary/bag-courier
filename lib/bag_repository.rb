@@ -8,7 +8,7 @@ module BagRepository
     :id,
     :identifier,
     :group_part,
-    :digital_object_identifier,
+    :repository_package_identifier,
     keyword_init: true
   )
 
@@ -16,7 +16,7 @@ module BagRepository
   end
 
   class BagRepositoryBase
-    def create(identifier:, group_part:, digital_object_identifier:)
+    def create(identifier:, group_part:, repository_package_identifier:)
       raise NotImplementedError
     end
 
@@ -46,7 +46,7 @@ module BagRepository
     end
     private :get_next_id!
 
-    def create(identifier:, group_part:, digital_object_identifier:)
+    def create(identifier:, group_part:, repository_package_identifier:)
       matching_bag = @bags.find { |b| b.identifier == identifier }
       if matching_bag
         logger.info("Bag with identifier #{identifier} already exists; creation skipped")
@@ -57,7 +57,7 @@ module BagRepository
         id: get_next_id!,
         identifier: identifier,
         group_part: group_part,
-        digital_object_identifier: digital_object_identifier
+        repository_package_identifier: repository_package_identifier
       )
       @bags << bag
     end
@@ -74,17 +74,17 @@ module BagRepository
   class BagDatabaseRepository < BagRepositoryBase
     include SemanticLogger::Loggable
 
-    def create(identifier:, group_part:, digital_object_identifier:)
-      dobj = DatabaseSchema::DigitalObject.find(identifier: digital_object_identifier)
-      if !dobj
-        raise BagRepositoryError, "No digital object with identifier #{digital_object_identifier} found."
+    def create(identifier:, group_part:, repository_package_identifier:)
+      package = DatabaseSchema::RepositoryPackage.find(identifier: repository_package_identifier)
+      if !package
+        raise BagRepositoryError, "No RepositoryPackage with identifier #{repository_package_identifier} found."
       end
 
       begin
         DatabaseSchema::Bag.create(
           identifier: identifier,
           group_part: group_part,
-          digital_object: dobj
+          repository_package: package
         )
       rescue Sequel::UniqueConstraintViolation
         logger.info("Bag with identifier #{identifier} already exists; creation skipped")
@@ -96,13 +96,13 @@ module BagRepository
         id: bag.id,
         identifier: bag.identifier,
         group_part: bag.group_part,
-        digital_object_identifier: bag.digital_object.identifier
+        repository_package_identifier: bag.repository_package.identifier
       )
     end
     private :convert_to_struct
 
     def base_query
-      DatabaseSchema::Bag.eager(:digital_object)
+      DatabaseSchema::Bag.eager(:repository_package)
     end
 
     def get_by_identifier(identifier)

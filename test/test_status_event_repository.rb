@@ -2,8 +2,9 @@ require "minitest/autorun"
 require "minitest/pride"
 
 require_relative "setup_db"
-require_relative "../lib/status_event_repository"
 require_relative "../lib/bag_repository"
+require_relative "../lib/repository_package_repository"
+require_relative "../lib/status_event_repository"
 
 module StatusEventRepositorySharedTest
   def test_create_with_unknown_status
@@ -17,7 +18,16 @@ module StatusEventRepositorySharedTest
   end
 
   def test_get_all
-    mixin_bag_repo.create(identifier: mixin_bag_identifier, group_part: 1)
+    mixin_package_repo.create(
+      identifier: mixin_package_identifier,
+      repository_name: "repository-1",
+      updated_at: Time.now.utc
+    )
+    mixin_bag_repo.create(
+      identifier: mixin_bag_identifier,
+      group_part: 1,
+      repository_package_identifier: mixin_package_identifier
+    )
     ["bagging", "copying", "copied", "bagged"].each do |status|
       mixin_repo.create(
         status: status,
@@ -43,10 +53,14 @@ module StatusEventRepositorySharedTest
   end
 
   def test_get_all_for_bag_identifier
+    second_package_identifier = "000002"
+    mixin_package_repo.create(identifier: mixin_package_identifier, repository_name: "repository-1", updated_at: Time.now.utc)
+    mixin_package_repo.create(identifier: second_package_identifier, repository_name: "repository-1", updated_at: Time.now.utc)
+
     bag_identifier_one = mixin_bag_identifier
     bag_identifier_two = "repository.context-002"
-    mixin_bag_repo.create(identifier: bag_identifier_one, group_part: 1)
-    mixin_bag_repo.create(identifier: bag_identifier_two, group_part: 1)
+    mixin_bag_repo.create(identifier: bag_identifier_one, group_part: 1, repository_package_identifier: mixin_package_identifier)
+    mixin_bag_repo.create(identifier: bag_identifier_two, group_part: 1, repository_package_identifier: second_package_identifier)
     mixin_repo.create(status: "bagging", bag_identifier: bag_identifier_one, timestamp: Time.now.utc)
     mixin_repo.create(status: "bagging", bag_identifier: bag_identifier_two, timestamp: Time.now.utc)
     mixin_repo.create(status: "bagged", bag_identifier: bag_identifier_two, timestamp: Time.now.utc)
@@ -62,9 +76,11 @@ class StatusEventInMemoryRepositoryTest < Minitest::Test
   include SemanticLogger::Loggable
 
   def setup
-    @bag_identifier = "repository.context-001"
     @repo = StatusEventRepository::StatusEventInMemoryRepository.new
     @bag_repo = BagRepository::BagInMemoryRepository.new
+    @bag_identifier = "repository.context-001"
+    @package_repo = RepositoryPackageRepository::RepositoryPackageInMemoryRepository.new
+    @package_identifier = "000001"
   end
 
   def mixin_bag_identifier
@@ -77,6 +93,14 @@ class StatusEventInMemoryRepositoryTest < Minitest::Test
 
   def mixin_bag_repo
     @bag_repo
+  end
+
+  def mixin_package_identifier
+    @package_identifier
+  end
+
+  def mixin_package_repo
+    @package_repo
   end
 
   def test_create
@@ -104,9 +128,11 @@ class StatusEventDatabaseRepositoryTest < SequelTestCase
   include StatusEventRepositorySharedTest
 
   def setup
-    @bag_identifier = "repository.context-001"
     @repo = StatusEventRepository::StatusEventDatabaseRepository.new
     @bag_repo = BagRepository::BagDatabaseRepository.new
+    @bag_identifier = "repository.context-001"
+    @package_repo = RepositoryPackageRepository::RepositoryPackageDatabaseRepository.new
+    @package_identifier = "000001"
   end
 
   def mixin_bag_identifier
@@ -121,8 +147,17 @@ class StatusEventDatabaseRepositoryTest < SequelTestCase
     @bag_repo
   end
 
+  def mixin_package_identifier
+    @package_identifier
+  end
+
+  def mixin_package_repo
+    @package_repo
+  end
+
   def test_create
-    @bag_repo.create(identifier: @bag_identifier, group_part: 2)
+    @package_repo.create(identifier: @package_identifier, repository_name: "repository-1", updated_at: Time.now.utc)
+    @bag_repo.create(identifier: @bag_identifier, group_part: 2, repository_package_identifier: @package_identifier)
     bag_db_id = @bag_repo.get_by_identifier(@bag_identifier).id
     timestamp = Time.now.utc.floor(6)  # To match database precision
     @repo.create(
