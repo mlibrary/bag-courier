@@ -11,7 +11,7 @@ module RepositoryPackageRepositorySharedTest
     1.upto(3) do |i|
       mixin_repo.create(
         identifier: "00000#{i}",
-        repository_name: mixin_repository_name,
+        repository_name: "fakerepository",
         updated_at: timestamp + i
       )
     end
@@ -23,7 +23,7 @@ module RepositoryPackageRepositorySharedTest
     package = mixin_repo.get_by_identifier("000002")
     assert package
     assert_equal "000002", package.identifier
-    assert_equal "repository-1", package.repository_name
+    assert_equal "fakerepository", package.repository_name
     assert_equal timestamp + 2, package.updated_at
   end
 
@@ -34,33 +34,33 @@ module RepositoryPackageRepositorySharedTest
     assert packages.all? { |package| package.is_a?(RepositoryPackageRepository::RepositoryPackage) }
 
     assert_equal ["000001", "000002", "000003"], packages.map { |package| package.identifier }
-    assert_equal ["repository-1"], packages.map { |package| package.repository_name }.uniq
+    assert_equal ["fakerepository"], packages.map { |package| package.repository_name }.uniq
   end
 
   def test_get_max_updated_at_for_repository
     timestamp = Time.utc(2024, 3, 11, 12)
     mixin_repo.create(
-      identifier: mixin_package_identifier,
-      repository_name: "repository-1",
+      identifier: "000001",
+      repository_name: "fakerepositoryone",
       updated_at: timestamp
     )
     mixin_repo.create(
       identifier: "000002",
-      repository_name: "repository-2",
+      repository_name: "fakerepositorytwo",
       updated_at: timestamp + 5
     )
     mixin_repo.create(
       identifier: "000003",
-      repository_name: "repository-1",
+      repository_name: "fakerepositoryone",
       updated_at: timestamp + 2
     )
 
-    max_updated_at = mixin_repo.get_max_updated_at_for_repository("repository-1")
+    max_updated_at = mixin_repo.get_max_updated_at_for_repository("fakerepositoryone")
     assert_equal Time.utc(2024, 3, 11, 12, 0, 2), max_updated_at
   end
 
   def test_get_max_updated_at_for_repository_with_no_objects
-    assert_nil nil, mixin_repo.get_max_updated_at_for_repository("repository-1")
+    assert_nil mixin_repo.get_max_updated_at_for_repository("repository-1")
   end
 end
 
@@ -68,21 +68,13 @@ class RepositoryPackageInMemoryRepositoryTest < Minitest::Test
   include RepositoryPackageRepositorySharedTest
 
   def setup
-    @package_identifier = "000001"
-    @repository_name = "repository-1"
     @repo = RepositoryPackageRepository::RepositoryPackageInMemoryRepository.new
+    @package_identifier = "000001"
+    @repository_name = "fakerepository"
   end
 
   def mixin_repo
     @repo
-  end
-
-  def mixin_package_identifier
-    @dobj_identifier
-  end
-
-  def mixin_repository_name
-    @repository_name
   end
 
   def test_create
@@ -129,21 +121,13 @@ class RepositoryPackageDatabaseRepositoryTest < SequelTestCase
   include RepositoryPackageRepositorySharedTest
 
   def setup
-    @package_identifier = "000001"
-    @repository_name = "repository-1"
     @repo = RepositoryPackageRepository::RepositoryPackageDatabaseRepository.new
+    @package_identifier = "000001"
+    @repository_name = "fakerepository"
   end
 
   def mixin_repo
     @repo
-  end
-
-  def mixin_package_identifier
-    @package_identifier
-  end
-
-  def mixin_repository_name
-    @repository_name
   end
 
   def test_create
