@@ -1,6 +1,6 @@
-module DigitalObject
-  DigitalObject = Struct.new(
-    "DigitalObject",
+module RepositoryPackage
+  RepositoryPackage = Struct.new(
+    "RepositoryPackage",
     :remote_path,
     :metadata,
     :context,

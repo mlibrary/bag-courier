@@ -2,7 +2,7 @@ require "faraday"
 require "faraday/retry"
 require "semantic_logger"
 
-require_relative "digital_object"
+require_relative "repository_package"
 
 module Archivematica
   Package = Struct.new(
@@ -82,11 +82,16 @@ module Archivematica
       results
     end
 
-    def get_packages(location_uuid:)
-      package_objects = get_objects_from_pages(PACKAGE_PATH, {
+    def get_packages(location_uuid:, stored_date: nil)
+      params = {
         "current_location" => location_uuid,
         "status" => PackageStatus::UPLOADED
-      })
+      }
+      if stored_date
+        params["stored_date__gt"] = stored_date
+      end
+
+      package_objects = get_objects_from_pages(PACKAGE_PATH, params)
       packages = package_objects.map do |o|
         Package.new(
           uuid: o["uuid"],
@@ -96,8 +101,10 @@ module Archivematica
         )
       end
       logger.info(
-        "Number of packages found in location #{location_uuid} " \
-        "with #{PackageStatus::UPLOADED} status: #{packages.length}"
+        "Number of packages found in location #{location_uuid} " +
+        "with #{PackageStatus::UPLOADED} status" +
+        (stored_date ? " and with stored date after #{stored_date}" : "") +
+        ": #{packages.length}"
       )
       packages
     end
@@ -114,17 +121,19 @@ module Archivematica
       name:,
       api:,
       location_uuid:,
+      stored_date:,
       object_size_limit:
     )
       @name = name
       @api = api
       @location_uuid = location_uuid
+      @stored_date = stored_date
       @object_size_limit = object_size_limit
     end
 
-    def get_digital_objects
+    def get_repository_packages
       logger.info("Archivematica instance: #{@name}")
-      packages = @api.get_packages(location_uuid: @location_uuid)
+      packages = @api.get_packages(location_uuid: @location_uuid, stored_date: @stored_date)
       selected_packages = packages.select { |p| p.size < @object_size_limit }
       logger.info("Number of packages below object size limit: #{selected_packages.length}")
 
@@ -134,13 +143,13 @@ module Archivematica
         logger.info("Inner bag name: #{inner_bag_dir_name}")
         ingest_dir_name = inner_bag_dir_name.gsub("-" + package.uuid, "")
         logger.info("Directory name on Archivematica ingest: #{ingest_dir_name}")
-        object_metadata = DigitalObject::ObjectMetadata.new(
+        object_metadata = RepositoryPackage::ObjectMetadata.new(
           id: package.uuid,
           title: "#{package.uuid} / #{ingest_dir_name}",
           creator: NA,
           description: NA
         )
-        DigitalObject::DigitalObject.new(
+        RepositoryPackage::RepositoryPackage.new(
           remote_path: package.path,
           metadata: object_metadata,
           context: @name,
