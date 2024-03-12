@@ -1,6 +1,6 @@
-module RepositoryPackage
-  RepositoryPackage = Struct.new(
-    "RepositoryPackage",
+module RepositoryData
+  RepositoryPackageData = Struct.new(
+    "RepositoryPackageData",
     :remote_path,
     :metadata,
     :context,

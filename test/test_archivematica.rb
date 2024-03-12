@@ -4,7 +4,7 @@ require "minitest/autorun"
 require "minitest/pride"
 
 require_relative "../lib/archivematica"
-require_relative "../lib/repository_package"
+require_relative "../lib/repository_data"
 
 module PackageTestUtils
   def make_path(uuid)
@@ -191,7 +191,7 @@ end
 
 class ArchivematicaServiceTest < Minitest::Test
   include Archivematica
-  include RepositoryPackage
+  include RepositoryData
   include PackageTestUtils
 
   def setup
@@ -201,7 +201,7 @@ class ArchivematicaServiceTest < Minitest::Test
     @object_size_limit = 4000000
   end
 
-  def test_get_repository_packages
+  def test_get_package_data_objects
     service = ArchivematicaService.new(
       name: "test",
       api: @mock_api,
@@ -227,14 +227,14 @@ class ArchivematicaServiceTest < Minitest::Test
     ]
 
     @mock_api.expect(:get_packages, test_packages, location_uuid: @location_uuid, stored_date: @stored_date)
-    repository_packages = service.get_repository_packages
+    package_data_objs = service.get_package_data_objects
     @mock_api.verify
 
     # filters out larger bag
-    assert_equal 1, repository_packages.length
+    assert_equal 1, package_data_objs.length
 
     first_package = test_packages[0]
-    expected = RepositoryPackage.new(
+    expected = RepositoryPackageData.new(
       remote_path: first_package.path,
       metadata: ObjectMetadata.new(
         id: first_package.uuid,
@@ -245,6 +245,6 @@ class ArchivematicaServiceTest < Minitest::Test
       context: "test",
       stored_time: Time.utc(2024, 2, 18)
     )
-    assert_equal expected, repository_packages[0]
+    assert_equal expected, package_data_objs[0]
   end
 end
