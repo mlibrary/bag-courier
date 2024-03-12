@@ -46,7 +46,6 @@ class DarkBlueJob
 
   def process
     @arch_configs.each do |arch_config|
-      logger.info("Archivematica instance: #{arch_config.name}")
       api_config = arch_config.api
       arch_api = Archivematica::ArchivematicaAPI.from_config(
         base_url: api_config.base_url,
@@ -68,7 +67,6 @@ class DarkBlueJob
         stored_date: max_updated_at&.iso8601,
         object_size_limit: @object_size_limit
       ).get_repository_packages
-      logger.debug(repository_packages)
 
       repository_packages.each do |package|
         logger.debug(package)
@@ -94,11 +92,6 @@ class DarkBlueJob
         )
         courier.deliver
       end
-    end
-
-    logger.info("Events")
-    @dispatcher.status_event_repo.get_all.each do |e|
-      logger.info(e)
     end
   end
 end
