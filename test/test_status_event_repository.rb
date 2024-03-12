@@ -2,6 +2,7 @@ require "minitest/autorun"
 require "minitest/pride"
 
 require_relative "setup_db"
+require_relative "../db/database_schema"
 require_relative "../lib/bag_repository"
 require_relative "../lib/repository_package_repository"
 require_relative "../lib/status_event_repository"
@@ -162,7 +163,6 @@ class StatusEventDatabaseRepositoryTest < SequelTestCase
   def test_create
     @package_repo.create(identifier: @package_identifier, repository_name: "repository-1", updated_at: Time.now.utc)
     @bag_repo.create(identifier: @bag_identifier, group_part: 2, repository_package_identifier: @package_identifier)
-    bag_db_id = @bag_repo.get_by_identifier(@bag_identifier).id
     timestamp = Time.now.utc.floor(6)  # To match database precision
     @repo.create(
       status: "bagged",
@@ -170,12 +170,12 @@ class StatusEventDatabaseRepositoryTest < SequelTestCase
       timestamp: timestamp,
       note: nil
     )
-    status_events = DB.from(:status_event).join(:status, id: :status_id).all
+    status_events = DatabaseSchema::StatusEvent.eager(:status, :bag).all
     assert_equal 1, status_events.length
     status_event = status_events[0]
-    assert_equal "bagged", status_event[:name]
-    assert_equal bag_db_id, status_event[:bag_id]
-    assert_equal timestamp, status_event[:timestamp]
+    assert_equal "bagged", status_event.status.name
+    assert_equal @bag_identifier, status_event.bag.identifier
+    assert_equal timestamp, status_event.timestamp
   end
 end
 
