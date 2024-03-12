@@ -5,12 +5,12 @@ require_relative "setup_db"
 require_relative "test_helper"
 require_relative "../db/database_schema"
 require_relative "../lib/bag_repository"
-require_relative "../lib/digital_object_repository"
+require_relative "../lib/repository_package_repository"
 
 module BagRepositorySharedTest
   def test_get_by_identifier
-    mixin_dobj_repo.create(identifier: mixin_dobj_identifier, system_name: mixin_system_name, updated_at: Time.now.utc)
-    mixin_repo.create(identifier: mixin_bag_id, group_part: 2, digital_object_identifier: mixin_dobj_identifier)
+    mixin_package_repo.create(identifier: mixin_package_identifier, repository_name: mixin_repository_name, updated_at: Time.now.utc)
+    mixin_repo.create(identifier: mixin_bag_id, group_part: 2, repository_package_identifier: mixin_package_identifier)
     bag = mixin_repo.get_by_identifier(mixin_bag_id)
     assert bag.is_a?(BagRepository::Bag)
     assert_equal bag.identifier, mixin_bag_id
@@ -24,15 +24,15 @@ module BagRepositorySharedTest
 
   def test_get_all
     1.upto(5) do |i|
-      mixin_dobj_repo.create(
+      mixin_package_repo.create(
         identifier: "00000#{i}",
-        system_name: mixin_system_name,
+        repository_name: mixin_repository_name,
         updated_at: Time.now.utc
       )
       mixin_repo.create(
         identifier: "repository.context-00#{i}",
         group_part: 1,
-        digital_object_identifier: "00000#{i}"
+        repository_package_identifier: "00000#{i}"
       )
     end
     bags = mixin_repo.get_all
@@ -47,9 +47,9 @@ class BagInMemoryRepositioryTest < Minitest::Test
   include BagRepositorySharedTest
 
   def setup
-    @dobj_identifier = "00001"
-    @system_name = "repository-1"
-    @dobj_repo = DigitalObjectRepository::DigitalObjectInMemoryRepository.new
+    @package_identifier = "00001"
+    @repository_name = "repository-1"
+    @package_repo = RepositoryPackageRepository::RepositoryPackageInMemoryRepository.new
 
     @bag_id = "repository.context-001"
     @repo = BagRepository::BagInMemoryRepository.new
@@ -63,30 +63,30 @@ class BagInMemoryRepositioryTest < Minitest::Test
     @repo
   end
 
-  def mixin_dobj_repo
-    @dobj_repo
+  def mixin_package_repo
+    @package_repo
   end
 
-  def mixin_dobj_identifier
-    @dobj_identifier
+  def mixin_package_identifier
+    @package_identifier
   end
 
-  def mixin_system_name
-    @system_name
+  def mixin_repository_name
+    @repository_name
   end
 
   def test_create
-    @repo.create(identifier: @bag_id, group_part: 2, digital_object_identifier: @dobj_identifier)
+    @repo.create(identifier: @bag_id, group_part: 2, repository_package_identifier: @package_identifier)
     expected = [BagRepository::Bag.new(
-      id: 0, identifier: @bag_id, group_part: 2, digital_object_identifier: @dobj_identifier
+      id: 0, identifier: @bag_id, group_part: 2, repository_package_identifier: @package_identifier
     )]
     assert_equal expected, @repo.bags
   end
 
   def test_create_when_already_exists
     messages = semantic_logger_events do
-      @repo.create(identifier: @bag_id, group_part: 2, digital_object_identifier: @dobj_identifier)
-      @repo.create(identifier: @bag_id, group_part: 2, digital_object_identifier: @dobj_identifier)
+      @repo.create(identifier: @bag_id, group_part: 2, repository_package_identifier: @package_identifier)
+      @repo.create(identifier: @bag_id, group_part: 2, repository_package_identifier: @package_identifier)
     end
     bags = @repo.bags
     assert_equal 1, bags.size
@@ -103,9 +103,9 @@ class BagDatabaseRepositoryTest < SequelTestCase
   include BagRepositorySharedTest
 
   def setup
-    @dobj_identifier = "00001"
-    @system_name = "repository-1"
-    @dobj_repo = DigitalObjectRepository::DigitalObjectDatabaseRepository.new
+    @package_identifier = "00001"
+    @repository_name = "repository-1"
+    @package_repo = RepositoryPackageRepository::RepositoryPackageDatabaseRepository.new
 
     @bag_id = "repository.context-001"
     @repo = BagRepository::BagDatabaseRepository.new
@@ -119,58 +119,58 @@ class BagDatabaseRepositoryTest < SequelTestCase
     @repo
   end
 
-  def mixin_dobj_repo
-    @dobj_repo
+  def mixin_package_repo
+    @package_repo
   end
 
-  def mixin_dobj_identifier
-    @dobj_identifier
+  def mixin_package_identifier
+    @package_identifier
   end
 
-  def mixin_system_name
-    @system_name
+  def mixin_repository_name
+    @repository_name
   end
 
-  def create_digital_object
-    @dobj_repo.create(
-      identifier: @dobj_identifier,
-      system_name: @system_name,
+  def create_repository_package
+    @package_repo.create(
+      identifier: @package_identifier,
+      repository_name: @repository_name,
       updated_at: Time.now.utc
     )
   end
 
   def test_create
-    create_digital_object
+    create_repository_package
 
     @repo.create(
       identifier: @bag_id,
       group_part: 2,
-      digital_object_identifier: @dobj_identifier
+      repository_package_identifier: @package_identifier
     )
-    bag = DatabaseSchema::Bag.eager(:digital_object).first
+    bag = DatabaseSchema::Bag.eager(:repository_package).first
 
     assert bag
     assert_equal @bag_id, bag[:identifier]
     assert_equal 2, bag[:group_part]
-    assert_equal @dobj_identifier, bag.digital_object.identifier
+    assert_equal @package_identifier, bag.repository_package.identifier
   end
 
-  def test_create_without_digital_object
+  def test_create_without_repository_package
     assert_raises BagRepository::BagRepositoryError do
       @repo.create(
         identifier: @bag_id,
         group_part: 2,
-        digital_object_identifier: "nonexistent-id"
+        repository_package_identifier: "nonexistent-id"
       )
     end
   end
 
   def test_create_when_already_exists
-    create_digital_object
+    create_repository_package
 
     messages = semantic_logger_events do
-      @repo.create(identifier: @bag_id, group_part: 2, digital_object_identifier: @dobj_identifier)
-      @repo.create(identifier: @bag_id, group_part: 2, digital_object_identifier: @dobj_identifier)
+      @repo.create(identifier: @bag_id, group_part: 2, repository_package_identifier: @package_identifier)
+      @repo.create(identifier: @bag_id, group_part: 2, repository_package_identifier: @package_identifier)
     end
     bags = DB.from(:bag).all
     assert_equal 1, bags.size
