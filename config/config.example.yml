@@ -22,7 +22,10 @@ Database:
 
 DarkBlue:
   ArchivematicaInstances:
+      # Name is used for the context in the bag identifier
     - Name:
+      # RepositoryName is used to create a Repository database record
+      RepositoryName:
       API:
         Username:
         APIKey:
