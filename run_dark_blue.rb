@@ -45,8 +45,8 @@ class DarkBlueJob
   end
 
   def process
-    digital_objects = []
     @arch_configs.each do |arch_config|
+      logger.info("Archivematica instance: #{arch_config.name}")
       api_config = arch_config.api
       arch_api = Archivematica::ArchivematicaAPI.from_config(
         base_url: api_config.base_url,
@@ -61,33 +61,36 @@ class DarkBlueJob
 
       max_updated_at = @package_repo.get_max_updated_at_for_repository(arch_config.repository_name)
 
-      digital_objects = Archivematica::ArchivematicaService.new(
+      repository_packages = Archivematica::ArchivematicaService.new(
         name: arch_config.name,
         api: arch_api,
         location_uuid: api_config.location_uuid,
+        stored_date: max_updated_at&.iso8601,
         object_size_limit: @object_size_limit
-      ).get_digital_objects
-      logger.debug(digital_objects)
+      ).get_repository_packages
+      logger.debug(repository_packages)
 
-      digital_objects.each do |obj|
-        logger.debug("Digital object: #{obj}")
-
+      repository_packages.each do |package|
+        logger.debug(package)
         created = @package_repo.create(
-          identifier: obj.metadata.id,
+          identifier: package.metadata.id,
           repository_name: arch_config.repository_name,
-          updated_at: obj.stored_time
+          updated_at: package.stored_time
         )
         if !created
-          @package_repo.update_updated_at(identifier: obj.metadata.id, updated_at: obj.stored_time)
+          @package_repo.update_updated_at(
+            identifier: package.metadata.id,
+            updated_at: package.stored_time
+          )
         end
 
         courier = @dispatcher.dispatch(
-          object_metadata: obj.metadata,
+          object_metadata: package.metadata,
           data_transfer: DataTransfer::RemoteClientDataTransfer.new(
             remote_client: remote_client,
-            remote_path: obj.remote_path
+            remote_path: package.remote_path
           ),
-          context: obj.context
+          context: package.context
         )
         courier.deliver
       end

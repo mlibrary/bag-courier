@@ -4,7 +4,7 @@ require "minitest/autorun"
 require "minitest/pride"
 
 require_relative "../lib/archivematica"
-require_relative "../lib/digital_object"
+require_relative "../lib/repository_package"
 
 module PackageTestUtils
   def make_path(uuid)
@@ -167,9 +167,18 @@ class ArchivematicaAPITest < Minitest::Test
     end
   end
 
-  def test_get_packages
+  def test_get_packages_with_no_stored_date
     @api.stub :get_objects_from_pages, @package_data do
       packages = @api.get_packages(location_uuid: @location_uuid)
+      assert packages.all? { |p| p.is_a?(Archivematica::Package) }
+      assert_equal(@package_data.map { |p| p["uuid"] }, packages.map { |p| p.uuid })
+    end
+  end
+
+  def test_get_packages_with_stored_date
+    time_filter = Time.utc(2024, 1, 12).iso8601
+    @api.stub :get_objects_from_pages, @package_data do
+      packages = @api.get_packages(location_uuid: @location_uuid, stored_date: time_filter)
       assert packages.all? { |p| p.is_a?(Archivematica::Package) }
       assert_equal(@package_data.map { |p| p["uuid"] }, packages.map { |p| p.uuid })
     end
@@ -182,25 +191,27 @@ end
 
 class ArchivematicaServiceTest < Minitest::Test
   include Archivematica
-  include DigitalObject
+  include RepositoryPackage
   include PackageTestUtils
 
   def setup
     @mock_api = Minitest::Mock.new
     @location_uuid = SecureRandom.uuid
+    @stored_date = Time.utc(2024, 2, 17).iso8601
     @object_size_limit = 4000000
   end
 
-  def test_digital_objects
+  def test_get_repository_packages
     service = ArchivematicaService.new(
       name: "test",
       api: @mock_api,
       location_uuid: @location_uuid,
+      stored_date: @stored_date,
       object_size_limit: @object_size_limit
     )
 
     uuids = Array.new(2) { SecureRandom.uuid }
-    packages = [
+    test_packages = [
       Package.new(
         uuid: uuids[0],
         path: "/storage/#{make_path(uuids[0])}/identifier-one-#{uuids[0]}",
@@ -215,14 +226,14 @@ class ArchivematicaServiceTest < Minitest::Test
       )
     ]
 
-    @mock_api.expect(:get_packages, packages, location_uuid: @location_uuid)
-    digital_objects = service.get_digital_objects
+    @mock_api.expect(:get_packages, test_packages, location_uuid: @location_uuid, stored_date: @stored_date)
+    repository_packages = service.get_repository_packages
 
     # filters out larger bag
-    assert_equal 1, digital_objects.length
+    assert_equal 1, repository_packages.length
 
-    first_package = packages[0]
-    expected = DigitalObject.new(
+    first_package = test_packages[0]
+    expected = RepositoryPackage.new(
       remote_path: first_package.path,
       metadata: ObjectMetadata.new(
         id: first_package.uuid,
@@ -233,6 +244,6 @@ class ArchivematicaServiceTest < Minitest::Test
       context: "test",
       stored_time: Time.utc(2024, 2, 18)
     )
-    assert_equal expected, digital_objects[0]
+    assert_equal expected, repository_packages[0]
   end
 end
