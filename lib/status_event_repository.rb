@@ -14,7 +14,8 @@ module StatusEventRepository
   STATUSES = %w[
     bagged bagging
     copied copying
-    deposit_skipped deposited depositing
+    deposited depositing deposit_skipped
+    deposit_verified deposit_failed
     failed
     packed packing
     validated validating validation_skipped
@@ -40,6 +41,10 @@ module StatusEventRepository
     end
 
     def get_all_for_bag_identifier(identifier)
+      raise NotImplementedError
+    end
+
+    def get_latest_event_for_bag(bag_identifier:)
       raise NotImplementedError
     end
   end
@@ -83,6 +88,13 @@ module StatusEventRepository
 
     def get_all_for_bag_identifier(identifier)
       @status_events.select { |e| e.bag_identifier == identifier }
+    end
+
+    def get_latest_event_for_bag(bag_identifier:)
+      events = @status_events
+        .select { |e| e.bag_identifier == bag_identifier }
+        .sort_by(&:timestamp).reverse
+      (events.length > 0) ? events[0] : nil
     end
   end
 
@@ -138,6 +150,14 @@ module StatusEventRepository
         .where(bag: DatabaseSchema::Bag.where(identifier: identifier))
         .all
         .map { |se| convert_to_struct(se) }
+    end
+
+    def get_latest_event_for_bag(bag_identifier:)
+      event = base_query
+        .where(bag: DatabaseSchema::Bag.where(identifier: bag_identifier))
+        .order(Sequel.desc(:timestamp))
+        .first
+      event && convert_to_struct(event)
     end
   end
 
