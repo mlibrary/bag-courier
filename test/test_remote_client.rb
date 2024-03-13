@@ -1,5 +1,3 @@
-require "logger"
-
 require "bundler/setup"
 
 require "aws-sdk-s3"

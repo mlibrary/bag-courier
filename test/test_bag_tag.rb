@@ -1,11 +1,7 @@
-require "logger"
-
 require "minitest/autorun"
 require "minitest/pride"
 
 require_relative "../lib/bag_tag"
-
-LOGGER = Logger.new($stdout)
 
 class BagInfoBagTagTest < Minitest::Test
   def setup
