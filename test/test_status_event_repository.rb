@@ -72,11 +72,15 @@ module StatusEventRepositorySharedTest
   end
 
   def test_get_latest_event_for_bag
+    second_package_identifier = "000002"
+    mixin_package_repo.create(identifier: mixin_package_identifier, repository_name: "repository-1", updated_at: Time.now.utc)
+    mixin_package_repo.create(identifier: second_package_identifier, repository_name: "repository-1", updated_at: Time.now.utc)
+
     bag_identifier_one = mixin_bag_identifier
     bag_identifier_two = "repository.context-002"
     start_time = Time.utc(2024, 3, 4, 12, 0, 0, 0)
-    mixin_bag_repo.create(identifier: bag_identifier_one, group_part: 1)
-    mixin_bag_repo.create(identifier: bag_identifier_two, group_part: 1)
+    mixin_bag_repo.create(identifier: bag_identifier_one, group_part: 1, repository_package_identifier: mixin_package_identifier)
+    mixin_bag_repo.create(identifier: bag_identifier_two, group_part: 1, repository_package_identifier: second_package_identifier)
     mixin_repo.create(status: "copying", bag_identifier: bag_identifier_one, timestamp: start_time)
     mixin_repo.create(status: "copied", bag_identifier: bag_identifier_one, timestamp: start_time + 30)
     mixin_repo.create(status: "copying", bag_identifier: bag_identifier_one, timestamp: start_time + 60)
