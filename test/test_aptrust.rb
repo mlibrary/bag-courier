@@ -45,7 +45,7 @@ class APTrustAPITest < Minitest::Test
   end
 
   def test_get_ingest_status_not_found
-    data = {"results" => []}
+    data = {"results" => nil}
     @mock_backend.expect(:get, data, ["items", @expected_params])
     assert_equal "not found", @mocked_api.get_ingest_status(@bag_identifier)
     @mock_backend.verify

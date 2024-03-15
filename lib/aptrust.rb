@@ -55,12 +55,11 @@ module APTrust
         per_page: 1,
         sort: "date_processed__desc"
       })
-      return IngestStatus::NOT_FOUND if data["results"].size == 0
+      logger.debug(data)
+      return IngestStatus::NOT_FOUND if data["results"].nil?
       first_result = data["results"][0]
       status = first_result["status"]
       stage = first_result["stage"]
-      logger.debug(status)
-      logger.debug(stage)
 
       if /failed/i.match?(status)
         IngestStatus::FAILED
