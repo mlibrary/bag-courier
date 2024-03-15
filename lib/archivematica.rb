@@ -87,8 +87,10 @@ module Archivematica
         "current_location" => location_uuid,
         "status" => PackageStatus::UPLOADED
       }
+      formatted_stored_date = nil
       if stored_date
-        params["stored_date__gt"] = stored_date
+        formatted_stored_date = stored_date.strftime("%Y-%m-%dT%H:%M:%S.%6N")
+        params["stored_date__gt"] = formatted_stored_date
       end
 
       package_objects = get_objects_from_pages(PACKAGE_PATH, params)
@@ -103,7 +105,7 @@ module Archivematica
       logger.info(
         "Number of packages found in location #{location_uuid} " +
         "with #{PackageStatus::UPLOADED} status" +
-        (stored_date ? " and with stored date after #{stored_date}" : "") +
+        (formatted_stored_date ? " and with stored date after #{formatted_stored_date}" : "") +
         ": #{packages.length}"
       )
       packages

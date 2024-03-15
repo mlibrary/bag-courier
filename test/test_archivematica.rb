@@ -168,7 +168,17 @@ class ArchivematicaAPITest < Minitest::Test
   end
 
   def test_get_packages_with_no_stored_date
-    @api.stub :get_objects_from_pages, @package_data do
+    args_checker = lambda do |url, params|
+      assert_equal "file/", url
+      expected_params = {
+        "current_location" => @location_uuid,
+        "status" => "UPLOADED"
+      }
+      assert_equal expected_params, params
+      @package_data
+    end
+
+    @api.stub :get_objects_from_pages, args_checker do
       packages = @api.get_packages(location_uuid: @location_uuid)
       assert packages.all? { |p| p.is_a?(Archivematica::Package) }
       assert_equal(@package_data.map { |p| p["uuid"] }, packages.map { |p| p.uuid })
@@ -176,8 +186,20 @@ class ArchivematicaAPITest < Minitest::Test
   end
 
   def test_get_packages_with_stored_date
-    time_filter = Time.utc(2024, 1, 12).iso8601
-    @api.stub :get_objects_from_pages, @package_data do
+    time_filter = Time.utc(2024, 1, 12)
+
+    args_checker = lambda do |url, params|
+      assert_equal "file/", url
+      expected_params = {
+        "current_location" => @location_uuid,
+        "status" => "UPLOADED",
+        "stored_date__gt" => "2024-01-12T00:00:00.000000"
+      }
+      assert_equal expected_params, params
+      @package_data
+    end
+
+    @api.stub :get_objects_from_pages, args_checker do
       packages = @api.get_packages(location_uuid: @location_uuid, stored_date: time_filter)
       assert packages.all? { |p| p.is_a?(Archivematica::Package) }
       assert_equal(@package_data.map { |p| p["uuid"] }, packages.map { |p| p.uuid })
