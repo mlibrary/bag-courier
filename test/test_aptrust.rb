@@ -1,8 +1,10 @@
 require "minitest/autorun"
 require "minitest/pride"
 
+require_relative "setup_db"
 require_relative "../lib/aptrust"
 require_relative "../lib/api_backend"
+require_relative "../lib/status_event_repository"
 
 class APTrustAPITest < Minitest::Test
   include APTrust
@@ -79,5 +81,63 @@ class APTrustAPITest < Minitest::Test
 
   def teardown
     Faraday.default_connection = nil
+  end
+end
+
+class APTrustVerifierTest < SequelTestCase
+  include APTrust
+
+  def setup
+    @bag_identifier = "repository.context-0001"
+    @mock_api = Minitest::Mock.new
+    @status_event_repo = StatusEventRepository::StatusEventInMemoryRepository.new
+
+    @verifier = APTrustVerifier.new(
+      aptrust_api: @mock_api, status_event_repo: @status_event_repo
+    )
+
+    @status_event_repo.create(
+      bag_identifier: @bag_identifier,
+      status: "deposited",
+      timestamp: Time.now.utc
+    )
+  end
+
+  def test_verify_with_success
+    @mock_api.expect :get_ingest_status, IngestStatus::SUCCESS, [@bag_identifier]
+    @verifier.verify(@bag_identifier)
+    @mock_api.verify
+
+    event = @status_event_repo.get_latest_event_for_bag(bag_identifier: @bag_identifier)
+    assert event
+    assert "deposit_verified", event.status
+  end
+
+  def test_verify_with_failure
+    @mock_api.expect :get_ingest_status, IngestStatus::FAILED, [@bag_identifier]
+    @verifier.verify(@bag_identifier)
+    @mock_api.verify
+
+    event = @status_event_repo.get_latest_event_for_bag(bag_identifier: @bag_identifier)
+    assert event
+    assert "deposit_failed", event.status
+  end
+
+  def test_verify_with_processing
+    @mock_api.expect :get_ingest_status, IngestStatus::PROCESSING, [@bag_identifier]
+    @verifier.verify(@bag_identifier)
+    @mock_api.verify
+
+    event = @status_event_repo.get_latest_event_for_bag(bag_identifier: @bag_identifier)
+    assert_equal "deposited", event.status
+  end
+
+  def test_verify_with_not_found
+    assert_raises APTrustVerificationError do
+      @mock_api.expect :get_ingest_status, IngestStatus::NOT_FOUND, [@bag_identifier]
+      @verifier.verify(@bag_identifier)
+    end
+
+    @mock_api.verify
   end
 end

@@ -73,4 +73,44 @@ module APTrust
       end
     end
   end
+
+  class APTrustVerificationError < StandardError
+  end
+
+  class APTrustVerifier
+    include SemanticLogger::Loggable
+
+    def initialize(aptrust_api:, status_event_repo:)
+      @aptrust_api = aptrust_api
+      @status_event_repo = status_event_repo
+    end
+
+    def verify(bag_identifier)
+      logger.info("Deposit with pending verification found for bag #{bag_identifier}.")
+      status = @aptrust_api.get_ingest_status(bag_identifier)
+      logger.debug("Ingest status from APTrust: #{status}")
+      case status
+      when APTrust::IngestStatus::SUCCESS
+        @status_event_repo.create(
+          bag_identifier: bag_identifier,
+          status: "deposit_verified",
+          timestamp: Time.now.utc,
+          note: "Ingest to APTrust verified"
+        )
+        logger.info("Deposit for bag #{bag_identifier} was verified.")
+      when APTrust::IngestStatus::FAILED, APTrust::IngestStatus::CANCELLED
+        @status_event_repo.create(
+          bag_identifier: bag_identifier,
+          status: "deposit_failed",
+          timestamp: Time.now.utc,
+          note: "Ingest to APTrust failed with status \"#{status}\""
+        )
+        logger.error("Deposit for bag #{bag_identifier} failed.")
+      when APTrust::IngestStatus::NOT_FOUND
+        raise APTrustVerificationError, "No record of deposit for #{bag_identifier} found"
+      when APTrust::IngestStatus::PROCESSING
+        logger.info("Deposit for #{bag_identifier} is still being processed.")
+      end
+    end
+  end
 end
