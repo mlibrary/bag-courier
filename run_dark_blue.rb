@@ -64,7 +64,7 @@ class DarkBlueJob
         name: arch_config.name,
         api: arch_api,
         location_uuid: api_config.location_uuid,
-        stored_date: max_updated_at&.iso8601,
+        stored_date: max_updated_at,
         object_size_limit: @object_size_limit
       ).get_package_data_objects
 
