@@ -16,10 +16,12 @@ class APTrustAPITest < Minitest::Test
     @api_prefix = "/member-api/v3/"
     @object_id_prefix = "umich.edu/"
     @bag_identifier = "repository.context-001"
+    @deposited_at = Time.utc(2024, 3, 18, 0, 1)
 
     @expected_params = {
       object_identifier: @object_id_prefix + @bag_identifier,
       action: "Ingest",
+      date_processed__gteq: "2024-03-18T00:00:00.000000",
       per_page: 1,
       sort: "date_processed__desc"
     }
@@ -47,35 +49,45 @@ class APTrustAPITest < Minitest::Test
   def test_get_ingest_status_not_found
     data = {"results" => nil}
     @mock_backend.expect(:get, data, ["items", @expected_params])
-    assert_equal "not found", @mocked_api.get_ingest_status(@bag_identifier)
+    assert_equal "not found", @mocked_api.get_ingest_status(
+      bag_identifier: @bag_identifier, deposited_at: @deposited_at
+    )
     @mock_backend.verify
   end
 
   def test_get_ingest_status_failed
     data = {"results" => [{"status" => "faiLed"}]}
     @mock_backend.expect(:get, data, ["items", @expected_params])
-    assert_equal "failed", @mocked_api.get_ingest_status(@bag_identifier)
+    assert_equal "failed", @mocked_api.get_ingest_status(
+      bag_identifier: @bag_identifier, deposited_at: @deposited_at
+    )
     @mock_backend.verify
   end
 
   def test_get_ingest_status_cancelled
     data = {"results" => [{"status" => "Cancelled"}]}
     @mock_backend.expect(:get, data, ["items", @expected_params])
-    assert_equal "cancelled", @mocked_api.get_ingest_status(@bag_identifier)
+    assert_equal "cancelled", @mocked_api.get_ingest_status(
+      bag_identifier: @bag_identifier, deposited_at: @deposited_at
+    )
     @mock_backend.verify
   end
 
   def test_get_ingest_status_success
     data = {"results" => [{"status" => "Success", "stage" => "Cleanup"}]}
     @mock_backend.expect(:get, data, ["items", @expected_params])
-    assert_equal "success", @mocked_api.get_ingest_status(@bag_identifier)
+    assert_equal "success", @mocked_api.get_ingest_status(
+      bag_identifier: @bag_identifier, deposited_at: @deposited_at
+    )
     @mock_backend.verify
   end
 
   def test_get_ingest_status_processing
     data = {"results" => [{"status" => "something_unexpected"}]}
     @mock_backend.expect(:get, data, ["items", @expected_params])
-    assert_equal "processing", @mocked_api.get_ingest_status(@bag_identifier)
+    assert_equal "processing", @mocked_api.get_ingest_status(
+      bag_identifier: @bag_identifier, deposited_at: @deposited_at
+    )
     @mock_backend.verify
   end
 
@@ -91,6 +103,7 @@ class APTrustVerifierTest < SequelTestCase
     @bag_identifier = "repository.context-0001"
     @mock_api = Minitest::Mock.new
     @status_event_repo = StatusEventRepository::StatusEventInMemoryRepository.new
+    @deposited_at = Time.utc(2024, 3, 18)
 
     @verifier = APTrustVerifier.new(
       aptrust_api: @mock_api, status_event_repo: @status_event_repo
@@ -99,13 +112,18 @@ class APTrustVerifierTest < SequelTestCase
     @status_event_repo.create(
       bag_identifier: @bag_identifier,
       status: "deposited",
-      timestamp: Time.now.utc
+      timestamp: @deposited_at
     )
   end
 
   def test_verify_with_success
-    @mock_api.expect :get_ingest_status, IngestStatus::SUCCESS, [@bag_identifier]
-    @verifier.verify(@bag_identifier)
+    @mock_api.expect(
+      :get_ingest_status,
+      IngestStatus::SUCCESS,
+      bag_identifier: @bag_identifier,
+      deposited_at: @deposited_at
+    )
+    @verifier.verify(bag_identifier: @bag_identifier, deposited_at: @deposited_at)
     @mock_api.verify
 
     event = @status_event_repo.get_latest_event_for_bag(bag_identifier: @bag_identifier)
@@ -114,8 +132,13 @@ class APTrustVerifierTest < SequelTestCase
   end
 
   def test_verify_with_failure
-    @mock_api.expect :get_ingest_status, IngestStatus::FAILED, [@bag_identifier]
-    @verifier.verify(@bag_identifier)
+    @mock_api.expect(
+      :get_ingest_status,
+      IngestStatus::FAILED,
+      bag_identifier: @bag_identifier,
+      deposited_at: @deposited_at
+    )
+    @verifier.verify(bag_identifier: @bag_identifier, deposited_at: @deposited_at)
     @mock_api.verify
 
     event = @status_event_repo.get_latest_event_for_bag(bag_identifier: @bag_identifier)
@@ -124,8 +147,13 @@ class APTrustVerifierTest < SequelTestCase
   end
 
   def test_verify_with_processing
-    @mock_api.expect :get_ingest_status, IngestStatus::PROCESSING, [@bag_identifier]
-    @verifier.verify(@bag_identifier)
+    @mock_api.expect(
+      :get_ingest_status,
+      IngestStatus::PROCESSING,
+      bag_identifier: @bag_identifier,
+      deposited_at: @deposited_at
+    )
+    @verifier.verify(bag_identifier: @bag_identifier, deposited_at: @deposited_at)
     @mock_api.verify
 
     event = @status_event_repo.get_latest_event_for_bag(bag_identifier: @bag_identifier)
@@ -133,8 +161,13 @@ class APTrustVerifierTest < SequelTestCase
   end
 
   def test_verify_with_not_found
-    @mock_api.expect :get_ingest_status, IngestStatus::NOT_FOUND, [@bag_identifier]
-    @verifier.verify(@bag_identifier)
+    @mock_api.expect(
+      :get_ingest_status,
+      IngestStatus::PROCESSING,
+      bag_identifier: @bag_identifier,
+      deposited_at: @deposited_at
+    )
+    @verifier.verify(bag_identifier: @bag_identifier, deposited_at: @deposited_at)
     @mock_api.verify
 
     event = @status_event_repo.get_latest_event_for_bag(bag_identifier: @bag_identifier)
