@@ -18,6 +18,7 @@ module APTrust
 
     API_V3 = "/member-api/v3/"
     DEFAULT_OBJECT_ID_PREFIX = "umich.edu/"
+    BUFFER = 60
 
     def initialize(api_backend:, api_prefix: API_V3, object_id_prefix: DEFAULT_OBJECT_ID_PREFIX)
       @backend = api_backend
@@ -45,12 +46,14 @@ module APTrust
       new(api_backend: backend, api_prefix: api_prefix, object_id_prefix: object_id_prefix)
     end
 
-    def get_ingest_status(bag_identifier)
+    def get_ingest_status(bag_identifier:, deposited_at:)
       # Modelled after https://github.com/mlibrary/heliotrope/blob/master/app/services/aptrust/service.rb
       # See also https://aptrust.github.io/registry/#/Work%20Items
+      time_filter = (deposited_at - BUFFER).strftime("%Y-%m-%dT%H:%M:%S.%6N")
       data = @backend.get("items", {
         object_identifier: @object_id_prefix + bag_identifier,
         action: "Ingest",
+        date_processed__gteq: time_filter,
         per_page: 1,
         sort: "date_processed__desc"
       })
@@ -80,8 +83,11 @@ module APTrust
       @status_event_repo = status_event_repo
     end
 
-    def verify(bag_identifier)
-      status = @aptrust_api.get_ingest_status(bag_identifier)
+    def verify(bag_identifier:, deposited_at:)
+      status = @aptrust_api.get_ingest_status(
+        bag_identifier: bag_identifier,
+        deposited_at: deposited_at
+      )
       logger.debug("Ingest status from APTrust: #{status}")
       case status
       when APTrust::IngestStatus::SUCCESS
