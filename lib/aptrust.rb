@@ -46,9 +46,8 @@ module APTrust
     end
 
     def get_ingest_status(bag_identifier)
-      # This "Work Items" endpoint always returns multiple, paginated results. Hence `results.first` below.
-      # See https://aptrust.github.io/registry/#/Work%20Items
-      # We'll request one result per page, and use a "date desc" sort to get the most recently-processed ingest for this identifier.
+      # Modelled after https://github.com/mlibrary/heliotrope/blob/master/app/services/aptrust/service.rb
+      # See also https://aptrust.github.io/registry/#/Work%20Items
       data = @backend.get("items", {
         object_identifier: @object_id_prefix + bag_identifier,
         action: "Ingest",
@@ -85,7 +84,6 @@ module APTrust
     end
 
     def verify(bag_identifier)
-      logger.info("Deposit with pending verification found for bag #{bag_identifier}.")
       status = @aptrust_api.get_ingest_status(bag_identifier)
       logger.debug("Ingest status from APTrust: #{status}")
       case status

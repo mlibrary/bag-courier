@@ -47,6 +47,7 @@ class APTrustVerificationJob
       logger.debug(latest_event)
       next if latest_event&.status != "deposited"
 
+      logger.info("Deposit with pending verification found for bag #{bag.identifier}.")
       @verifier.verify(bag.identifier)
     end
   end
