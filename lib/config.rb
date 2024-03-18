@@ -86,10 +86,17 @@ module Config
   )
 
   APTrustAPIConfig = Struct.new(
-    "APTrustConfig",
+    "APTrustAPIConfig",
     :username,
     :base_url,
     :api_key,
+    keyword_init: true
+  )
+
+  APTrustConfig = Struct.new(
+    "APTrustConfig",
+    :api,
+    :remote,
     keyword_init: true
   )
 
@@ -98,9 +105,8 @@ module Config
     :settings,
     :database,
     :repository,
-    :target_remote,
     :dark_blue,
-    :aptrust_api,
+    :aptrust,
     keyword_init: true
   )
 
@@ -178,6 +184,7 @@ module Config
     def self.create_config(data)
       logger.debug(data)
       db_data = data.fetch("Database", nil)
+      aptrust_data = data["APTrust"]
       Config.new(
         settings: SettingsConfig.new(
           log_level: verify_string("LogLevel", data["LogLevel"]).to_sym,
@@ -216,11 +223,13 @@ module Config
             end
           )
         ),
-        target_remote: create_remote_config(data["TargetRemote"]),
-        aptrust_api: APTrustAPIConfig.new(
-          username: verify_string("Username", data["APTrust"]["Username"]),
-          api_key: verify_string("APIKey", data["APTrust"]["APIKey"]),
-          base_url: verify_string("BaseURL", data["APTrust"]["BaseURL"])
+        aptrust: APTrustConfig.new(
+          api: APTrustAPIConfig.new(
+            username: verify_string("Username", aptrust_data["API"]["Username"]),
+            api_key: verify_string("APIKey", aptrust_data["API"]["APIKey"]),
+            base_url: verify_string("BaseURL", aptrust_data["API"]["BaseURL"])
+          ),
+          remote: create_remote_config(aptrust_data["Remote"])
         )
       )
     end

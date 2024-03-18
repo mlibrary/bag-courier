@@ -46,19 +46,17 @@ DarkBlue:
 Repository:
 RepositoryDescription:
 
-# Remote(s)
-TargetRemote:
-  Type: aptrust
-  Settings:
-    # APTrust AWS remote settings
-    ReceivingBucket:
-    RestoreBucket:
-    BucketRegion:
-    AwsAccessKeyId:
-    AwsSecretAccessKey:
-
-# APTrust
 APTrust:
-  Username:
-  APIKey:
-  BaseURL:
+  API:
+    Username:
+    APIKey:
+    BaseURL:
+  Remote:
+    Type: aptrust
+    Settings:
+      # APTrust AWS remote settings
+      ReceivingBucket:
+      RestoreBucket:
+      BucketRegion:
+      AwsAccessKeyId:
+      AwsSecretAccessKey:
