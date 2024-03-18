@@ -12,9 +12,10 @@ config = Config::ConfigService.from_file(File.join(".", "config", "config.yml"))
 SemanticLogger.default_level = config.settings.log_level
 logger = SemanticLogger["run_example"]
 
+# Build your target client here; APTrust is the standard target and specified here.
 target_client = RemoteClient::RemoteClientFactory.from_config(
-  type: config.target_remote.type,
-  settings: config.target_remote.settings
+  type: config.aptrust.remote.type,
+  settings: config.aptrust.remote.settings
 )
 
 # A RemoteClient will be used to copy your object into the bag

@@ -29,9 +29,9 @@ class APTrustVerificationJob
 
   def initialize(config)
     aptrust_api = APTrust::APTrustAPI.from_config(
-      base_url: config.aptrust_api.base_url,
-      username: config.aptrust_api.username,
-      api_key: config.aptrust_api.api_key
+      base_url: config.aptrust.api.base_url,
+      username: config.aptrust.api.username,
+      api_key: config.aptrust.api.api_key
     )
     @bag_repo = BagRepository::BagRepositoryFactory.for(use_db: DB)
     @status_event_repo = StatusEventRepository::StatusEventRepositoryFactory.for(use_db: DB)

@@ -35,8 +35,8 @@ class DarkBlueJob
       settings: config.settings,
       repository: config.repository,
       target_client: RemoteClient::RemoteClientFactory.from_config(
-        type: config.target_remote.type,
-        settings: config.target_remote.settings
+        type: config.aptrust.remote.type,
+        settings: config.aptrust.remote.settings
       ),
       status_event_repo: StatusEventRepository::StatusEventRepositoryFactory.for(use_db: DB),
       bag_repo: BagRepository::BagRepositoryFactory.for(use_db: DB)
