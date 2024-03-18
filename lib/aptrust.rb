@@ -72,9 +72,6 @@ module APTrust
     end
   end
 
-  class APTrustVerificationError < StandardError
-  end
-
   class APTrustVerifier
     include SemanticLogger::Loggable
 
@@ -104,7 +101,7 @@ module APTrust
         )
         logger.error("Deposit for bag #{bag_identifier} failed.")
       when APTrust::IngestStatus::NOT_FOUND
-        raise APTrustVerificationError, "No record of deposit for #{bag_identifier} found"
+        logger.info("Deposit for #{bag_identifier} was not yet found.")
       when APTrust::IngestStatus::PROCESSING
         logger.info("Deposit for #{bag_identifier} is still being processed.")
       end

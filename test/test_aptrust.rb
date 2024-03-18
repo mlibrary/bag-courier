@@ -133,11 +133,11 @@ class APTrustVerifierTest < SequelTestCase
   end
 
   def test_verify_with_not_found
-    assert_raises APTrustVerificationError do
-      @mock_api.expect :get_ingest_status, IngestStatus::NOT_FOUND, [@bag_identifier]
-      @verifier.verify(@bag_identifier)
-    end
-
+    @mock_api.expect :get_ingest_status, IngestStatus::NOT_FOUND, [@bag_identifier]
+    @verifier.verify(@bag_identifier)
     @mock_api.verify
+
+    event = @status_event_repo.get_latest_event_for_bag(bag_identifier: @bag_identifier)
+    assert_equal "deposited", event.status
   end
 end
