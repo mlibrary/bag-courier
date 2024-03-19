@@ -59,9 +59,14 @@ bundle install
 
 #### Usage
 
-The only process or job currently defined is `run_dark_blue.rb`.
+The primary job or process is `run_dark_blue.rb`.
 ```sh
 ruby run_dark_blue.rb
+```
+
+The latest deposits to APTrust can be verified using `verify_aptrust.rb`.
+```sh
+ruby verify_aptrust.rb
 ```
 
 If you're working on a new job or just want to try out the classes,
@@ -88,9 +93,14 @@ Run the migrations, if you configured the application to use a database:
 docker compose run dark-blue rake db:migrate
 ```
 
-Run the `dark-blue` service.
+Run the `dark-blue` service to start `run_dark_blue.rb`.
 ```sh
 docker compose up dark-blue
+```
+
+To use `verify_aptrust.rb`, override the entry command for the `dark-blue` service with `run`.
+```sh
+docker compose run dark-blue ruby verify_aptrust.rb
 ```
 
 ## Running tests
