@@ -1,5 +1,3 @@
-require "faraday"
-require "faraday/retry"
 require "semantic_logger"
 
 require_relative "api_backend"

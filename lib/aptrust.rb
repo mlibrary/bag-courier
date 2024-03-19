@@ -1,5 +1,3 @@
-require "faraday"
-require "faraday/retry"
 require "semantic_logger"
 
 require_relative "api_backend"
@@ -89,6 +87,7 @@ module APTrust
         deposited_at: deposited_at
       )
       logger.debug("Ingest status from APTrust: #{status}")
+      log_message_beginning = "Deposit for bag #{bag_identifier}"
       case status
       when APTrust::IngestStatus::SUCCESS
         @status_event_repo.create(
@@ -97,7 +96,7 @@ module APTrust
           timestamp: Time.now.utc,
           note: "Ingest to APTrust verified"
         )
-        logger.info("Deposit for bag #{bag_identifier} was verified.")
+        logger.info("#{log_message_beginning} was verified.")
       when APTrust::IngestStatus::FAILED, APTrust::IngestStatus::CANCELLED
         @status_event_repo.create(
           bag_identifier: bag_identifier,
@@ -105,11 +104,11 @@ module APTrust
           timestamp: Time.now.utc,
           note: "Ingest to APTrust failed with status \"#{status}\""
         )
-        logger.error("Deposit for bag #{bag_identifier} failed.")
+        logger.error("#{log_message_beginning} failed.")
       when APTrust::IngestStatus::NOT_FOUND
-        logger.info("Deposit for #{bag_identifier} was not yet found.")
+        logger.info("#{log_message_beginning} was not yet found.")
       when APTrust::IngestStatus::PROCESSING
-        logger.info("Deposit for #{bag_identifier} is still being processed.")
+        logger.info("#{log_message_beginning} is still being processed.")
       end
     end
   end
