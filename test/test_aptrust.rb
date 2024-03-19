@@ -128,7 +128,7 @@ class APTrustVerifierTest < SequelTestCase
 
     event = @status_event_repo.get_latest_event_for_bag(bag_identifier: @bag_identifier)
     assert event
-    assert "deposit_verified", event.status
+    assert "verified", event.status
   end
 
   def test_verify_with_failure
@@ -143,7 +143,7 @@ class APTrustVerifierTest < SequelTestCase
 
     event = @status_event_repo.get_latest_event_for_bag(bag_identifier: @bag_identifier)
     assert event
-    assert "deposit_failed", event.status
+    assert "verify_failed", event.status
   end
 
   def test_verify_with_processing

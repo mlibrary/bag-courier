@@ -15,10 +15,10 @@ module StatusEventRepository
     bagged bagging
     copied copying
     deposited depositing deposit_skipped
-    deposit_verified deposit_failed
     failed
     packed packing
     validated validating validation_skipped
+    verified verify_failed
   ]
 
   StatusEvent = Struct.new(
