@@ -92,7 +92,7 @@ module APTrust
       when APTrust::IngestStatus::SUCCESS
         @status_event_repo.create(
           bag_identifier: bag_identifier,
-          status: "deposit_verified",
+          status: "verified",
           timestamp: Time.now.utc,
           note: "Ingest to APTrust verified"
         )
@@ -100,7 +100,7 @@ module APTrust
       when APTrust::IngestStatus::FAILED, APTrust::IngestStatus::CANCELLED
         @status_event_repo.create(
           bag_identifier: bag_identifier,
-          status: "deposit_failed",
+          status: "verify_failed",
           timestamp: Time.now.utc,
           note: "Ingest to APTrust failed with status \"#{status}\""
         )
