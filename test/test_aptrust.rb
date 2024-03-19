@@ -39,9 +39,9 @@ class APTrustAPITest < Minitest::Test
       base_url: @base_url,
       username: @username,
       api_key: @api_key,
+      api_backend: APIBackend::FaradayAPIBackend,
       api_prefix: @api_prefix,
-      object_id_prefix: @object_id_prefix,
-      api_backend: APIBackend::FaradayAPIBackend
+      object_id_prefix: @object_id_prefix
     )
     assert api.is_a?(APTrustAPI)
   end
@@ -89,10 +89,6 @@ class APTrustAPITest < Minitest::Test
       bag_identifier: @bag_identifier, deposited_at: @deposited_at
     )
     @mock_backend.verify
-  end
-
-  def teardown
-    Faraday.default_connection = nil
   end
 end
 
@@ -157,7 +153,7 @@ class APTrustVerifierTest < SequelTestCase
     @mock_api.verify
 
     event = @status_event_repo.get_latest_event_for_bag(bag_identifier: @bag_identifier)
-    assert_equal "deposited", event.status
+    assert_equal "deposited", event.status  # No verify event
   end
 
   def test_verify_with_not_found
@@ -171,6 +167,6 @@ class APTrustVerifierTest < SequelTestCase
     @mock_api.verify
 
     event = @status_event_repo.get_latest_event_for_bag(bag_identifier: @bag_identifier)
-    assert_equal "deposited", event.status
+    assert_equal "deposited", event.status  # No verify event
   end
 end
