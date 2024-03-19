@@ -7,7 +7,8 @@ WorkingDir: "./prep"
 ExportDir: "./export"
 # Determines whether the process skips sending bag(s)
 DryRun: false
-# Objects this size or larger in bytes will not be processed.
+# Limit for the size of objects to be processed (optional)
+# This is useful for development or in environments where larger files cannot be processed.
 ObjectSizeLimit: 2000000000
 
 # Database (optional)

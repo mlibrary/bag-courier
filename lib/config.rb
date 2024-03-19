@@ -175,7 +175,7 @@ module Config
           working_dir: verify_string("WorkingDir", data["WorkingDir"]),
           export_dir: verify_string("ExportDir", data["ExportDir"]),
           dry_run: verify_boolean("DryRun", data["DryRun"]),
-          object_size_limit: verify_int("ObjectSizeLimit", data["ObjectSizeLimit"])
+          object_size_limit: data["ObjectSizeLimit"] && verify_int("ObjectSizeLimit", data["ObjectSizeLimit"])
         ),
         repository: RepositoryConfig.new(
           name: verify_string("Repository", data["Repository"]),

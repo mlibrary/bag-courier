@@ -219,21 +219,10 @@ class ArchivematicaServiceTest < Minitest::Test
   def setup
     @mock_api = Minitest::Mock.new
     @location_uuid = SecureRandom.uuid
-    @stored_date = Time.utc(2024, 2, 17).iso8601
-    @object_size_limit = 4000000
-  end
-
-  def test_get_package_data_objects
-    service = ArchivematicaService.new(
-      name: "test",
-      api: @mock_api,
-      location_uuid: @location_uuid,
-      stored_date: @stored_date,
-      object_size_limit: @object_size_limit
-    )
+    @stored_date = Time.utc(2024, 2, 17)
 
     uuids = Array.new(2) { SecureRandom.uuid }
-    test_packages = [
+    @test_packages = [
       Package.new(
         uuid: uuids[0],
         path: "/storage/#{make_path(uuids[0])}/identifier-one-#{uuids[0]}",
@@ -244,29 +233,67 @@ class ArchivematicaServiceTest < Minitest::Test
         uuid: uuids[1],
         path: "/storage/#{make_path(uuids[1])}/identifier-two-#{uuids[1]}",
         size: 500000000,
-        stored_date: "2024-02-18T00:00:00.000000"
+        stored_date: "2024-02-19T00:00:00.000000"
       )
     ]
+  end
 
-    @mock_api.expect(:get_packages, test_packages, location_uuid: @location_uuid, stored_date: @stored_date)
+  def test_get_package_data_objects_with_no_filter
+    service = ArchivematicaService.new(
+      name: "test",
+      api: @mock_api,
+      location_uuid: @location_uuid,
+      stored_date: @stored_date
+    )
+
+    @mock_api.expect(:get_packages, @test_packages, location_uuid: @location_uuid, stored_date: @stored_date)
     package_data_objs = service.get_package_data_objects
     @mock_api.verify
 
-    # filters out larger bag
-    assert_equal 1, package_data_objs.length
-
-    first_package = test_packages[0]
-    expected = RepositoryPackageData.new(
-      remote_path: first_package.path,
-      metadata: ObjectMetadata.new(
-        id: first_package.uuid,
-        title: "#{first_package.uuid} / identifier-one",
-        creator: "Not available",
-        description: "Not available"
+    # No objects are filtered out
+    first_package, second_package = @test_packages
+    expected = [
+      RepositoryPackageData.new(
+        remote_path: first_package.path,
+        metadata: ObjectMetadata.new(
+          id: first_package.uuid,
+          title: "#{first_package.uuid} / identifier-one",
+          creator: "Not available",
+          description: "Not available"
+        ),
+        context: "test",
+        stored_time: Time.utc(2024, 2, 18)
       ),
-      context: "test",
-      stored_time: Time.utc(2024, 2, 18)
+      RepositoryPackageData.new(
+        remote_path: second_package.path,
+        metadata: ObjectMetadata.new(
+          id: second_package.uuid,
+          title: "#{second_package.uuid} / identifier-two",
+          creator: "Not available",
+          description: "Not available"
+        ),
+        context: "test",
+        stored_time: Time.utc(2024, 2, 19)
+      )
+    ]
+    assert_equal expected, package_data_objs
+  end
+
+  def test_get_package_data_objects_with_size_filter
+    service = ArchivematicaService.new(
+      name: "test",
+      api: @mock_api,
+      location_uuid: @location_uuid,
+      stored_date: @stored_date,
+      package_filter: SizePackageFilter.new(4000000)
     )
-    assert_equal expected, package_data_objs[0]
+
+    @mock_api.expect(:get_packages, @test_packages, location_uuid: @location_uuid, stored_date: @stored_date)
+    package_data_objs = service.get_package_data_objects
+    @mock_api.verify
+
+    # Larger object is filtered out
+    assert_equal 1, package_data_objs.length
+    assert_equal package_data_objs[0].metadata.id, @test_packages[0].uuid
   end
 end
