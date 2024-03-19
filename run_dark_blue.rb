@@ -65,7 +65,7 @@ class DarkBlueJob
         api: arch_api,
         location_uuid: api_config.location_uuid,
         stored_date: max_updated_at,
-        object_size_limit: @object_size_limit
+        **(@object_size_limit ? {package_filter: Archivematica::SizePackageFilter.new(@object_size_limit)} : {})
       ).get_package_data_objects
 
       package_data_objs.each do |package_data|

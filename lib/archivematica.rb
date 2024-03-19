@@ -112,6 +112,32 @@ module Archivematica
     end
   end
 
+  class PackageFilterBase
+    def filter(packages)
+      raise NotImplementedError
+    end
+  end
+
+  class AllPackageFilter < PackageFilterBase
+    def filter(packages)
+      packages
+    end
+  end
+
+  class SizePackageFilter < PackageFilterBase
+    include SemanticLogger::Loggable
+
+    def initialize(size_limit)
+      @size_limit = size_limit
+    end
+
+    def filter(packages)
+      filtered_packages = packages.filter { |p| p.size < @size_limit }
+      logger.info("Number of packages below object size limit of #{@size_limit}: #{filtered_packages.length}")
+      filtered_packages
+    end
+  end
+
   class ArchivematicaService
     include SemanticLogger::Loggable
 
@@ -124,27 +150,25 @@ module Archivematica
       api:,
       location_uuid:,
       stored_date:,
-      object_size_limit:
+      package_filter: AllPackageFilter.new
     )
       @name = name
       @api = api
       @location_uuid = location_uuid
       @stored_date = stored_date
-      @object_size_limit = object_size_limit
+      @package_filter = package_filter
     end
 
     def get_package_data_objects
       logger.info("Archivematica instance: #{@name}")
       packages = @api.get_packages(location_uuid: @location_uuid, stored_date: @stored_date)
-      selected_packages = packages.select { |p| p.size < @object_size_limit }
-      logger.info("Number of packages below object size limit: #{selected_packages.length}")
-
-      selected_packages.map do |package|
-        logger.info(package)
+      filtered_packages = @package_filter.filter(packages)
+      filtered_packages.map do |package|
+        logger.debug(package)
         inner_bag_dir_name = File.basename(package.path)
-        logger.info("Inner bag name: #{inner_bag_dir_name}")
+        logger.debug("Inner bag name: #{inner_bag_dir_name}")
         ingest_dir_name = inner_bag_dir_name.gsub("-" + package.uuid, "")
-        logger.info("Directory name on Archivematica ingest: #{ingest_dir_name}")
+        logger.debug("Directory name on Archivematica ingest: #{ingest_dir_name}")
         object_metadata = RepositoryData::ObjectMetadata.new(
           id: package.uuid,
           title: "#{package.uuid} / #{ingest_dir_name}",
