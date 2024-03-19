@@ -162,10 +162,6 @@ class ArchivematicaAPITest < Minitest::Test
       assert_equal(@package_data.map { |p| p["uuid"] }, packages.map { |p| p.uuid })
     end
   end
-
-  def teardown
-    Faraday.default_connection = nil
-  end
 end
 
 class ArchivematicaServiceTest < Minitest::Test
