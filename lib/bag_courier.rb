@@ -90,26 +90,17 @@ module BagCourier
     def deposit(file_path:)
       logger.debug(["file_path=#{file_path}", "bag_id=#{@bag_id}"])
 
-      bag_sent = false
       logger.debug("dry_run=#{@dry_run}")
       if @dry_run
         track!(status: "deposit_skipped")
-        return bag_sent
+        return
       end
 
       logger.info("Sending bag to #{@target_client.remote_text}")
-      begin
-        # add timing
-        track!(status: "depositing")
-        @target_client.send_file(local_file_path: file_path)
-        track!(status: "deposited")
-      rescue RemoteClient::RemoteClientError => e
-        track!(status: "failed", note: "failed in #{e.context} with error #{e}")
-        logger.error(
-          ["Sending of file #{filename} failed in #{e.context} with error #{e}"] +
-          e.backtrace[0..20]
-        )
-      end
+      # add timing
+      track!(status: "depositing")
+      @target_client.send_file(local_file_path: file_path)
+      track!(status: "deposited")
     end
 
     def deliver
@@ -146,9 +137,9 @@ module BagCourier
 
         deposit(file_path: export_tar_file_path)
       rescue => e
-        logger.error(
-          ["BagCourier.deliver error: #{e}"] + e.backtrace[0..20]
-        )
+        note = "failed with error #{e.class}: #{e.full_message}"
+        track!(status: "failed", note: note)
+        logger.error("BagCourier.deliver #{note}")
       end
     end
   end
