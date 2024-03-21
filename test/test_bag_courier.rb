@@ -45,30 +45,29 @@ end
 
 class BagCourierTest < SequelTestCase
   def setup
+    # Set up test directories and files
     @test_dir_path = File.join(__dir__, "bag_courier_test")
     @prep_path = File.join(@test_dir_path, "prep")
     @export_path = File.join(@test_dir_path, "export")
     @remote_path = File.join(@test_dir_path, "remote")
-
     FileUtils.rm_r(@test_dir_path)
     FileUtils.mkdir_p([@test_dir_path, @prep_path, @export_path, @remote_path])
-
     File.write(
       File.join(@remote_path, "something.txt"),
       "Something to be preserved"
     )
 
-    @package_repo = RepositoryPackageRepository::RepositoryPackageDatabaseRepository.new
-    @bag_repo = BagRepository::BagDatabaseRepository.new
-    @status_event_repo = StatusEventRepository::StatusEventDatabaseRepository.new
-
-    @source_remote_client = RemoteClient::FileSystemRemoteClient.new(
-      File.join(__dir__, "bag_courier_test", "remote")
+    # Set up remote-related objects
+    @data_transfer = DataTransfer::RemoteClientDataTransfer.new(
+      remote_client: RemoteClient::FileSystemRemoteClient.new(
+        File.join(@remote_path)
+      )
     )
+    @mock_target_client = Minitest::Mock.new
 
+    # Set up data
     @object_id = "000001"
     @repository_name = "fake-repository"
-
     @bag_id = BagCourier::BagId.new(
       repository: @repository_name,
       object_id: @object_id,
@@ -85,6 +84,10 @@ class BagCourierTest < SequelTestCase
       creator: "Test Test"
     )
 
+    # Set up repositories and add records
+    @package_repo = RepositoryPackageRepository::RepositoryPackageDatabaseRepository.new
+    @bag_repo = BagRepository::BagDatabaseRepository.new
+    @status_event_repo = StatusEventRepository::StatusEventDatabaseRepository.new
     @package_repo.create(
       identifier: @object_id,
       repository_name: @repository_name,
@@ -95,8 +98,6 @@ class BagCourierTest < SequelTestCase
       group_part: 1,
       repository_package_identifier: @object_id
     )
-
-    @mock_target_client = Minitest::Mock.new
   end
 
   def create_courier(dry_run)
@@ -104,9 +105,7 @@ class BagCourierTest < SequelTestCase
       bag_id: @bag_id,
       bag_info: @bag_info,
       tags: [@aptrust_info],
-      data_transfer: DataTransfer::RemoteClientDataTransfer.new(
-        remote_client: @source_remote_client
-      ),
+      data_transfer: @data_transfer,
       working_dir: @prep_path,
       export_dir: @export_path,
       dry_run: dry_run,
