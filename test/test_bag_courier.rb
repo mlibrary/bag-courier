@@ -1,15 +1,19 @@
 require "minitar"
 require "minitest/autorun"
 require "minitest/pride"
+require "semantic_logger"
 
 require_relative "setup_db"
 require_relative "../lib/bag_courier"
 require_relative "../lib/bag_repository"
 require_relative "../lib/bag_tag"
+require_relative "../lib/config"
 require_relative "../lib/data_transfer"
 require_relative "../lib/remote_client"
 require_relative "../lib/repository_package_repository"
 require_relative "../lib/status_event_repository"
+
+SemanticLogger.add_appender(io: $stderr, formatter: :color)
 
 class BagIdTest < Minitest::Test
   def test_to_s
@@ -65,6 +69,16 @@ class BagCourierTest < SequelTestCase
       )
     )
     @mock_target_client = Minitest::Mock.new
+    @aptrust_target_client = RemoteClient::RemoteClientFactory.from_config(
+      type: :aptrust,
+      settings: Config::AptrustAwsRemoteConfig.new(
+        region: "us-east-2",
+        receiving_bucket: "aptrust.receiving.someorg.edu",
+        restore_bucket: "aptrust.restore.someorg.edu",
+        access_key_id: "some-access-key",
+        secret_access_key: "some-secret-key"
+      )
+    )
 
     # Set up data
     @object_id = "000001"
@@ -101,7 +115,7 @@ class BagCourierTest < SequelTestCase
     )
   end
 
-  def create_courier(dry_run)
+  def create_courier(dry_run:, target_client:)
     BagCourier::BagCourier.new(
       bag_id: @bag_id,
       bag_info: @bag_info,
@@ -111,13 +125,12 @@ class BagCourierTest < SequelTestCase
       export_dir: @export_path,
       dry_run: dry_run,
       status_event_repo: @status_event_repo,
-      target_client: @mock_target_client
+      target_client: target_client
     )
   end
 
   def test_deliver_with_dry_run_false
-    courier = create_courier(false)
-
+    courier = create_courier(dry_run: false, target_client: @mock_target_client)
     expected_tar_file_path = File.join(@export_path, @bag_id.to_s + ".tar")
     @mock_target_client.expect(:remote_text, "AWS S3 remote location in bucket fake")
     @mock_target_client.expect(:send_file, nil, local_file_path: expected_tar_file_path)
@@ -140,8 +153,7 @@ class BagCourierTest < SequelTestCase
   end
 
   def test_deliver_with_dry_run
-    courier = create_courier(true)
-
+    courier = create_courier(dry_run: true, target_client: @mock_target_client)
     courier.deliver
     @mock_target_client.verify
 
@@ -154,5 +166,20 @@ class BagCourierTest < SequelTestCase
 
     expected_tar_file_path = File.join(@export_path, @bag_id.to_s + ".tar")
     assert File.exist?(expected_tar_file_path)
+  end
+
+  def test_deliver_when_deposit_raises_error
+    courier = create_courier(dry_run: false, target_client: @aptrust_target_client)
+    raise_error = proc { raise RemoteClient::RemoteClientError, "specific details" }
+    @aptrust_target_client.stub :send_file, raise_error do
+      courier.deliver
+    end
+
+    expected_statuses = [
+      "bagging", "copying", "copied", "bagged", "packing",
+      "packed", "depositing", "failed"
+    ]
+    statuses = @status_event_repo.get_all.sort_by(&:timestamp).map(&:status)
+    assert_equal expected_statuses, statuses
   end
 end
