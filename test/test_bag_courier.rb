@@ -1,7 +1,6 @@
 require "minitar"
 require "minitest/autorun"
 require "minitest/pride"
-require "semantic_logger"
 
 require_relative "setup_db"
 require_relative "../lib/bag_courier"
@@ -12,8 +11,6 @@ require_relative "../lib/data_transfer"
 require_relative "../lib/remote_client"
 require_relative "../lib/repository_package_repository"
 require_relative "../lib/status_event_repository"
-
-SemanticLogger.add_appender(io: $stderr, formatter: :color)
 
 class BagIdTest < Minitest::Test
   def test_to_s
