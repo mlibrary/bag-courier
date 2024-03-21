@@ -1,3 +1,4 @@
+require "minitar"
 require "minitest/autorun"
 require "minitest/pride"
 
@@ -117,9 +118,9 @@ class BagCourierTest < SequelTestCase
   def test_deliver_with_dry_run_false
     courier = create_courier(false)
 
-    expected_tar_file_name = File.join(@export_path, @bag_id.to_s + ".tar")
+    expected_tar_file_path = File.join(@export_path, @bag_id.to_s + ".tar")
     @mock_target_client.expect(:remote_text, "AWS S3 remote location in bucket fake")
-    @mock_target_client.expect(:send_file, nil, local_file_path: expected_tar_file_name)
+    @mock_target_client.expect(:send_file, nil, local_file_path: expected_tar_file_path)
     courier.deliver
     @mock_target_client.verify
 
@@ -129,6 +130,13 @@ class BagCourierTest < SequelTestCase
     ]
     statuses = @status_event_repo.get_all.sort_by(&:timestamp).map(&:status)
     assert_equal expected_statuses, statuses
+
+    assert File.exist?(expected_tar_file_path)
+    Minitar.unpack(expected_tar_file_path, @export_path)
+    untarred_bag_path = File.join(@export_path, @bag_id.to_s)
+    assert Dir.exist?(untarred_bag_path)
+    assert File.exist?(File.join(untarred_bag_path, "data", "remote", "something.txt"))
+    assert File.exist?(File.join(untarred_bag_path, "aptrust-info.txt"))
   end
 
   def test_deliver_with_dry_run
@@ -143,5 +151,8 @@ class BagCourierTest < SequelTestCase
     ]
     statuses = @status_event_repo.get_all.sort_by(&:timestamp).map(&:status)
     assert_equal expected_statuses, statuses
+
+    expected_tar_file_path = File.join(@export_path, @bag_id.to_s + ".tar")
+    assert File.exist?(expected_tar_file_path)
   end
 end
