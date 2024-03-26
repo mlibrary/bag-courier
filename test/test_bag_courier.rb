@@ -56,11 +56,14 @@ class BagCourierTest < SequelTestCase
     @package_path = File.join(@test_dir_path, "package")
     FileUtils.rm_r(@test_dir_path)
     FileUtils.mkdir_p([@test_dir_path, @prep_path, @export_path, @package_path])
+    innerbag = BagAdapter::BagAdapter.new(@package_path)
+
     File.write(
-      File.join(@package_path, "something.txt"),
+      File.join(@package_path, "data", "something.txt"),
       "Something to be preserved"
     )
-
+    innerbag.add_bag_info({})
+    innerbag.add_manifests
     @validator = InnerBagValidator.new("package")
     # Set up remote-related objects
     @data_transfer = DataTransfer::RemoteClientDataTransfer.new(
@@ -140,7 +143,7 @@ class BagCourierTest < SequelTestCase
     @mock_target_client.verify
 
     expected_statuses = [
-      "bagging", "copying", "copied", "validation_skipped", "bagged", "packing",
+      "bagging", "copying", "copied", "validating", "validated", "bagged", "packing",
       "packed", "depositing", "deposited"
     ]
     statuses = @status_event_repo.get_all.sort_by(&:timestamp).map(&:status)
@@ -150,7 +153,7 @@ class BagCourierTest < SequelTestCase
     Minitar.unpack(expected_tar_file_path, @export_path)
     untarred_bag_path = File.join(@export_path, @bag_id.to_s)
     assert Dir.exist?(untarred_bag_path)
-    assert File.exist?(File.join(untarred_bag_path, "data", "package", "something.txt"))
+    assert File.exist?(File.join(untarred_bag_path, "data", "package", "data", "something.txt"))
     assert File.exist?(File.join(untarred_bag_path, "aptrust-info.txt"))
   end
 
@@ -160,7 +163,7 @@ class BagCourierTest < SequelTestCase
     @mock_target_client.verify
 
     expected_statuses = [
-      "bagging", "copying", "copied", "validation_skipped", "bagged", "packing",
+      "bagging", "copying", "copied", "validating", "validated", "bagged", "packing",
       "packed", "deposit_skipped"
     ]
     statuses = @status_event_repo.get_all.sort_by(&:timestamp).map(&:status)
@@ -177,7 +180,7 @@ class BagCourierTest < SequelTestCase
       courier.deliver
     end
     expected_statuses = [
-      "bagging", "copying", "copied", "validation_skipped", "bagged", "packing",
+      "bagging", "copying", "copied", "validating", "validated", "bagged", "packing",
       "packed", "depositing", "failed"
     ]
     statuses = @status_event_repo.get_all.sort_by(&:timestamp).map(&:status)
