@@ -123,7 +123,7 @@ class BagCourierTest < SequelTestCase
       dry_run: dry_run,
       status_event_repo: @status_event_repo,
       target_client: target_client,
-      validate: nil
+      validator: nil
     )
   end
 

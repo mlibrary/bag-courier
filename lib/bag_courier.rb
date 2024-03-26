@@ -37,7 +37,8 @@ module BagCourier
       working_dir:,
       export_dir:,
       dry_run:,
-      status_event_repo:
+      status_event_repo:,
+      validator:
     )
       @bag_id = bag_id
       @bag_info = bag_info
@@ -50,6 +51,7 @@ module BagCourier
       @working_dir = working_dir
       @export_dir = export_dir
       @dry_run = dry_run
+      @validator = validator
     end
 
     def track!(status:, note: nil)
