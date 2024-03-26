@@ -24,6 +24,7 @@ require_relative "lib/dispatcher"
 require_relative "lib/remote_client"
 require_relative "lib/repository_package_repository"
 require_relative "lib/status_event_repository"
+require_relative "lib/bag_validator"
 
 class DarkBlueJob
   include SemanticLogger::Loggable

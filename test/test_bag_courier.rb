@@ -11,6 +11,8 @@ require_relative "../lib/data_transfer"
 require_relative "../lib/remote_client"
 require_relative "../lib/repository_package_repository"
 require_relative "../lib/status_event_repository"
+require_relative "../lib/bag_validator"
+require_relative "../lib/bag_adapter"
 
 class BagIdTest < Minitest::Test
   def test_to_s
@@ -51,20 +53,22 @@ class BagCourierTest < SequelTestCase
     @test_dir_path = File.join(__dir__, "bag_courier_test")
     @prep_path = File.join(@test_dir_path, "prep")
     @export_path = File.join(@test_dir_path, "export")
-    @remote_path = File.join(@test_dir_path, "remote")
+    @package_path = File.join(@test_dir_path, "package")
     FileUtils.rm_r(@test_dir_path)
-    FileUtils.mkdir_p([@test_dir_path, @prep_path, @export_path, @remote_path])
+    FileUtils.mkdir_p([@test_dir_path, @prep_path, @export_path, @package_path])
     File.write(
-      File.join(@remote_path, "something.txt"),
+      File.join(@package_path, "something.txt"),
       "Something to be preserved"
     )
 
+    @validator = InnerBagValidator.new("package")
     # Set up remote-related objects
     @data_transfer = DataTransfer::RemoteClientDataTransfer.new(
       remote_client: RemoteClient::FileSystemRemoteClient.new(
-        File.join(@remote_path)
+        File.join(@package_path)
       )
     )
+
     @mock_target_client = Minitest::Mock.new
     @aptrust_target_client = RemoteClient::RemoteClientFactory.from_config(
       type: :aptrust,
@@ -112,7 +116,7 @@ class BagCourierTest < SequelTestCase
     )
   end
 
-  def create_courier(dry_run:, target_client:)
+  def create_courier(dry_run:, target_client:, validator: @validator)
     BagCourier::BagCourier.new(
       bag_id: @bag_id,
       bag_info: @bag_info,
@@ -123,7 +127,7 @@ class BagCourierTest < SequelTestCase
       dry_run: dry_run,
       status_event_repo: @status_event_repo,
       target_client: target_client,
-      validator: nil
+      validator: validator
     )
   end
 
@@ -136,7 +140,7 @@ class BagCourierTest < SequelTestCase
     @mock_target_client.verify
 
     expected_statuses = [
-      "bagging", "copying", "copied", "bagged", "packing",
+      "bagging", "copying", "copied", "validation_skipped", "bagged", "packing",
       "packed", "depositing", "deposited"
     ]
     statuses = @status_event_repo.get_all.sort_by(&:timestamp).map(&:status)
@@ -146,7 +150,7 @@ class BagCourierTest < SequelTestCase
     Minitar.unpack(expected_tar_file_path, @export_path)
     untarred_bag_path = File.join(@export_path, @bag_id.to_s)
     assert Dir.exist?(untarred_bag_path)
-    assert File.exist?(File.join(untarred_bag_path, "data", "remote", "something.txt"))
+    assert File.exist?(File.join(untarred_bag_path, "data", "package", "something.txt"))
     assert File.exist?(File.join(untarred_bag_path, "aptrust-info.txt"))
   end
 
@@ -156,7 +160,7 @@ class BagCourierTest < SequelTestCase
     @mock_target_client.verify
 
     expected_statuses = [
-      "bagging", "copying", "copied", "bagged", "packing",
+      "bagging", "copying", "copied", "validation_skipped", "bagged", "packing",
       "packed", "deposit_skipped"
     ]
     statuses = @status_event_repo.get_all.sort_by(&:timestamp).map(&:status)
@@ -172,9 +176,8 @@ class BagCourierTest < SequelTestCase
     @aptrust_target_client.stub :send_file, raise_error do
       courier.deliver
     end
-
     expected_statuses = [
-      "bagging", "copying", "copied", "bagged", "packing",
+      "bagging", "copying", "copied", "validation_skipped", "bagged", "packing",
       "packed", "depositing", "failed"
     ]
     statuses = @status_event_repo.get_all.sort_by(&:timestamp).map(&:status)

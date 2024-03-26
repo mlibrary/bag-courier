@@ -122,8 +122,7 @@ module BagCourier
           @validator.validate(bag.data_dir)
           track!(status: "validated")
         else
-          track!(status: "invalidated")
-          raise BagValidationError, "validation is skipped since validator is nil: bag_id=#{@bag_id}"
+          track!(status: "validation_skipped")
         end
 
         @tags.each do |tag|
