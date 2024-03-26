@@ -34,6 +34,11 @@ end
 class DarkBlueJob
   include SemanticLogger::Loggable
 
+  module ExtraBagInfoData
+    CONTENT_TYPE_KEY = "Dark-Blue-Content-Type"
+    LOCATION_UUID_KEY = "Archivematica-Location-UUID"
+  end
+
   def initialize(config)
     @package_repo = RepositoryPackageRepository::RepositoryPackageRepositoryFactory.for(use_db: DB)
     @dispatcher = Dispatcher::APTrustDispatcher.new(
@@ -71,7 +76,11 @@ class DarkBlueJob
         remote_path: package_data.remote_path
       ),
       context: context,
-      validator: InnerBagValidator.new(package_data.dir_name)
+      validator: InnerBagValidator.new(package_data.dir_name),
+      extra_bag_info: {
+        ExtraBagInfoData::CONTENT_TYPE_KEY => arch_config.name,
+        ExtraBagInfoData::LOCATION_UUID_KEY => api_config.location_uuid
+      }
     )
     courier.deliver
   end
