@@ -6,7 +6,7 @@ require_relative "status_event_repository"
 
 module Dispatcher
   class DispatcherBase
-    def dispatch(object_metadata:, data_transfer:, context: nil, validator: nil)
+    def dispatch(object_metadata:, data_transfer:, context: nil, validator:nil)
       raise NotImplementedError
     end
   end
@@ -28,7 +28,7 @@ module Dispatcher
       @bag_repo = bag_repo
     end
 
-    def dispatch(object_metadata:, data_transfer:, context: nil, validator: nil)
+    def dispatch(object_metadata:, data_transfer:, context: nil, validator:nil)
       bag_id = BagCourier::BagId.new(
         repository: @repository.name,
         object_id: object_metadata.id,
