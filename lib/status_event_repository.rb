@@ -17,7 +17,7 @@ module StatusEventRepository
     deposit_skipped deposited depositing
     failed
     packed packing
-    validated validating invalidated
+    validated validating validation_skipped
   ]
 
   StatusEvent = Struct.new(
