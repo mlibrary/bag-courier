@@ -115,6 +115,15 @@ module BagCourier
         @data_transfer.transfer(bag.data_dir)
         track!(status: "copied")
 
+        if @validator
+          track!(status: "validating")
+          @validator.validate(bag.data_dir)
+          track!(status: "validated")
+        else
+          track!(status: "invalidated")
+          raise BagValidationError, "validation is skipped since validator is nil: bag_id=#{@bag_id}"
+        end
+
         @tags.each do |tag|
           bag.add_tag_file!(
             tag_file_text: tag.serialize,

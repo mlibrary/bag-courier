@@ -11,3 +11,4 @@ config/config.yml
 test/bag_test_dir
 test/remote_test
 test/bag_courier_test
+test/test_bag_val_dir

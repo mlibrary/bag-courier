@@ -81,14 +81,15 @@ class DarkBlueJob
             updated_at: package_data.stored_time
           )
         end
-
+        inner_bag_dir = File.basename(package_data.remote_path)
         courier = @dispatcher.dispatch(
           object_metadata: package_data.metadata,
           data_transfer: DataTransfer::RemoteClientDataTransfer.new(
             remote_client: remote_client,
             remote_path: package_data.remote_path
           ),
-          context: package_data.context
+          context: package_data.context,
+          validator: InnerBagValidator.new(inner_bag_dir)
         )
         courier.deliver
       end
