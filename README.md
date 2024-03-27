@@ -88,6 +88,11 @@ docker compose build dark-blue
 
 #### Usage
 
+Start up the database service by itself.
+```sh
+docker compose up database
+```
+
 Run the migrations, if you configured the application to use a database:
 ```sh
 docker compose run dark-blue rake db:migrate
