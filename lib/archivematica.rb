@@ -84,7 +84,7 @@ module Archivematica
 
     # Returns package or nil if it doesn't exist
     def get_package(uuid)
-      package_data = @backend.get(url: PACKAGE_PATH + uuid)
+      package_data = @backend.get(url: PACKAGE_PATH + uuid + "/")
       package_data && create_package(package_data)
     end
 
