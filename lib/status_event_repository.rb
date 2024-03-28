@@ -55,7 +55,7 @@ module StatusEventRepository
     private :get_next_id!
 
     def create(bag_identifier:, status:, timestamp:, note: nil)
-      if !BagStatus.constants.map(&:to_s).include?(status.upcase)
+      if !BagStatus.check_status?(status)
         raise UnknownStatusError
       end
       event = StatusEvent.new(
@@ -97,7 +97,7 @@ module StatusEventRepository
     private :find_or_create_status
 
     def create(bag_identifier:, status:, timestamp:, note: nil)
-      if !BagStatus.constants.map(&:to_s).include?(status.upcase)
+      if !BagStatus.check_status?(status)
         raise UnknownStatusError
       end
       status = find_or_create_status(status)
