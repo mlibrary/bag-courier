@@ -4,6 +4,7 @@ require "minitest/pride"
 require_relative "setup_db"
 require_relative "../db/database_schema"
 require_relative "../lib/bag_repository"
+require_relative "../lib/bag_status"
 require_relative "../lib/repository_package_repository"
 require_relative "../lib/status_event_repository"
 
@@ -29,7 +30,7 @@ module StatusEventRepositorySharedTest
       group_part: 1,
       repository_package_identifier: mixin_package_identifier
     )
-    ["bagging", "copying", "copied", "bagged"].each do |status|
+    [BagStatus::BAGGING, BagStatus::COPYING, BagStatus::COPIED, BagStatus::BAGGED].each do |status|
       mixin_repo.create(
         status: status,
         bag_identifier: mixin_bag_identifier,
@@ -42,10 +43,10 @@ module StatusEventRepositorySharedTest
     event_ids = status_events.map { |se| se.id }
     assert_equal event_ids, event_ids.uniq
     expected = [
-      {status: "bagging", bag_identifier: mixin_bag_identifier},
-      {status: "copying", bag_identifier: mixin_bag_identifier},
-      {status: "copied", bag_identifier: mixin_bag_identifier},
-      {status: "bagged", bag_identifier: mixin_bag_identifier}
+      {status: BagStatus::BAGGING, bag_identifier: mixin_bag_identifier},
+      {status: BagStatus::COPYING, bag_identifier: mixin_bag_identifier},
+      {status: BagStatus::COPIED, bag_identifier: mixin_bag_identifier},
+      {status: BagStatus::BAGGED, bag_identifier: mixin_bag_identifier}
     ]
     assert_equal(
       expected,
@@ -62,13 +63,13 @@ module StatusEventRepositorySharedTest
     bag_identifier_two = "repository.context-002"
     mixin_bag_repo.create(identifier: bag_identifier_one, group_part: 1, repository_package_identifier: mixin_package_identifier)
     mixin_bag_repo.create(identifier: bag_identifier_two, group_part: 1, repository_package_identifier: second_package_identifier)
-    mixin_repo.create(status: "bagging", bag_identifier: bag_identifier_one, timestamp: Time.now.utc)
-    mixin_repo.create(status: "bagging", bag_identifier: bag_identifier_two, timestamp: Time.now.utc)
-    mixin_repo.create(status: "bagged", bag_identifier: bag_identifier_two, timestamp: Time.now.utc)
+    mixin_repo.create(status: BagStatus::BAGGING, bag_identifier: bag_identifier_one, timestamp: Time.now.utc)
+    mixin_repo.create(status: BagStatus::BAGGING, bag_identifier: bag_identifier_two, timestamp: Time.now.utc)
+    mixin_repo.create(status: BagStatus::BAGGED, bag_identifier: bag_identifier_two, timestamp: Time.now.utc)
     events = mixin_repo.get_all_for_bag_identifier(bag_identifier_two)
     assert events.all? { |s| s.is_a?(StatusEventRepository::StatusEvent) }
     assert_equal 2, events.length
-    assert_equal ["bagging", "bagged"], events.map { |e| e.status }
+    assert_equal [BagStatus::BAGGING, BagStatus::BAGGED], events.map { |e| e.status }
   end
 
   def test_get_latest_event_for_bag
@@ -81,16 +82,16 @@ module StatusEventRepositorySharedTest
     start_time = Time.utc(2024, 3, 4, 12, 0, 0, 0)
     mixin_bag_repo.create(identifier: bag_identifier_one, group_part: 1, repository_package_identifier: mixin_package_identifier)
     mixin_bag_repo.create(identifier: bag_identifier_two, group_part: 1, repository_package_identifier: second_package_identifier)
-    mixin_repo.create(status: "copying", bag_identifier: bag_identifier_one, timestamp: start_time)
-    mixin_repo.create(status: "copied", bag_identifier: bag_identifier_one, timestamp: start_time + 30)
-    mixin_repo.create(status: "copying", bag_identifier: bag_identifier_one, timestamp: start_time + 60)
-    mixin_repo.create(status: "copied", bag_identifier: bag_identifier_one, timestamp: start_time + 90)
-    mixin_repo.create(status: "copying", bag_identifier: bag_identifier_two, timestamp: start_time + 100)
-    mixin_repo.create(status: "copied", bag_identifier: bag_identifier_two, timestamp: start_time + 120)
+    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_one, timestamp: start_time)
+    mixin_repo.create(status: BagStatus::COPIED, bag_identifier: bag_identifier_one, timestamp: start_time + 30)
+    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_one, timestamp: start_time + 60)
+    mixin_repo.create(status: BagStatus::COPIED, bag_identifier: bag_identifier_one, timestamp: start_time + 90)
+    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_two, timestamp: start_time + 100)
+    mixin_repo.create(status: BagStatus::COPIED, bag_identifier: bag_identifier_two, timestamp: start_time + 120)
     event = mixin_repo.get_latest_event_for_bag(bag_identifier: bag_identifier_one)
     assert event.is_a?(StatusEventRepository::StatusEvent)
     assert_equal bag_identifier_one, event.bag_identifier
-    assert_equal "copied", event.status
+    assert_equal BagStatus::COPIED, event.status
     assert_equal start_time + 90, event.timestamp
   end
 
@@ -137,7 +138,7 @@ class StatusEventInMemoryRepositoryTest < Minitest::Test
   def test_create
     timestamp = Time.now.utc
     @repo.create(
-      status: "bagged",
+      status: BagStatus::BAGGED,
       bag_identifier: @bag_identifier,
       timestamp: timestamp,
       note: "something happening here"
@@ -145,7 +146,7 @@ class StatusEventInMemoryRepositoryTest < Minitest::Test
     expected = [
       StatusEventRepository::StatusEvent.new(
         id: 0,
-        status: "bagged",
+        status: BagStatus::BAGGED,
         bag_identifier: @bag_identifier,
         timestamp: timestamp,
         note: "something happening here"
@@ -193,7 +194,7 @@ class StatusEventDatabaseRepositoryTest < SequelTestCase
     @bag_repo.create(identifier: @bag_identifier, group_part: 2, repository_package_identifier: @package_identifier)
     timestamp = Time.now.utc.floor(6)  # To match database precision
     @repo.create(
-      status: "bagged",
+      status: BagStatus::BAGGED,
       bag_identifier: @bag_identifier,
       timestamp: timestamp,
       note: nil
@@ -201,7 +202,7 @@ class StatusEventDatabaseRepositoryTest < SequelTestCase
     status_events = DatabaseSchema::StatusEvent.eager(:status, :bag).all
     assert_equal 1, status_events.length
     status_event = status_events[0]
-    assert_equal "bagged", status_event.status.name
+    assert_equal BagStatus::BAGGED, status_event.status.name
     assert_equal @bag_identifier, status_event.bag.identifier
     assert_equal timestamp, status_event.timestamp
   end

@@ -19,8 +19,8 @@ DB = config.database && Sequel.connect(
 
 require_relative "lib/aptrust"
 require_relative "lib/bag_repository"
-require_relative "lib/status_event_repository"
 require_relative "lib/bag_status"
+require_relative "lib/status_event_repository"
 
 class APTrustVerificationError < StandardError
 end

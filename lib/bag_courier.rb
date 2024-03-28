@@ -2,8 +2,8 @@ require "minitar"
 require "semantic_logger"
 
 require_relative "bag_adapter"
-require_relative "remote_client"
 require_relative "bag_status"
+require_relative "remote_client"
 
 module BagCourier
   class BagId
