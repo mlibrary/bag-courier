@@ -1,3 +1,5 @@
+require "optparse"
+
 require "semantic_logger"
 require "sequel"
 
@@ -101,6 +103,11 @@ class DarkBlueJob
       context: arch_config.name
     )
   end
+  private :redeliver_package
+
+  def redeliver_packages(package_identifiers)
+    package_identifiers.each { |pi| redeliver_package(pi) }
+  end
 
   def process_arch_instance(arch_config)
     arch_service = prepare_arch_service(arch_config)
@@ -141,7 +148,31 @@ class DarkBlueJob
   end
 end
 
-job = DarkBlueJob.new(config)
+DarkBlueOptions = Struct.new(:packages)
 
-job.process
-# job.redeliver_package("some-uuid")
+class DarkBlueParser
+  def self.parse(options)
+    args = DarkBlueOptions.new(options)
+    opt_parser = OptionParser.new do |parser|
+      parser.banner = "Usage: run_dark_blue.rb [options]"
+      parser.on("-pPACKAGES", "--packages=PACKAGES", Array, "List of comma-separated package identifiers") do |p|
+        args.packages = p
+      end
+      parser.on("-h", "--help", "Prints this help") do
+        puts parser
+        exit
+      end
+    end
+    opt_parser.parse!(options)
+    args
+  end
+end
+
+dark_blue_job = DarkBlueJob.new(config)
+
+options = DarkBlueParser.parse ARGV
+if options.packages.length > 0
+  dark_blue_job.redeliver_packages(options.packages)
+else
+  dark_blue_job.process
+end
