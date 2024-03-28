@@ -1,5 +1,7 @@
 require "semantic_logger"
+
 require_relative "bag_status"
+
 require_relative "../db/database_schema" if DB
 
 Sequel.default_timezone = :utc

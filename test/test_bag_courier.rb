@@ -3,16 +3,17 @@ require "minitest/autorun"
 require "minitest/pride"
 
 require_relative "setup_db"
+require_relative "../lib/bag_adapter"
 require_relative "../lib/bag_courier"
 require_relative "../lib/bag_repository"
+require_relative "../lib/bag_status"
 require_relative "../lib/bag_tag"
+require_relative "../lib/bag_validator"
 require_relative "../lib/config"
 require_relative "../lib/data_transfer"
 require_relative "../lib/remote_client"
 require_relative "../lib/repository_package_repository"
 require_relative "../lib/status_event_repository"
-require_relative "../lib/bag_validator"
-require_relative "../lib/bag_adapter"
 
 class BagIdTest < Minitest::Test
   def test_to_s
@@ -143,8 +144,8 @@ class BagCourierTest < SequelTestCase
     @mock_target_client.verify
 
     expected_statuses = [
-      "bagging", "copying", "copied", "validating", "validated", "bagged", "packing",
-      "packed", "depositing", "deposited"
+      BagStatus::BAGGING, BagStatus::COPYING, BagStatus::COPIED, BagStatus::VALIDATING, BagStatus::VALIDATED, BagStatus::BAGGED, BagStatus::PACKING,
+      BagStatus::PACKED, BagStatus::DEPOSITING, BagStatus::DEPOSITED
     ]
     statuses = @status_event_repo.get_all.sort_by(&:timestamp).map(&:status)
     assert_equal expected_statuses, statuses
@@ -163,8 +164,8 @@ class BagCourierTest < SequelTestCase
     @mock_target_client.verify
 
     expected_statuses = [
-      "bagging", "copying", "copied", "validating", "validated", "bagged", "packing",
-      "packed", "deposit_skipped"
+      BagStatus::BAGGING, BagStatus::COPYING, BagStatus::COPIED, BagStatus::VALIDATING, BagStatus::VALIDATED, BagStatus::BAGGED, BagStatus::PACKING,
+      BagStatus::PACKED, BagStatus::DEPOSIT_SKIPPED
     ]
     statuses = @status_event_repo.get_all.sort_by(&:timestamp).map(&:status)
     assert_equal expected_statuses, statuses
@@ -180,8 +181,8 @@ class BagCourierTest < SequelTestCase
       courier.deliver
     end
     expected_statuses = [
-      "bagging", "copying", "copied", "validating", "validated", "bagged", "packing",
-      "packed", "depositing", "failed"
+      BagStatus::BAGGING, BagStatus::COPYING, BagStatus::COPIED, BagStatus::VALIDATING, BagStatus::VALIDATED, BagStatus::BAGGED, BagStatus::PACKING,
+      BagStatus::PACKED, BagStatus::DEPOSITING, BagStatus::FAILED
     ]
     statuses = @status_event_repo.get_all.sort_by(&:timestamp).map(&:status)
     assert_equal expected_statuses, statuses

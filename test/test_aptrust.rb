@@ -4,6 +4,7 @@ require "minitest/pride"
 require_relative "setup_db"
 require_relative "../lib/aptrust"
 require_relative "../lib/api_backend"
+require_relative "../lib/bag_status"
 require_relative "../lib/status_event_repository"
 
 class APTrustAPITest < Minitest::Test
@@ -107,7 +108,7 @@ class APTrustVerifierTest < SequelTestCase
 
     @status_event_repo.create(
       bag_identifier: @bag_identifier,
-      status: "deposited",
+      status: BagStatus::DEPOSITED,
       timestamp: @deposited_at
     )
   end
@@ -124,7 +125,7 @@ class APTrustVerifierTest < SequelTestCase
 
     event = @status_event_repo.get_latest_event_for_bag(bag_identifier: @bag_identifier)
     assert event
-    assert "verified", event.status
+    assert BagStatus::VERIFIED, event.status
   end
 
   def test_verify_with_failure
@@ -139,7 +140,7 @@ class APTrustVerifierTest < SequelTestCase
 
     event = @status_event_repo.get_latest_event_for_bag(bag_identifier: @bag_identifier)
     assert event
-    assert "verify_failed", event.status
+    assert BagStatus::VERIFY_FAILED, event.status
   end
 
   def test_verify_with_processing
@@ -153,7 +154,7 @@ class APTrustVerifierTest < SequelTestCase
     @mock_api.verify
 
     event = @status_event_repo.get_latest_event_for_bag(bag_identifier: @bag_identifier)
-    assert_equal "deposited", event.status  # No verify event
+    assert_equal BagStatus::DEPOSITED, event.status  # No verify event
   end
 
   def test_verify_with_not_found
@@ -167,6 +168,6 @@ class APTrustVerifierTest < SequelTestCase
     @mock_api.verify
 
     event = @status_event_repo.get_latest_event_for_bag(bag_identifier: @bag_identifier)
-    assert_equal "deposited", event.status  # No verify event
+    assert_equal BagStatus::DEPOSITED, event.status  # No verify event
   end
 end
