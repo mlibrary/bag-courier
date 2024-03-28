@@ -108,7 +108,13 @@ To use `verify_aptrust.rb`, override the entry command for the `dark-blue` servi
 docker compose run dark-blue ruby verify_aptrust.rb
 ```
 
-To execute a typical workflow (mentioned in the above first three steps) by simply running the command.
+You can re-deliver previously delivered packages by passing a `--packages` option to `run_dark_blue.rb`
+with a comma-separated list of package identifiers.
+```sh
+docker compose run dark-blue ruby run_dark_blue.rb --packages=some_id,some_other_id
+```
+
+To execute a typical workflow (the first three steps above), you can simply run the following command:
 ```sh
 docker compose up
 ```
