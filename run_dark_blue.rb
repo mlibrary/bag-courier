@@ -26,6 +26,9 @@ require_relative "lib/repository_package_repository"
 require_relative "lib/status_event_repository"
 require_relative "lib/bag_validator"
 
+class DarkBlueError < StandardError
+end
+
 class DarkBlueJob
   include SemanticLogger::Loggable
 
@@ -45,14 +48,63 @@ class DarkBlueJob
     @object_size_limit = config.settings.object_size_limit
   end
 
-  def process
-    @arch_configs.each do |arch_config|
-      api_config = arch_config.api
-      arch_api = Archivematica::ArchivematicaAPI.from_config(
+  def prepare_arch_service(arch_config)
+    api_config = arch_config.api
+    Archivematica::ArchivematicaService.new(
+      name: arch_config.name,
+      api: Archivematica::ArchivematicaAPI.from_config(
         base_url: api_config.base_url,
         api_key: api_config.api_key,
         username: api_config.username
-      )
+      ),
+      location_uuid: api_config.location_uuid
+    )
+  end
+  private :prepare_arch_service
+
+  def deliver_package(remote_client:, package_data:, context:)
+    inner_bag_dir = File.basename(package_data.remote_path)
+    courier = @dispatcher.dispatch(
+      object_metadata: package_data.metadata,
+      data_transfer: DataTransfer::RemoteClientDataTransfer.new(
+        remote_client: remote_client,
+        remote_path: package_data.remote_path
+      ),
+      context: context,
+      validator: InnerBagValidator.new(inner_bag_dir)
+    )
+    courier.deliver
+  end
+  private :deliver_package
+
+  def redeliver_package(package_identifier)
+    package = @package_repo.get_by_identifier(package_identifier)
+    raise DarkBlueError, "No repository package was found with identifier #{package_identifier}" unless package
+
+    arch_config = @arch_configs.find { |ac| ac.repository_name == package.repository_name }
+    raise DarkBlueError, "No configured Archivematica instance by name #{package.repository_name}" unless arch_config
+
+    arch_service = prepare_arch_service(arch_config)
+    package_data = arch_service.get_package_data_object(package.identifier)
+    if !package_data
+      message = "No Archivematica package with identifier #{package.identifier} found in instance #{arch_config.name}"
+      raise DarkBlueError, message
+    end
+
+    remote_client = RemoteClient::RemoteClientFactory.from_config(
+      type: arch_config.remote.type,
+      settings: arch_config.remote.settings
+    )
+    deliver_package(
+      remote_client: remote_client,
+      package_data: package_data,
+      context: arch_config.name
+    )
+  end
+
+  def process
+    @arch_configs.each do |arch_config|
+      arch_service = prepare_arch_service(arch_config)
       remote_config = arch_config.remote
       remote_client = RemoteClient::RemoteClientFactory.from_config(
         type: remote_config.type,
@@ -60,12 +112,6 @@ class DarkBlueJob
       )
 
       max_updated_at = @package_repo.get_max_updated_at_for_repository(arch_config.repository_name)
-
-      arch_service = Archivematica::ArchivematicaService.new(
-        name: arch_config.name,
-        api: arch_api,
-        location_uuid: api_config.location_uuid
-      )
       package_data_objs = arch_service.get_package_data_objects(
         stored_date: max_updated_at,
         **(@object_size_limit ? {package_filter: Archivematica::SizePackageFilter.new(@object_size_limit)} : {})
@@ -83,20 +129,17 @@ class DarkBlueJob
             updated_at: package_data.stored_time
           )
         end
-        inner_bag_dir = File.basename(package_data.remote_path)
-        courier = @dispatcher.dispatch(
-          object_metadata: package_data.metadata,
-          data_transfer: DataTransfer::RemoteClientDataTransfer.new(
-            remote_client: remote_client,
-            remote_path: package_data.remote_path
-          ),
-          context: arch_config.name,
-          validator: InnerBagValidator.new(inner_bag_dir)
+        deliver_package(
+          remote_client: remote_client,
+          package_data: package_data,
+          context: arch_config.name
         )
-        courier.deliver
       end
     end
   end
 end
 
-DarkBlueJob.new(config).process
+job = DarkBlueJob.new(config)
+
+job.process
+# job.redeliver_package("some-uuid")
