@@ -102,40 +102,42 @@ class DarkBlueJob
     )
   end
 
-  def process
-    @arch_configs.each do |arch_config|
-      arch_service = prepare_arch_service(arch_config)
-      remote_config = arch_config.remote
-      remote_client = RemoteClient::RemoteClientFactory.from_config(
-        type: remote_config.type,
-        settings: remote_config.settings
-      )
+  def process_arch_instance(arch_config)
+    arch_service = prepare_arch_service(arch_config)
+    remote_config = arch_config.remote
+    remote_client = RemoteClient::RemoteClientFactory.from_config(
+      type: remote_config.type,
+      settings: remote_config.settings
+    )
 
-      max_updated_at = @package_repo.get_max_updated_at_for_repository(arch_config.repository_name)
-      package_data_objs = arch_service.get_package_data_objects(
-        stored_date: max_updated_at,
-        **(@object_size_limit ? {package_filter: Archivematica::SizePackageFilter.new(@object_size_limit)} : {})
+    max_updated_at = @package_repo.get_max_updated_at_for_repository(arch_config.repository_name)
+    package_data_objs = arch_service.get_package_data_objects(
+      stored_date: max_updated_at,
+      **(@object_size_limit ? {package_filter: Archivematica::SizePackageFilter.new(@object_size_limit)} : {})
+    )
+    package_data_objs.each do |package_data|
+      logger.debug(package_data)
+      created = @package_repo.create(
+        identifier: package_data.metadata.id,
+        repository_name: arch_config.repository_name,
+        updated_at: package_data.stored_time
       )
-      package_data_objs.each do |package_data|
-        logger.debug(package_data)
-        created = @package_repo.create(
+      if !created
+        @package_repo.update_updated_at(
           identifier: package_data.metadata.id,
-          repository_name: arch_config.repository_name,
           updated_at: package_data.stored_time
         )
-        if !created
-          @package_repo.update_updated_at(
-            identifier: package_data.metadata.id,
-            updated_at: package_data.stored_time
-          )
-        end
-        deliver_package(
-          remote_client: remote_client,
-          package_data: package_data,
-          context: arch_config.name
-        )
       end
+      deliver_package(
+        remote_client: remote_client,
+        package_data: package_data,
+        context: arch_config.name
+      )
     end
+  end
+
+  def process
+    @arch_configs.each { |ac| process_arch_instance(ac) }
   end
 end
 
