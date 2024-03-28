@@ -168,7 +168,7 @@ class ArchivematicaAPITest < Minitest::Test
       stored_date: "2024-01-17T00:00:00.000000"
     )
 
-    @mock_backend.expect(:get, first_package_data, url: "file/#{first_package_data["uuid"]}")
+    @mock_backend.expect(:get, first_package_data, url: "file/#{first_package_data["uuid"]}/")
     package = @mocked_api.get_package(first_package_data["uuid"])
     @mock_backend.verify
     assert_equal expected, package
@@ -176,7 +176,7 @@ class ArchivematicaAPITest < Minitest::Test
 
   def test_get_package_when_does_not_exist
     uuid = SecureRandom.uuid
-    @mock_backend.expect(:get, nil, url: "file/#{uuid}")
+    @mock_backend.expect(:get, nil, url: "file/#{uuid}/")
     package = @mocked_api.get_package(uuid)
     @mock_backend.verify
     assert_nil package
