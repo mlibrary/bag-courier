@@ -15,7 +15,7 @@ services:
     depends_on:
       database:
         condition: "service_healthy"
-    command: ["sh", "-c","ruby run_dark_blue.rb && tail -f /dev/null"] 
+    command: ["sh", "-c","rake db:migrate && ruby run_dark_blue.rb && tail -f /dev/null"] 
   database:
     image: mariadb:11
     environment:
@@ -35,8 +35,8 @@ services:
     healthcheck:
       test: mariadb-admin -uroot --password=root_pw status
       start_interval: 1s
-      interval: "5s"
-      timeout: "5s"
-      retries: 2   
+      interval: 5s
+      timeout: 5s
+      retries: 3   
 volumes:
   database:
