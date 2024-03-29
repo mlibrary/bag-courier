@@ -164,6 +164,7 @@ module Archivematica
       )
       RepositoryData::RepositoryPackageData.new(
         remote_path: package.path,
+        dir_name: inner_bag_dir_name,
         metadata: object_metadata,
         stored_time: Time.parse(package.stored_date)
       )

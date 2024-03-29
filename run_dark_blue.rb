@@ -64,8 +64,7 @@ class DarkBlueJob
   end
   private :prepare_arch_service
 
-  def deliver_package(remote_client:, package_data:, context:)
-    inner_bag_dir = File.basename(package_data.remote_path)
+  def deliver_package(package_data:, remote_client:, context:)
     courier = @dispatcher.dispatch(
       object_metadata: package_data.metadata,
       data_transfer: DataTransfer::RemoteClientDataTransfer.new(
@@ -73,7 +72,7 @@ class DarkBlueJob
         remote_path: package_data.remote_path
       ),
       context: context,
-      validator: InnerBagValidator.new(inner_bag_dir)
+      validator: InnerBagValidator.new(package_data.dir_name)
     )
     courier.deliver
   end
