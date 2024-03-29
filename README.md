@@ -108,6 +108,11 @@ To use `verify_aptrust.rb`, override the entry command for the `dark-blue` servi
 docker compose run dark-blue ruby verify_aptrust.rb
 ```
 
+To execute a typical workflow (mentioned in the above first three steps) by simply running the command.
+```sh
+docker compose up
+```
+
 ## Running tests
 
 [`minitest`](https://github.com/minitest/minitest) unit tests for classes are
