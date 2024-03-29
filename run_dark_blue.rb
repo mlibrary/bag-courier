@@ -50,10 +50,9 @@ class DarkBlueJob
     @object_size_limit = config.settings.object_size_limit
   end
 
-  def prepare_arch_service(arch_config)
-    api_config = arch_config.api
+  def prepare_arch_service(name:, api_config:)
     Archivematica::ArchivematicaService.new(
-      name: arch_config.name,
+      name: name,
       api: Archivematica::ArchivematicaAPI.from_config(
         base_url: api_config.base_url,
         api_key: api_config.api_key,
@@ -92,7 +91,7 @@ class DarkBlueJob
       raise DarkBlueError, message
     end
 
-    arch_service = prepare_arch_service(arch_config)
+    arch_service = prepare_arch_service(name: arch_config.name, api_config: arch_config.api)
     package_data = arch_service.get_package_data_object(package.identifier)
     unless package_data
       message = "No package with identifier #{package.identifier} was found " \
@@ -100,13 +99,13 @@ class DarkBlueJob
       raise DarkBlueError, message
     end
 
-    remote_client = RemoteClient::RemoteClientFactory.from_config(
+    source_remote_client = RemoteClient::RemoteClientFactory.from_config(
       type: arch_config.remote.type,
       settings: arch_config.remote.settings
     )
     deliver_package(
       package_data: package_data,
-      remote_client: remote_client,
+      remote_client: source_remote_client,
       context: arch_config.name
     )
   end
@@ -117,11 +116,10 @@ class DarkBlueJob
   end
 
   def process_arch_instance(arch_config)
-    arch_service = prepare_arch_service(arch_config)
-    remote_config = arch_config.remote
-    remote_client = RemoteClient::RemoteClientFactory.from_config(
-      type: remote_config.type,
-      settings: remote_config.settings
+    arch_service = prepare_arch_service(name: arch_config.name, api_config: arch_config.api)
+    source_remote_client = RemoteClient::RemoteClientFactory.from_config(
+      type: arch_config.remote.type,
+      settings: arch_config.remote.settings
     )
 
     max_updated_at = @package_repo.get_max_updated_at_for_repository(arch_config.repository_name)
@@ -144,7 +142,7 @@ class DarkBlueJob
       end
       deliver_package(
         package_data: package_data,
-        remote_client: remote_client,
+        remote_client: source_remote_client,
         context: arch_config.name
       )
     end
