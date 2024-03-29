@@ -11,15 +11,18 @@ services:
         source: /run/host-services/ssh-auth.sock
         target: /run/host-services/ssh-auth.sock
     environment:
-     - SSH_AUTH_SOCK=/run/host-services/ssh-auth.sock
-    command: ["ruby", "run_dark_blue.rb"]
+      - SSH_AUTH_SOCK=/run/host-services/ssh-auth.sock
+    depends_on:
+      database:
+        condition: "service_healthy"
+    command: ["sh", "-c","ruby run_dark_blue.rb && tail -f /dev/null"] 
   database:
     image: mariadb:11
     environment:
-      - MARIADB_ROOT_PASSWORD=root_pw
-      - MARIADB_DATABASE=dpact_pres_service
-      - MARIADB_USER=dpact_user
-      - MARIADB_PASSWORD=dpact_pw
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${MARIADB_DATABASE}
+      MARIADB_USER: ${MARIADB_USER}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
     command: [
       '--character-set-server=utf8mb4',
       '--collation-server=utf8mb4_unicode_ci'
@@ -29,5 +32,11 @@ services:
       - ./mariadb:/docker-entrypoint-initdb.d:ro
     ports:
       - "3306:3306"
+    healthcheck:
+      test: mariadb-admin -uroot --password=$MARIADB_ROOT_PASSWORD status
+      start_interval: 1s
+      interval: "5s"
+      timeout: "5s"
+      retries: 2   
 volumes:
   database:

@@ -4,6 +4,7 @@ restore
 source
 
 .DS_Store
+.env
 .ssh
 
 config/config.yml
