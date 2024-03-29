@@ -224,6 +224,7 @@ class ArchivematicaServiceTest < Minitest::Test
     expected = [
       RepositoryPackageData.new(
         remote_path: first_package.path,
+        dir_name: "identifier-one-0948e2ae-eb24-4984-a71b-43bc440534d0",
         metadata: ObjectMetadata.new(
           id: first_package.uuid,
           title: "#{first_package.uuid} / identifier-one",
@@ -234,6 +235,7 @@ class ArchivematicaServiceTest < Minitest::Test
       ),
       RepositoryPackageData.new(
         remote_path: second_package.path,
+        dir_name: "identifier-two-0baa468e-dd42-49ff-ba90-5dedc30c8541",
         metadata: ObjectMetadata.new(
           id: second_package.uuid,
           title: "#{second_package.uuid} / identifier-two",
