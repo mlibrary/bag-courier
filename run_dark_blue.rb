@@ -78,17 +78,25 @@ class DarkBlueJob
   end
   private :deliver_package
 
-  def redeliver_package(package_identifier)
-    package = @package_repo.get_by_identifier(package_identifier)
-    raise DarkBlueError, "No repository package was found with identifier #{package_identifier}" unless package
+  def redeliver_package(identifier)
+    package = @package_repo.get_by_identifier(identifier)
+    unless package
+      message = "No repository package was found with identifier #{identifier}"
+      raise DarkBlueError, message
+    end
 
     arch_config = @arch_configs.find { |ac| ac.repository_name == package.repository_name }
-    raise DarkBlueError, "No configured Archivematica instance by name #{package.repository_name}" unless arch_config
+    unless arch_config
+      message = "No configured Archivematica instance was found " \
+        "with name #{package.repository_name}."
+      raise DarkBlueError, message
+    end
 
     arch_service = prepare_arch_service(arch_config)
     package_data = arch_service.get_package_data_object(package.identifier)
-    if !package_data
-      message = "No Archivematica package with identifier #{package.identifier} found in instance #{arch_config.name}"
+    unless package_data
+      message = "No package with identifier #{package.identifier} was found " \
+        "in #{arch_config.name} Archivematica instance."
       raise DarkBlueError, message
     end
 
