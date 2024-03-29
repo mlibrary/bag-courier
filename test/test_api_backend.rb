@@ -44,7 +44,7 @@ class FaradayAPIBackendTest < Minitest::Test
       [404, {"Content-Type": "text/plain"}, "Resource not found"]
     end
     result = @stubbed_api_backend.get(url: "file/")
-    refute(result)
+    assert_nil result
   end
 
   def test_get_retries_on_timeout_to_failure
