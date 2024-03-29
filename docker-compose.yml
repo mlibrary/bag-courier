@@ -19,10 +19,10 @@ services:
   database:
     image: mariadb:11
     environment:
-      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
-      MARIADB_DATABASE: ${MARIADB_DATABASE}
-      MARIADB_USER: ${MARIADB_USER}
-      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
+      - MARIADB_ROOT_PASSWORD=root_pw
+      - MARIADB_DATABASE=dpact_pres_service
+      - MARIADB_USER=dpact_user
+      - MARIADB_PASSWORD=dpact_pw
     command: [
       '--character-set-server=utf8mb4',
       '--collation-server=utf8mb4_unicode_ci'
@@ -33,7 +33,7 @@ services:
     ports:
       - "3306:3306"
     healthcheck:
-      test: mariadb-admin -uroot --password=$MARIADB_ROOT_PASSWORD status
+      test: mariadb-admin -uroot --password=root_pw status
       start_interval: 1s
       interval: "5s"
       timeout: "5s"
