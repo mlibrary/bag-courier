@@ -97,8 +97,8 @@ class DarkBlueJob
       settings: arch_config.remote.settings
     )
     deliver_package(
-      remote_client: remote_client,
       package_data: package_data,
+      remote_client: remote_client,
       context: arch_config.name
     )
   end
@@ -135,8 +135,8 @@ class DarkBlueJob
         )
       end
       deliver_package(
-        remote_client: remote_client,
         package_data: package_data,
+        remote_client: remote_client,
         context: arch_config.name
       )
     end
@@ -154,7 +154,12 @@ class DarkBlueParser
     args = DarkBlueOptions.new(options)
     opt_parser = OptionParser.new do |parser|
       parser.banner = "Usage: run_dark_blue.rb [options]"
-      parser.on("-pPACKAGES", "--packages=PACKAGES", Array, "List of comma-separated package identifiers") do |p|
+      parser.on(
+        "-pPACKAGES",
+        "--packages=PACKAGES",
+        Array,
+        "List of comma-separated package identifiers"
+      ) do |p|
         args.packages = p
       end
       parser.on("-h", "--help", "Prints this help") do
