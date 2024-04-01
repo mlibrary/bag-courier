@@ -74,7 +74,7 @@ module RemoteClient
       logger.debug("Progress: #{bytes.sum} / #{totals.sum} bytes; #{percentage} %")
     end
 
-    def self.update_config(access_key_id, secret_access_key)
+    def self.update_config(access_key_id:, secret_access_key:)
       Aws.config.update(
         credentials: Aws::Credentials.new(access_key_id, secret_access_key)
       )
@@ -171,7 +171,10 @@ module RemoteClient
       case type
       when :aptrust
         aws_config = settings
-        AwsS3RemoteClient.update_config(aws_config.access_key_id, aws_config.secret_access_key)
+        AwsS3RemoteClient.update_config(
+          access_key_id: aws_config.access_key_id,
+          secret_access_key: aws_config.secret_access_key
+        )
         AwsS3RemoteClient.from_config(
           region: aws_config.region,
           bucket_name: aws_config.receiving_bucket

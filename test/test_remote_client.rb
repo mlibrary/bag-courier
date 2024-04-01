@@ -114,11 +114,19 @@ class AwsS3RemoteClientTest < Minitest::Test
   def setup
     @bucket_name = "aptrust.receiving.someorg.edu"
     @region = "us-east-2"
+    @access_key_id = "some-access-key"
+    @secret_access_key = "some-secret-key"
 
+    # for testing update_config, from_config class methods
+    RemoteClient::AwsS3RemoteClient.update_config(
+      access_key_id: @access_key_id,
+      secret_access_key: @secret_access_key
+    )
     @client = RemoteClient::AwsS3RemoteClient.from_config(
       region: "us-east-2",
       bucket_name: @bucket_name
     )
+
     @role_player = @client
 
     @mock_bucket = Minitest::Mock.new
@@ -133,6 +141,12 @@ class AwsS3RemoteClientTest < Minitest::Test
   def test_from_config
     assert_equal Aws::S3::Bucket, @client.bucket.class
     assert_equal @bucket_name, @client.bucket.name
+  end
+
+  def test_update_config
+    creds = Aws.config[:credentials]
+    assert_equal @access_key_id, creds.access_key_id
+    assert_equal @secret_access_key, creds.secret_access_key
   end
 
   def test_remote_text
