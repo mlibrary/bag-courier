@@ -181,6 +181,16 @@ module Config
       )
     end
 
+    def self.create_database_config(data)
+      DatabaseConfig.new(
+        host: verify_string("Host", data["Host"]),
+        database: verify_string("Database", data["Database"]),
+        port: verify_int("Port", data["Port"]),
+        user: verify_string("User", data["User"]),
+        password: verify_string("Password", data["Password"])
+      )
+    end
+
     def self.create_config(data)
       logger.debug(data)
       db_data = data.fetch("Database", nil)
@@ -197,13 +207,7 @@ module Config
           name: verify_string("Repository", data["Repository"]),
           description: verify_string("RepositoryDescription", data["RepositoryDescription"])
         ),
-        database: db_data && DatabaseConfig.new(
-          host: verify_string("Host", db_data["Host"]),
-          database: verify_string("Database", db_data["Database"]),
-          port: verify_int("Port", db_data["Port"]),
-          user: verify_string("User", db_data["User"]),
-          password: verify_string("Password", db_data["Password"])
-        ),
+        database: db_data && create_database_config(db_data),
         dark_blue: DarkBlueConfig.new(
           archivematicas: (
             data["DarkBlue"]["ArchivematicaInstances"].map do |arch_data|
@@ -232,6 +236,12 @@ module Config
           remote: create_remote_config(aptrust_data["Remote"])
         )
       )
+    end
+
+    def self.database_config_from_file(yaml_path)
+      data = read_data_from_file(yaml_path)
+      db_data = data.fetch("Database", nil)
+      db_data && create_database_config(db_data)
     end
 
     def self.from_file(yaml_path)
