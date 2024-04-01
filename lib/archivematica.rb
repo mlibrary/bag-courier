@@ -102,7 +102,7 @@ module Archivematica
       package_objects = get_objects_from_pages(url: PACKAGE_PATH, params: params)
       packages = package_objects.map { |o| create_package(o) }
       logger.info(
-        "Number of packages found in location #{location_uuid} " +
+        "Number of packages found in location #{location_uuid} " \
         "with #{PackageStatus::UPLOADED} status" +
         (formatted_stored_date ? " and with stored date after #{formatted_stored_date}" : "") +
         ": #{packages.length}"
