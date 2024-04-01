@@ -58,7 +58,7 @@ class APTrustAPITest < Minitest::Test
 
   def test_get_ingest_status_failed
     data = {"results" => [{"status" => "faiLed"}]}
-    @mock_backend.expect(:get, data, ["items", @expected_params])
+    @mock_backend.expect(:get, data, url: "items", params: @expected_params)
     assert_equal "failed", @mocked_api.get_ingest_status(
       bag_identifier: @bag_identifier, deposited_at: @deposited_at
     )
@@ -67,7 +67,7 @@ class APTrustAPITest < Minitest::Test
 
   def test_get_ingest_status_cancelled
     data = {"results" => [{"status" => "Cancelled"}]}
-    @mock_backend.expect(:get, data, ["items", @expected_params])
+    @mock_backend.expect(:get, data, url: "items", params: @expected_params)
     assert_equal "cancelled", @mocked_api.get_ingest_status(
       bag_identifier: @bag_identifier, deposited_at: @deposited_at
     )
@@ -76,7 +76,7 @@ class APTrustAPITest < Minitest::Test
 
   def test_get_ingest_status_success
     data = {"results" => [{"status" => "Success", "stage" => "Cleanup"}]}
-    @mock_backend.expect(:get, data, ["items", @expected_params])
+    @mock_backend.expect(:get, data, url: "items", params: @expected_params)
     assert_equal "success", @mocked_api.get_ingest_status(
       bag_identifier: @bag_identifier, deposited_at: @deposited_at
     )
@@ -85,7 +85,7 @@ class APTrustAPITest < Minitest::Test
 
   def test_get_ingest_status_processing
     data = {"results" => [{"status" => "something_unexpected"}]}
-    @mock_backend.expect(:get, data, ["items", @expected_params])
+    @mock_backend.expect(:get, data, url: "items", params: @expected_params)
     assert_equal "processing", @mocked_api.get_ingest_status(
       bag_identifier: @bag_identifier, deposited_at: @deposited_at
     )
