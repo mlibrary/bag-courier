@@ -49,7 +49,7 @@ module APTrust
       # Modelled after https://github.com/mlibrary/heliotrope/blob/master/app/services/aptrust/service.rb
       # See also https://aptrust.github.io/registry/#/Work%20Items
       time_filter = (deposited_at - BUFFER).strftime("%Y-%m-%dT%H:%M:%S.%6N")
-      data = @backend.get("items", {
+      data = @backend.get(url: "items", params: {
         object_identifier: @object_id_prefix + bag_identifier,
         action: "Ingest",
         date_processed__gteq: time_filter,
