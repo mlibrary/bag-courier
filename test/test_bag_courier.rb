@@ -55,7 +55,7 @@ class BagCourierTest < SequelTestCase
     @prep_path = File.join(@test_dir_path, "prep")
     @export_path = File.join(@test_dir_path, "export")
     @package_path = File.join(@test_dir_path, "package")
-    FileUtils.rm_r(@test_dir_path)
+    FileUtils.rm_r(@test_dir_path) if File.exist?(@test_dir_path)
     FileUtils.mkdir_p([@test_dir_path, @prep_path, @export_path, @package_path])
     innerbag = BagAdapter::BagAdapter.new(@package_path)
 
