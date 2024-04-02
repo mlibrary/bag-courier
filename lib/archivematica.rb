@@ -84,8 +84,13 @@ module Archivematica
 
     # Returns package or nil if it doesn't exist
     def get_package(uuid)
-      package_data = @backend.get(url: PACKAGE_PATH + uuid + "/")
-      package_data && create_package(package_data)
+      begin
+        package_data = @backend.get(url: PACKAGE_PATH + uuid + "/")
+      rescue APIBackend::APIError => error
+        return nil if error.status == APIBackend::ResponseStatus::RESOURCE_NOT_FOUND
+        raise error
+      end
+      create_package(package_data)
     end
 
     def get_packages(location_uuid:, stored_date: nil)

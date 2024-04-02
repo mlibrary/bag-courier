@@ -37,14 +37,7 @@ class FaradayAPIBackendTest < Minitest::Test
       "status code: 401; " \
       "body: Unauthorized"
     assert_equal expected, error.message
-  end
-
-  def test_get_returns_nil_when_resource_not_found
-    @stubs.get(@base_url + "file/") do |env|
-      [404, {"Content-Type": "text/plain"}, "Resource not found"]
-    end
-    result = @stubbed_api_backend.get(url: "file/")
-    assert_nil result
+    assert_equal 401, error.status
   end
 
   def test_get_retries_on_timeout_to_failure
@@ -64,6 +57,7 @@ class FaradayAPIBackendTest < Minitest::Test
       "status code: none; " \
       "body: none"
     assert_equal expected, error.message
+    assert_nil error.status
 
     assert_equal 3, calls
   end

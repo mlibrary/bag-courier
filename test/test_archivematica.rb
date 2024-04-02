@@ -3,8 +3,17 @@ require "securerandom"
 require "minitest/autorun"
 require "minitest/pride"
 
+require_relative "../lib/api_backend"
 require_relative "../lib/archivematica"
 require_relative "../lib/repository_data"
+
+class FakeBackend
+  def get(uuid)
+    raise APIBackend::APIError.new(
+      message: "Error message here", status: APIBackend::ResponseStatus::RESOURCE_NOT_FOUND
+    )
+  end
+end
 
 class ArchivematicaAPITest < Minitest::Test
   include Archivematica
@@ -175,10 +184,9 @@ class ArchivematicaAPITest < Minitest::Test
   end
 
   def test_get_package_when_does_not_exist
+    api = ArchivematicaAPI.new(api_backend: FakeBackend.new)
     uuid = SecureRandom.uuid
-    @mock_backend.expect(:get, nil, url: "file/#{uuid}/")
-    package = @mocked_api.get_package(uuid)
-    @mock_backend.verify
+    package = api.get_package(uuid)
     assert_nil package
   end
 end
