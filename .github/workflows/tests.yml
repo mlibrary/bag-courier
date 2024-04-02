@@ -31,4 +31,4 @@ jobs:
       - name: Run tests
         run: bundle exec rake test
         env: 
-          CONFIG_PATH_YAML: "./config/config.tests.yml"
+          CONFIG_YML_PATH: "./config/config.tests.yml"
