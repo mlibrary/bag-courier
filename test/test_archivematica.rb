@@ -261,11 +261,20 @@ class ArchivematicaServiceTest < Minitest::Test
     assert_equal package_data_objs[0].metadata.id, @test_packages[0].uuid
   end
 
-  def test_get_package_data_object
+  def test_get_package_data_object_when_exists
     first_package = @test_packages[0]
     @mock_api.expect(:get_package, first_package, [first_package.uuid])
     package_data_obj = @service.get_package_data_object(first_package.uuid)
+    @mock_api.verify
     assert package_data_obj.is_a?(RepositoryPackageData)
     assert_equal first_package.path, package_data_obj.remote_path
+  end
+
+  def test_get_package_data_object_when_does_not_exist
+    uuid = SecureRandom.uuid
+    @mock_api.expect(:get_package, nil, [uuid])
+    package_data_obj = @service.get_package_data_object(uuid)
+    @mock_api.verify
+    assert_nil package_data_obj
   end
 end
