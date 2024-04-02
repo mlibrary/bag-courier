@@ -3,6 +3,16 @@ require "faraday/retry"
 
 module APIBackend
   class APIError < StandardError
+    attr_reader :status
+
+    def initialize(message:, status:)
+      super(message)
+      @status = status
+    end
+  end
+
+  module ResponseStatus
+    RESOURCE_NOT_FOUND = 404
   end
 
   class APIBackendBase
@@ -25,13 +35,11 @@ module APIBackend
       resp = @conn.get(url, params)
       JSON.parse(resp.body)
     rescue Faraday::Error => error
-      return nil if error.is_a?(Faraday::ResourceNotFound)
-
       message = "Error occurred while interacting with REST API at #{@base_url}. " \
         "Error type: #{error.class}; " \
         "status code: #{error.response_status || "none"}; " \
         "body: #{error.response_body || "none"}"
-      raise APIError, message
+      raise APIError.new(message: message, status: error.response_status)
     end
   end
 end
