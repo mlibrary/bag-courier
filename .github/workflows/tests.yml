@@ -15,7 +15,7 @@ jobs:
           MARIADB_DATABASE: test_database
           MARIADB_ROOT_PASSWORD: password
         ports: ["3306:3306"]
-        options: --health-cmd="mysqladmin ping" --health-interval=5s --health-timeout=2s --health-retries=3
+        options: --health-cmd="mysqladmin ping" --health-interval=5s --health-timeout=2s --health-retries=5
     steps:
       - uses: actions/checkout@v3
       - name: Wait for MariaDB
