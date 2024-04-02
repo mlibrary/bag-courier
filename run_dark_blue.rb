@@ -68,7 +68,14 @@ class DarkBlueJob
   end
   private :prepare_arch_service
 
-  def deliver_package(package_data:, remote_client:, context:)
+  def create_extra_bag_info(content_type:, location_uuid:)
+    {
+      ExtraBagInfoData::CONTENT_TYPE_KEY => content_type,
+      ExtraBagInfoData::LOCATION_UUID_KEY => location_uuid
+    }
+  end
+
+  def deliver_package(package_data:, remote_client:, context:, extra_bag_info:)
     courier = @dispatcher.dispatch(
       object_metadata: package_data.metadata,
       data_transfer: DataTransfer::RemoteClientDataTransfer.new(
@@ -77,10 +84,7 @@ class DarkBlueJob
       ),
       context: context,
       validator: InnerBagValidator.new(package_data.dir_name),
-      extra_bag_info: {
-        ExtraBagInfoData::CONTENT_TYPE_KEY => arch_config.name,
-        ExtraBagInfoData::LOCATION_UUID_KEY => api_config.location_uuid
-      }
+      extra_bag_info: extra_bag_info
     )
     courier.deliver
   end
@@ -100,6 +104,9 @@ class DarkBlueJob
       raise DarkBlueError, message
     end
 
+    extra_bag_info = create_extra_bag_info(
+      content_type: arch_config.name, location_uuid: api_config.location_uuid
+    )
     arch_service = prepare_arch_service(name: arch_config.name, api_config: arch_config.api)
     package_data = arch_service.get_package_data_object(package.identifier)
     unless package_data
@@ -115,7 +122,8 @@ class DarkBlueJob
     deliver_package(
       package_data: package_data,
       remote_client: source_remote_client,
-      context: arch_config.name
+      context: arch_config.name,
+      extra_bag_info: extra_bag_info
     )
   end
   private :redeliver_package
@@ -125,6 +133,9 @@ class DarkBlueJob
   end
 
   def process_arch_instance(arch_config)
+    extra_bag_info = create_extra_bag_info(
+      content_type: arch_config.name, location_uuid: arch_config.api.location_uuid
+    )
     arch_service = prepare_arch_service(name: arch_config.name, api_config: arch_config.api)
     source_remote_client = RemoteClient::RemoteClientFactory.from_config(
       type: arch_config.remote.type,
@@ -152,7 +163,8 @@ class DarkBlueJob
       deliver_package(
         package_data: package_data,
         remote_client: source_remote_client,
-        context: arch_config.name
+        context: arch_config.name,
+        extra_bag_info: extra_bag_info
       )
     end
   end

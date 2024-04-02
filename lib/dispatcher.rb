@@ -28,7 +28,6 @@ module Dispatcher
       @bag_repo = bag_repo
     end
 
-    def dispatch(object_metadata:, data_transfer:, context: nil, validator: nil)
     def dispatch(
       object_metadata:,
       data_transfer:,
