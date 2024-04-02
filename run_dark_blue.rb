@@ -68,14 +68,14 @@ class DarkBlueJob
   end
   private :prepare_arch_service
 
-  def create_extra_bag_info(content_type:, location_uuid:)
+  def create_extra_bag_info_data(content_type:, location_uuid:)
     {
       ExtraBagInfoData::CONTENT_TYPE_KEY => content_type,
       ExtraBagInfoData::LOCATION_UUID_KEY => location_uuid
     }
   end
 
-  def deliver_package(package_data:, remote_client:, context:, extra_bag_info:)
+  def deliver_package(package_data:, remote_client:, context:, extra_bag_info_data:)
     courier = @dispatcher.dispatch(
       object_metadata: package_data.metadata,
       data_transfer: DataTransfer::RemoteClientDataTransfer.new(
@@ -84,7 +84,7 @@ class DarkBlueJob
       ),
       context: context,
       validator: InnerBagValidator.new(package_data.dir_name),
-      extra_bag_info: extra_bag_info
+      extra_bag_info_data: extra_bag_info_data
     )
     courier.deliver
   end
@@ -104,7 +104,7 @@ class DarkBlueJob
       raise DarkBlueError, message
     end
 
-    extra_bag_info = create_extra_bag_info(
+    extra_bag_info_data = create_extra_bag_info_data(
       content_type: arch_config.name, location_uuid: api_config.location_uuid
     )
     arch_service = prepare_arch_service(name: arch_config.name, api_config: arch_config.api)
@@ -123,7 +123,7 @@ class DarkBlueJob
       package_data: package_data,
       remote_client: source_remote_client,
       context: arch_config.name,
-      extra_bag_info: extra_bag_info
+      extra_bag_info_data: extra_bag_info_data
     )
   end
   private :redeliver_package
@@ -133,7 +133,7 @@ class DarkBlueJob
   end
 
   def process_arch_instance(arch_config)
-    extra_bag_info = create_extra_bag_info(
+    extra_bag_info_data = create_extra_bag_info_data(
       content_type: arch_config.name, location_uuid: arch_config.api.location_uuid
     )
     arch_service = prepare_arch_service(name: arch_config.name, api_config: arch_config.api)
@@ -164,7 +164,7 @@ class DarkBlueJob
         package_data: package_data,
         remote_client: source_remote_client,
         context: arch_config.name,
-        extra_bag_info: extra_bag_info
+        extra_bag_info_data: extra_bag_info_data
       )
     end
   end
