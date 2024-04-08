@@ -3,6 +3,9 @@ name: "Build image"
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - 'main'
 
 jobs:
   build:
