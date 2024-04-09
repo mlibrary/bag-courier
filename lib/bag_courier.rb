@@ -1,3 +1,4 @@
+$LOAD_PATH.unshift(File.dirname(__FILE__))
 require "minitar"
 
 require_relative "bag_adapter"

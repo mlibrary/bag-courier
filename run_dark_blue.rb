@@ -1,10 +1,10 @@
 require "optparse"
+
 require "sequel"
 
 require_relative "services"
 
 config = S.config
-
 DB = config.database && S.dbconnect
 
 require_relative "lib/archivematica"
@@ -21,7 +21,6 @@ end
 
 class DarkBlueJob
   include DarkBlueLogger
-
   module ExtraBagInfoData
     CONTENT_TYPE_KEY = "Dark-Blue-Content-Type"
     LOCATION_UUID_KEY = "Archivematica-Location-UUID"
