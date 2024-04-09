@@ -1,9 +1,10 @@
+$LOAD_PATH.unshift(File.dirname(__FILE__))
 require "bagit"
-require "semantic_logger"
+require "services"
 
 module BagAdapter
   class BagAdapter
-    include SemanticLogger::Loggable
+    include DarkBlueLogger
 
     attr_reader :additional_tag_files
 

@@ -1,23 +1,10 @@
+$LOAD_PATH.unshift(File.dirname(__FILE__))
 require "optparse"
 
-require "semantic_logger"
 require "sequel"
+require "services"
 
-require_relative "lib/config"
-
-SemanticLogger.add_appender(io: $stderr, formatter: :color)
-config = Config::ConfigService.from_file(File.join(".", "config", "config.yml"))
-SemanticLogger.default_level = config.settings.log_level
-
-DB = config.database && Sequel.connect(
-  adapter: "mysql2",
-  host: config.database.host,
-  port: config.database.port,
-  database: config.database.database,
-  user: config.database.user,
-  password: config.database.password,
-  fractional_seconds: true
-)
+DB = config.database && dbconnect
 
 require_relative "lib/archivematica"
 require_relative "lib/bag_repository"
@@ -32,8 +19,7 @@ class DarkBlueError < StandardError
 end
 
 class DarkBlueJob
-  include SemanticLogger::Loggable
-
+  include DarkBlueLogger
   def initialize(config)
     @package_repo = RepositoryPackageRepository::RepositoryPackageRepositoryFactory.for(use_db: DB)
     @dispatcher = Dispatcher::APTrustDispatcher.new(

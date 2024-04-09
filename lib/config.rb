@@ -1,7 +1,5 @@
 require "yaml"
 
-require "semantic_logger"
-
 module Config
   SettingsConfig = Struct.new(
     "SettingsConfig",
@@ -114,8 +112,6 @@ module Config
   end
 
   class ConfigService
-    include SemanticLogger::Loggable
-
     def self.raise_error(key, value)
       raise ConfigError, "Value for \"#{key}\" is not valid: #{value}"
     end
@@ -142,7 +138,6 @@ module Config
     end
 
     def self.read_data_from_file(yaml_path)
-      logger.debug("yaml_path=#{yaml_path}")
       YAML.safe_load_file(yaml_path)
     end
 
@@ -182,7 +177,6 @@ module Config
     end
 
     def self.create_config(data)
-      logger.debug(data)
       db_data = data.fetch("Database", nil)
       aptrust_data = data["APTrust"]
       Config.new(

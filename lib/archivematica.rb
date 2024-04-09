@@ -1,4 +1,5 @@
-require "semantic_logger"
+$LOAD_PATH.unshift(File.dirname(__FILE__))
+require "services"
 
 require_relative "api_backend"
 require_relative "repository_data"
@@ -19,7 +20,7 @@ module Archivematica
   end
 
   class ArchivematicaAPI
-    include SemanticLogger::Loggable
+    include DarkBlueLogger
 
     LOCATION_PATH = "location/"
     PACKAGE_PATH = "file/"
@@ -129,7 +130,7 @@ module Archivematica
   end
 
   class SizePackageFilter < PackageFilterBase
-    include SemanticLogger::Loggable
+    include DarkBlueLogger
 
     def initialize(size_limit)
       @size_limit = size_limit
@@ -143,7 +144,7 @@ module Archivematica
   end
 
   class ArchivematicaService
-    include SemanticLogger::Loggable
+    include DarkBlueLogger
 
     NA = "Not available"
 

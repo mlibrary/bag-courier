@@ -1,21 +1,8 @@
-require "semantic_logger"
+$LOAD_PATH.unshift(File.dirname(__FILE__))
+require "services"
 require "sequel"
 
-require_relative "lib/config"
-
-SemanticLogger.add_appender(io: $stderr, formatter: :color)
-config = Config::ConfigService.from_file(File.join(".", "config", "config.yml"))
-SemanticLogger.default_level = config.settings.log_level
-
-DB = config.database && Sequel.connect(
-  adapter: "mysql2",
-  host: config.database.host,
-  port: config.database.port,
-  database: config.database.database,
-  user: config.database.user,
-  password: config.database.password,
-  fractional_seconds: true
-)
+DB = config.database && dbconnect
 
 require_relative "lib/aptrust"
 require_relative "lib/bag_repository"
@@ -26,7 +13,7 @@ class APTrustVerificationError < StandardError
 end
 
 class APTrustVerificationJob
-  include SemanticLogger::Loggable
+  include DarkBlueLogger
 
   def initialize(config)
     aptrust_api = APTrust::APTrustAPI.from_config(

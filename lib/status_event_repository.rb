@@ -1,4 +1,5 @@
-require "semantic_logger"
+$LOAD_PATH.unshift(File.dirname(__FILE__))
+require "services"
 
 require_relative "bag_status"
 
@@ -91,7 +92,7 @@ module StatusEventRepository
   end
 
   class StatusEventDatabaseRepository
-    include SemanticLogger::Loggable
+    include DarkBlueLogger
 
     def find_or_create_status(status_name)
       DatabaseSchema::Status.find_or_create(name: status_name)

@@ -1,5 +1,6 @@
+$LOAD_PATH.unshift(File.dirname(__FILE__))
 require "minitar"
-require "semantic_logger"
+require "services"
 
 require_relative "bag_adapter"
 require_relative "bag_status"
@@ -23,7 +24,7 @@ module BagCourier
   end
 
   class BagCourier
-    include SemanticLogger::Loggable
+    include DarkBlueLogger
 
     EXT_TAR = ".tar"
 
