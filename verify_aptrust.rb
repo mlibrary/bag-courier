@@ -3,7 +3,6 @@ require "sequel"
 require_relative "services"
 
 config = S.config
-
 DB = config.database && S.dbconnect
 
 require_relative "lib/aptrust"

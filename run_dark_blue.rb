@@ -1,8 +1,6 @@
 require "optparse"
 
-
 require "sequel"
-
 require_relative "services"
 
 config = S.config
@@ -22,11 +20,6 @@ end
 
 class DarkBlueJob
   include DarkBlueLogger
-  module ExtraBagInfoData
-    CONTENT_TYPE_KEY = "Dark-Blue-Content-Type"
-    LOCATION_UUID_KEY = "Archivematica-Location-UUID"
-  end
-
   def initialize(config)
     @package_repo = RepositoryPackageRepository::RepositoryPackageRepositoryFactory.for(use_db: DB)
     @dispatcher = Dispatcher::APTrustDispatcher.new(
