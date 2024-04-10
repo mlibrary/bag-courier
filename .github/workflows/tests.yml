@@ -22,10 +22,10 @@ jobs:
         run: |
           for i in {1..10}
           do
-              if [[ $(mysqladmin ping -h"127.0.0.1" -P"3306" --silent) ]]; then
+              if [[ ! $(mysqladmin ping -h"127.0.0.1" -P"3306" --silent) ]]; then
                   exit 0
               else
-                  sleep 10
+                  sleep 3
               fi
           done
           exit 1
