@@ -167,10 +167,10 @@ module Config
 
   class RemoteTypeCheck < CheckBase
     include ErrorRaising
-    LOG_LEVELS = ["file_system", "aptrust", "sftp"]
+    REMOTE_TYPES = ["file_system", "aptrust", "sftp"]
 
     def verify(key:, value:)
-      raise_error(key: key, value: value) if !LOG_LEVELS.include?(value)
+      raise_error(key: key, value: value) if !REMOTE_TYPES.include?(value)
       value
     end
   end
