@@ -6,10 +6,7 @@ require_relative "../lib/config"
 
 Sequel.extension :migration
 
-config_yml_path = ENV.fetch("CONFIG_YML_PATH", File.join(".", "config", "config.yml"))
-db_config = Config::ConfigService.database_config_from_file(
-  File.join(__dir__, "..", config_yml_path)
-)
+db_config = Config::ConfigService.database_config_from_env
 
 if !db_config
   message = "A database connection is not configured. This is required for some tests."

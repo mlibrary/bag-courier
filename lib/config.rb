@@ -1,5 +1,3 @@
-require "yaml"
-
 require "semantic_logger"
 
 module Config
@@ -113,139 +111,216 @@ module Config
   class ConfigError < StandardError
   end
 
-  class ConfigService
-    include SemanticLogger::Loggable
-
-    def self.raise_error(key, value)
+  module ErrorRaising
+    def raise_error(key:, value:)
       raise ConfigError, "Value for \"#{key}\" is not valid: #{value}"
     end
+  end
 
-    def self.verify_string(key, value)
-      if !value.is_a?(String)
-        raise_error(key, value)
-      end
+  class CheckBase
+    def verify(key:, value:)
+      raise NotImplementedError
+    end
+  end
+
+  class NotNilCheck < CheckBase
+    include ErrorRaising
+    def verify(key:, value:)
+      raise_error(key: key, value: value) if value.nil?
       value
     end
+  end
 
-    def self.verify_int(key, value)
-      if !value.is_a?(Integer)
-        raise_error(key, value)
-      end
+  # class StringCheck < CheckBase
+  #   include ErrorRaising
+  #   def verify(key, value)
+  #     raise_error(key: key, value: value) if !value.is_a?(String)
+  #     value
+  #   end
+  # end
+
+  class IntegerCheck < CheckBase
+    include ErrorRaising
+    def verify(key:, value:)
+      raise_error(key: key, value: value) if !Integer(value, exception: false).is_a?(Integer)
       value
     end
+  end
 
-    def self.verify_boolean(key, value)
-      if ![true, false].include?(value)
-        raise_error(key, value)
-      end
+  class BooleanCheck < CheckBase
+    include ErrorRaising
+    def verify(key:, value:)
+      raise_error(key: key, value: value) if !["true", "false"].include?(value)
       value
     end
+  end
 
-    def self.read_data_from_file(yaml_path)
-      logger.debug("yaml_path=#{yaml_path}")
-      YAML.safe_load_file(yaml_path)
+  class LogLevelCheck < CheckBase
+    include ErrorRaising
+    LOG_LEVELS = ["info", "debug", "trace", "warn", "error", "fatal"]
+
+    def verify(key:, value:)
+      raise_error(key: key, value: value) if !LOG_LEVELS.include?(value)
+      value
+    end
+  end
+
+  class RemoteTypeCheck < CheckBase
+    include ErrorRaising
+    LOG_LEVELS = ["file_system", "aptrust", "sftp"]
+
+    def verify(key:, value:)
+      raise_error(key: key, value: value) if !LOG_LEVELS.include?(value)
+      value
+    end
+  end
+
+  class CheckableData
+    attr_reader :data
+
+    def initialize(data)
+      @data = data
     end
 
-    # TO DO
-    # Support config from environment?
+    def inspect
+      @data.to_s
+    end
+
+    def to_s
+      @data.to_s
+    end
+
+    def get_value(
+      key:,
+      checks: [],
+      optional: false
+    )
+      value = data.fetch(key)
+      NotNilCheck.new.verify(key: key, value: value) if !optional
+      checks.each { |check| check.new.verify(key: key, value: value) }
+      value
+    end
+    
+    def keys
+      @data.keys
+    end
+
+    def get_subset_by_key_stem(stem)
+      matching_keys = data.keys.filter { |k| k.start_with?(stem) }
+      filtered_data = data.slice(*matching_keys)
+      new_data = {}
+      filtered_data.each_pair do |key, value|
+        new_key = key.sub(stem, "")
+        new_data[new_key] = value
+      end
+      CheckableData.new(new_data)
+    end
+  end
+
+  class ConfigService
+    include SemanticLogger::Loggable
+    attr_reader :data
+
+    ARCHIVEMATICA_INSTANCES = ["ARCHIVEMATICA_DEV",  "ARCHIVEMATICA_LAB", "ARCHIVEMATICA_AMI", "ARCHIVEMATICA_VGA"]
+
+    def self.create_database_config(data)
+      DatabaseConfig.new(
+        host: data.get_value(key: "HOST"),
+        database: data.get_value(key: "DATABASE"),
+        port: data.get_value(key: "PORT", checks=[IntegerCheck]).to_i,
+        user: data.get_value(key: "USER"),
+        password: data.get_value(key: "PASSWORD")
+      )
+    end
 
     def self.create_remote_config(data)
-      type = verify_string("Type", data["Type"]).to_sym
-      settings = data["Settings"]
+      type = data.get_value(key: "TYPE", checks: [RemoteTypeCheck]).to_sym
+      settings = data.get_subset_by_key_stem("SETTINGS_")
       RemoteConfig.new(
         type: type,
         settings: (
           case type
           when :aptrust
             AptrustAwsRemoteConfig.new(
-              region: verify_string("BucketRegion", settings["BucketRegion"]),
-              receiving_bucket: verify_string("ReceivingBucket", settings["ReceivingBucket"]),
-              restore_bucket: verify_string("RestoreBucket", settings["RestoreBucket"]),
-              access_key_id: verify_string("AwsAccessKeyId", settings["AwsAccessKeyId"]),
-              secret_access_key: verify_string("AwsSecretAccessKey", settings["AwsSecretAccessKey"])
+              region: settings.get_value(key: "BUCKET_REGION"),
+              receiving_bucket: settings.get_value(key: "RECEIVING_BUCKET"),
+              restore_bucket: settings.get_value(key: "RESTORE_BUCKET"),
+              access_key_id: settings.get_value(key: "AWS_ACCESS_KEY_ID"),
+              secret_access_key: settings.get_value(key: "AWS_SECRET_ACCESS_KEY")
             )
           when :file_system
             FileSystemRemoteConfig.new(
-              remote_path: verify_string("FileSystemRemotePath", settings["FileSystemRemotePath"])
+              remote_path: settings.get_value("FILE_SYSTEM_REMOTE_PATH")
             )
           when :sftp
             SftpRemoteConfig.new(
-              user: verify_string("User", settings["User"]),
-              host: verify_string("Host", settings["Host"]),
-              key_path: verify_string("KeyPath", settings["KeyPath"])
+              user: settings.get_value(key: "USER"),
+              host: settings.get_value(key: "HOST"),
+              key_path: settings.get_value(key: "KEY_PATH")
             )
           else
-            raise ConfigError, "Remote type #{type} is not supported"
+            raise ConfigError, "Remote type #{type} is not supported."
           end
         )
       )
     end
 
-    def self.create_database_config(data)
-      DatabaseConfig.new(
-        host: verify_string("Host", data["Host"]),
-        database: verify_string("Database", data["Database"]),
-        port: verify_int("Port", data["Port"]),
-        user: verify_string("User", data["User"]),
-        password: verify_string("Password", data["Password"])
+    def self.create_archivematica_config(data)
+      ArchivematicaConfig.new(
+        name: data.get_value(key: "NAME"),
+        repository_name: data.get_value(key: "REPOSITORY_NAME"),
+        api: ArchivematicaAPIConfig.new(
+          base_url: data.get_value(key: "API_BASE_URL"),
+          username: data.get_value(key: "API_USERNAME"),
+          api_key: data.get_value(key: "API_API_KEY"),
+          location_uuid: data.get_value(key: "API_LOCATION_UUID")
+        ),
+        remote: create_remote_config(data.get_subset_by_key_stem("REMOTE_"))
       )
     end
 
     def self.create_config(data)
-      logger.debug(data)
-      db_data = data.fetch("Database", nil)
-      aptrust_data = data["APTrust"]
-      Config.new(
+      data = CheckableData.new(data)
+      db_data = data.get_subset_by_key_stem("DATABASE_")
+
+      arch_configs = []
+      ARCHIVEMATICA_INSTANCES.each do |instance_name|
+        instance_data = data.get_subset_by_key_stem(instance_name + "_")
+        arch_configs << create_archivematica_config(instance_data) if instance_data.keys.length > 0
+      end
+
+      config = Config.new(
         settings: SettingsConfig.new(
-          log_level: verify_string("LogLevel", data["LogLevel"]).to_sym,
-          working_dir: verify_string("WorkingDir", data["WorkingDir"]),
-          export_dir: verify_string("ExportDir", data["ExportDir"]),
-          dry_run: verify_boolean("DryRun", data["DryRun"]),
-          object_size_limit: data["ObjectSizeLimit"] && verify_int("ObjectSizeLimit", data["ObjectSizeLimit"])
+          log_level: data.get_value(key: "SETTINGS_LOG_LEVEL", checks: [LogLevelCheck]).to_sym,
+          working_dir: data.get_value(key: "SETTINGS_WORKING_DIR"),
+          export_dir: data.get_value(key: "SETTINGS_EXPORT_DIR"),
+          dry_run: data.get_value(key: "SETTINGS_DRY_RUN", checks: [BooleanCheck]) == "true",
+          object_size_limit: data.get_value(key: "SETTINGS_OBJECT_SIZE_LIMIT", checks: [IntegerCheck]).to_i
         ),
         repository: RepositoryConfig.new(
-          name: verify_string("Repository", data["Repository"]),
-          description: verify_string("RepositoryDescription", data["RepositoryDescription"])
+          name: data.get_value(key: "REPOSITORY_NAME"),
+          description: data.get_value(key: "REPOSITORY_DESCRIPTION")
         ),
-        database: db_data && create_database_config(db_data),
-        dark_blue: DarkBlueConfig.new(
-          archivematicas: (
-            data["DarkBlue"]["ArchivematicaInstances"].map do |arch_data|
-              api_data = arch_data["API"]
-              remote_data = arch_data["Remote"]
-              ArchivematicaConfig.new(
-                name: verify_string("Name", arch_data["Name"]),
-                repository_name: verify_string("RepositoryName", arch_data["RepositoryName"]),
-                api: ArchivematicaAPIConfig.new(
-                  base_url: verify_string("BaseURL", api_data["BaseURL"]),
-                  username: verify_string("Username", api_data["Username"]),
-                  api_key: verify_string("APIKey", api_data["APIKey"]),
-                  location_uuid: verify_string("LocationUUID", api_data["LocationUUID"])
-                ),
-                remote: create_remote_config(remote_data)
-              )
-            end
-          )
-        ),
+        database: db_data.keys.length > 0 ? create_database_config(db_data) : nil,
+        dark_blue: DarkBlueConfig.new(archivematicas: arch_configs),
         aptrust: APTrustConfig.new(
           api: APTrustAPIConfig.new(
-            username: verify_string("Username", aptrust_data["API"]["Username"]),
-            api_key: verify_string("APIKey", aptrust_data["API"]["APIKey"]),
-            base_url: verify_string("BaseURL", aptrust_data["API"]["BaseURL"])
+            username: data.get_value(key: "APTRUST_API_USERNAME"),
+            api_key: data.get_value(key: "APTRUST_API_API_KEY"),
+            base_url: data.get_value(key: "APTRUST_API_BASE_URL")
           ),
-          remote: create_remote_config(aptrust_data["Remote"])
+          remote: create_remote_config(data.get_subset_by_key_stem("APTRUST_REMOTE_"))
         )
       )
     end
 
-    def self.database_config_from_file(yaml_path)
-      data = read_data_from_file(yaml_path)
-      db_data = data.fetch("Database", nil)
-      db_data && create_database_config(db_data)
+    def self.database_config_from_env
+      db_data = CheckableData.new(ENV.to_hash).get_subset_by_key_stem("DATABASE_")
+      db_data.keys.length > 0 ? create_database_config(db_data) : nil
     end
 
-    def self.from_file(yaml_path)
-      create_config(read_data_from_file(yaml_path))
+    def self.from_env
+      create_config(ENV.to_hash)
     end
   end
 end
