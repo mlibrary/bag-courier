@@ -7,7 +7,9 @@ require_relative "lib/remote_client"
 
 SemanticLogger.add_appender(io: $stderr, formatter: :color)
 
-config = Config::ConfigService.from_file(File.join(".", "config", "config.yml"))
+config = Config::ConfigService.from_file(
+  ENV.fetch("CONFIG_YML_PATH", File.join(".", "config", "config.yml"))
+)
 
 SemanticLogger.default_level = config.settings.log_level
 logger = SemanticLogger["run_example"]

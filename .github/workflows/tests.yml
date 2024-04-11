@@ -1,0 +1,40 @@
+name: Run Tests
+
+on: push
+
+jobs:
+  # Run tests
+  test:
+    runs-on: ubuntu-latest
+    services:
+      mariadb:
+        image: mariadb:10
+        env:
+          MARIADB_USER: user
+          MARIADB_PASSWORD: password
+          MARIADB_DATABASE: test_database
+          MARIADB_ROOT_PASSWORD: password
+        ports: ["3306:3306"]
+        options: --health-cmd="mysqladmin ping" --health-interval=5s --health-timeout=2s --health-retries=5
+    steps:
+      - uses: actions/checkout@v3
+      - name: Wait for MariaDB
+        run: |
+          for i in {1..10}
+          do
+              if [[ $(mysqladmin ping -h"127.0.0.1" -P"3306" --silent) -eq 0 ]]; then
+                  exit 0
+              else
+                  sleep 3
+              fi
+          done
+          exit 1
+      - name: Set up Ruby 3.2
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2.3'
+          bundler-cache: true
+      - name: Run tests
+        run: bundle exec rake test
+        env: 
+          CONFIG_YML_PATH: "./config/config.tests.yml"

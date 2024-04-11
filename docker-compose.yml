@@ -12,6 +12,7 @@ services:
         target: /run/host-services/ssh-auth.sock
     environment:
      - SSH_AUTH_SOCK=/run/host-services/ssh-auth.sock
+     - CONFIG_YML_PATH=./config/config.tests.yml
     depends_on:
       database:
         condition: "service_healthy"
