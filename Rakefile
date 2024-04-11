@@ -14,7 +14,7 @@ namespace :db do
 
     Sequel.extension :migration
 
-    db_config = config.database
+    # db_config = db_config
     if !db_config
       raise DatabaseError, "Migration failed. A database connection is not configured."
     end

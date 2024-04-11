@@ -9,11 +9,19 @@ S = Services
 
 # Config
 S.register(:config) do
-  Config::ConfigService.from_file(File.join(".", "config", "config.yml"))
+  Config::ConfigService.from_file(ENV.fetch("CONFIG_YML_PATH", File.join(".", "config", "config.yml")))
+end
+
+S.register(:db_config) do
+  Config::ConfigService.database_config_from_file(ENV.fetch("CONFIG_YML_PATH", File.join(".", "config", "config.yml")))
 end
 
 def config
   S.config
+end
+
+def db_config
+  S.db_config
 end
 
 # Logger
