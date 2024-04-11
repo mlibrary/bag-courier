@@ -6,9 +6,7 @@ require "sequel"
 require_relative "lib/config"
 
 SemanticLogger.add_appender(io: $stderr, formatter: :color)
-config = Config::ConfigService.from_file(
-  ENV.fetch("CONFIG_YML_PATH", File.join(".", "config", "config.yml"))
-)
+config = Config::ConfigService.from_env
 SemanticLogger.default_level = config.settings.log_level
 
 DB = config.database && Sequel.connect(

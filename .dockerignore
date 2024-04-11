@@ -1,4 +1,5 @@
 **/config.yml
+**/.env*
 .ssh/*
 export/*
 prep/*

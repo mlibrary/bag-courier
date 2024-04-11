@@ -13,9 +13,7 @@ namespace :db do
 
     Sequel.extension :migration
 
-    db_config = Config::ConfigService.database_config_from_file(
-      ENV.fetch("CONFIG_YML_PATH", File.join(".", "config", "config.yml"))
-    )
+    db_config = Config::ConfigService.database_config_from_env
     if !db_config
       raise DatabaseError, "Migration failed. A database connection is not configured."
     end
