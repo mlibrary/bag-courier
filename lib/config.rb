@@ -190,13 +190,11 @@ module Config
       @data.to_s
     end
 
-    def get_value(
-      key:,
-      checks: [],
-      optional: false
-    )
-      value = data.fetch(key)
-      NotNilCheck.new.verify(key: key, value: value) if !optional
+    def get_value(key:, checks: [], optional: false)
+      value = data.fetch(key, nil)
+      return value if optional && value.nil?
+
+      NotNilCheck.new.verify(key: key, value: value)
       checks.each { |check| check.new.verify(key: key, value: value) }
       value
     end
@@ -227,7 +225,7 @@ module Config
       DatabaseConfig.new(
         host: data.get_value(key: "HOST"),
         database: data.get_value(key: "DATABASE"),
-        port: data.get_value(key: "PORT", checks=[IntegerCheck]).to_i,
+        port: data.get_value(key: "PORT", checks: [IntegerCheck]).to_i,
         user: data.get_value(key: "USER"),
         password: data.get_value(key: "PASSWORD")
       )
@@ -295,7 +293,9 @@ module Config
           working_dir: data.get_value(key: "SETTINGS_WORKING_DIR"),
           export_dir: data.get_value(key: "SETTINGS_EXPORT_DIR"),
           dry_run: data.get_value(key: "SETTINGS_DRY_RUN", checks: [BooleanCheck]) == "true",
-          object_size_limit: data.get_value(key: "SETTINGS_OBJECT_SIZE_LIMIT", checks: [IntegerCheck]).to_i
+          object_size_limit: data.get_value(
+            key: "SETTINGS_OBJECT_SIZE_LIMIT", checks: [IntegerCheck], optional: true
+          ).to_i
         ),
         repository: RepositoryConfig.new(
           name: data.get_value(key: "REPOSITORY_NAME"),
