@@ -1,8 +1,0 @@
-# Configuration for GitHub Action defined in .github/workflows/tests.yaml
-
-Database:
-  Host: 127.0.0.1
-  Database: test_database
-  Port: 3306
-  User: user
-  Password: password
