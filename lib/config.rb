@@ -111,67 +111,49 @@ module Config
   class ConfigError < StandardError
   end
 
-  module ErrorRaising
-    def raise_error(key:, value:)
-      raise ConfigError, "Value for \"#{key}\" is not valid: #{value}"
-    end
-  end
-
   class CheckBase
-    def verify(key:, value:)
+    def check?(value)
       raise NotImplementedError
     end
   end
 
   class NotNilCheck < CheckBase
-    include ErrorRaising
-    def verify(key:, value:)
-      raise_error(key: key, value: value) if value.nil?
-      value
+    def check?(value)
+      value.nil?
     end
   end
 
   # class StringCheck < CheckBase
-  #   include ErrorRaising
-  #   def verify(key, value)
-  #     raise_error(key: key, value: value) if !value.is_a?(String)
-  #     value
+  #   def check?(value)
+  #     value.is_a?(String)
   #   end
   # end
 
   class IntegerCheck < CheckBase
-    include ErrorRaising
-    def verify(key:, value:)
-      raise_error(key: key, value: value) if !Integer(value, exception: false).is_a?(Integer)
-      value
+    def check?(value)
+      Integer(value, exception: false).is_a?(Integer)
     end
   end
 
   class BooleanCheck < CheckBase
-    include ErrorRaising
-    def verify(key:, value:)
-      raise_error(key: key, value: value) if !["true", "false"].include?(value)
-      value
+    def check?(value)
+      ["true", "false"].include?(value)
     end
   end
 
   class LogLevelCheck < CheckBase
-    include ErrorRaising
     LOG_LEVELS = ["info", "debug", "trace", "warn", "error", "fatal"]
 
-    def verify(key:, value:)
-      raise_error(key: key, value: value) if !LOG_LEVELS.include?(value)
-      value
+    def check?(value)
+      LOG_LEVELS.include?(value)
     end
   end
 
   class RemoteTypeCheck < CheckBase
-    include ErrorRaising
     REMOTE_TYPES = ["file_system", "aptrust", "sftp"]
 
-    def verify(key:, value:)
-      raise_error(key: key, value: value) if !REMOTE_TYPES.include?(value)
-      value
+    def check?(value)
+      REMOTE_TYPES.include?(value)
     end
   end
 
@@ -190,12 +172,20 @@ module Config
       @data.to_s
     end
 
+    def raise_error(key:, value:, reason: nil)
+      raise ConfigError, "Value \"#{value}\" for key \"#{key}\" is not valid. #{reason}"
+    end
+    private :raise_error
+
     def get_value(key:, checks: [], optional: false)
       value = data.fetch(key, nil)
       return value if optional && value.nil?
 
-      NotNilCheck.new.verify(key: key, value: value)
-      checks.each { |check| check.new.verify(key: key, value: value) }
+      NotNilCheck.new.check?(value)
+      checks.each do |check|
+        result = check.check?(value)
+        raise_error(key: key, value: value, reason: "#{check.class} failed.") if !result
+      end
       value
     end
     
@@ -225,14 +215,14 @@ module Config
       DatabaseConfig.new(
         host: data.get_value(key: "HOST"),
         database: data.get_value(key: "DATABASE"),
-        port: data.get_value(key: "PORT", checks: [IntegerCheck]).to_i,
+        port: data.get_value(key: "PORT", checks: [IntegerCheck.new]).to_i,
         user: data.get_value(key: "USER"),
         password: data.get_value(key: "PASSWORD")
       )
     end
 
     def self.create_remote_config(data)
-      type = data.get_value(key: "TYPE", checks: [RemoteTypeCheck]).to_sym
+      type = data.get_value(key: "TYPE", checks: [RemoteTypeCheck.new]).to_sym
       settings = data.get_subset_by_key_stem("SETTINGS_")
       RemoteConfig.new(
         type: type,
@@ -289,12 +279,12 @@ module Config
 
       config = Config.new(
         settings: SettingsConfig.new(
-          log_level: data.get_value(key: "SETTINGS_LOG_LEVEL", checks: [LogLevelCheck]).to_sym,
+          log_level: data.get_value(key: "SETTINGS_LOG_LEVEL", checks: [LogLevelCheck.new]).to_sym,
           working_dir: data.get_value(key: "SETTINGS_WORKING_DIR"),
           export_dir: data.get_value(key: "SETTINGS_EXPORT_DIR"),
-          dry_run: data.get_value(key: "SETTINGS_DRY_RUN", checks: [BooleanCheck]) == "true",
+          dry_run: data.get_value(key: "SETTINGS_DRY_RUN", checks: [BooleanCheck.new]) == "true",
           object_size_limit: data.get_value(
-            key: "SETTINGS_OBJECT_SIZE_LIMIT", checks: [IntegerCheck], optional: true
+            key: "SETTINGS_OBJECT_SIZE_LIMIT", checks: [IntegerCheck.new], optional: true
           ).to_i
         ),
         repository: RepositoryConfig.new(
