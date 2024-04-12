@@ -21,9 +21,9 @@ services:
     image: mariadb:11
     environment:
       - MARIADB_ROOT_PASSWORD=root_pw
-      - MARIADB_DATABASE=dpact_pres_service
-      - MARIADB_USER=dpact_user
-      - MARIADB_PASSWORD=dpact_pw
+      - MARIADB_DATABASE=darkblue_aptrust
+      - MARIADB_USER=darkblue_aptrust_user
+      - MARIADB_PASSWORD=darkblue_aptrust_pw
     command: [
       '--character-set-server=utf8mb4',
       '--collation-server=utf8mb4_unicode_ci'
