@@ -286,7 +286,7 @@ module Config
           dry_run: data.get_value(key: "SETTINGS_DRY_RUN", checks: [BooleanCheck.new]) == "true",
           object_size_limit: data.get_value(
             key: "SETTINGS_OBJECT_SIZE_LIMIT", checks: [IntegerCheck.new], optional: true
-          ).to_i
+          ).tap { |v| !v.nil? && v.to_i }
         ),
         repository: RepositoryConfig.new(
           name: data.get_value(key: "REPOSITORY_NAME"),
