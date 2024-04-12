@@ -1,6 +1,104 @@
 require "semantic_logger"
 
 module Config
+  class ConfigError < StandardError
+  end
+
+  class CheckBase
+    def check?(value)
+      raise NotImplementedError
+    end
+  end
+
+  class NotNilCheck < CheckBase
+    def check?(value)
+     !value.nil?
+    end
+  end
+
+  # class StringCheck < CheckBase
+  #   def check?(value)
+  #     value.is_a?(String)
+  #   end
+  # end
+
+  class IntegerCheck < CheckBase
+    def check?(value)
+      Integer(value, exception: false).is_a?(Integer)
+    end
+  end
+
+  class BooleanCheck < CheckBase
+    def check?(value)
+      ["true", "false"].include?(value)
+    end
+  end
+
+  class LogLevelCheck < CheckBase
+    LOG_LEVELS = ["info", "debug", "trace", "warn", "error", "fatal"]
+
+    def check?(value)
+      LOG_LEVELS.include?(value)
+    end
+  end
+
+  class RemoteTypeCheck < CheckBase
+    REMOTE_TYPES = ["file_system", "aptrust", "sftp"]
+
+    def check?(value)
+      REMOTE_TYPES.include?(value)
+    end
+  end
+
+  class CheckableData
+    attr_reader :data
+
+    def initialize(data)
+      @data = data
+    end
+
+    def inspect
+      @data.to_s
+    end
+
+    def to_s
+      @data.to_s
+    end
+
+    def keys
+      @data.keys
+    end
+
+    def raise_error(key:, value:, reason: nil)
+      raise ConfigError, "Value \"#{value}\" for key \"#{key}\" is not valid. #{reason}"
+    end
+    private :raise_error
+
+    def get_value(key:, checks: [], optional: false)
+      value = data.fetch(key, nil)
+      return value if optional && value.nil?
+
+      [NotNilCheck.new, *checks].each do |check|
+        if !check.check?(value)
+          reason = "#{check.class.name.split("::").last} failed."
+          raise_error(key: key, value: value, reason: reason)
+        end
+      end
+      value
+    end
+
+    def get_subset_by_key_stem(stem)
+      matching_keys = data.keys.filter { |k| k.start_with?(stem) }
+      filtered_data = data.slice(*matching_keys)
+      new_data = {}
+      filtered_data.each_pair do |key, value|
+        new_key = key.sub(stem, "")
+        new_data[new_key] = value
+      end
+      CheckableData.new(new_data)
+    end
+  end
+
   SettingsConfig = Struct.new(
     "SettingsConfig",
     :log_level,
@@ -107,103 +205,6 @@ module Config
     :aptrust,
     keyword_init: true
   )
-
-  class ConfigError < StandardError
-  end
-
-  class CheckBase
-    def check?(value)
-      raise NotImplementedError
-    end
-  end
-
-  class NotNilCheck < CheckBase
-    def check?(value)
-      value.nil?
-    end
-  end
-
-  # class StringCheck < CheckBase
-  #   def check?(value)
-  #     value.is_a?(String)
-  #   end
-  # end
-
-  class IntegerCheck < CheckBase
-    def check?(value)
-      Integer(value, exception: false).is_a?(Integer)
-    end
-  end
-
-  class BooleanCheck < CheckBase
-    def check?(value)
-      ["true", "false"].include?(value)
-    end
-  end
-
-  class LogLevelCheck < CheckBase
-    LOG_LEVELS = ["info", "debug", "trace", "warn", "error", "fatal"]
-
-    def check?(value)
-      LOG_LEVELS.include?(value)
-    end
-  end
-
-  class RemoteTypeCheck < CheckBase
-    REMOTE_TYPES = ["file_system", "aptrust", "sftp"]
-
-    def check?(value)
-      REMOTE_TYPES.include?(value)
-    end
-  end
-
-  class CheckableData
-    attr_reader :data
-
-    def initialize(data)
-      @data = data
-    end
-
-    def inspect
-      @data.to_s
-    end
-
-    def to_s
-      @data.to_s
-    end
-
-    def raise_error(key:, value:, reason: nil)
-      raise ConfigError, "Value \"#{value}\" for key \"#{key}\" is not valid. #{reason}"
-    end
-    private :raise_error
-
-    def get_value(key:, checks: [], optional: false)
-      value = data.fetch(key, nil)
-      return value if optional && value.nil?
-
-      NotNilCheck.new.check?(value)
-      checks.each do |check|
-        result = check.check?(value)
-        raise_error(key: key, value: value, reason: "#{check.class} failed.") if !result
-      end
-      value
-    end
-    
-    def keys
-      @data.keys
-    end
-
-    def get_subset_by_key_stem(stem)
-      matching_keys = data.keys.filter { |k| k.start_with?(stem) }
-      filtered_data = data.slice(*matching_keys)
-      new_data = {}
-      filtered_data.each_pair do |key, value|
-        new_key = key.sub(stem, "")
-        new_data[new_key] = value
-      end
-      CheckableData.new(new_data)
-    end
-  end
 
   class ConfigService
     include SemanticLogger::Loggable
