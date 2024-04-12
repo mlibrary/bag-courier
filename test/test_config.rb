@@ -47,4 +47,20 @@ class CheckableDataTest < Minitest::Test
     error = assert_raises(ConfigError) { data.get_value(key: "some_key", checks: [BooleanCheck.new]) }
     assert_equal expected_message, error.message
   end
+
+  def test_get_subset_by_key_stem
+    input = {"namespace_a" => "1", "namespace_b" => "2", "namespace_c" => "3"}
+    data = CheckableData.new(input)
+    data_subset = data.get_subset_by_key_stem("namespace_")
+    assert data_subset.is_a?(CheckableData)
+    expected = {"a" => "1", "b" => "2", "c" => "3"}
+    assert_equal expected, data_subset.data
+  end
+
+  def test_get_subset_by_key_stem_with_no_matches
+    input = {"A_blah" => 1, "B_blah" => 2}
+    data = CheckableData.new(input)
+    data_subset = data.get_subset_by_key_stem("C_")
+    assert_equal Hash.new, data_subset.data
+  end
 end
