@@ -1,14 +1,20 @@
+# Data directories
 export
 prep
 restore
 source
 
-.DS_Store
+# Configuration
 .ssh
+**/.env*
+# Former configuration file format; leaving here to prevent accidental inclusion
+**/config.yml
 
-config/config.yml
-
+# Testing directories
 test/bag_test_dir
 test/remote_test
 test/bag_courier_test
 test/test_bag_val_dir
+
+# Misc.
+.DS_Store

@@ -24,11 +24,11 @@ may be IP address restricted, so ensure you have access to the proper network or
 
 In all cases, you will need to set up a configuration file, which you can do by following these steps:
 
-1. Create a configuration YAML file based on the provided template.
+1. Create a `.env` file based on the provided template, [`example.env`](/example.env).
     ```sh
-    cp config/config.example.yml config/config.yml
+    cp example.env .env
     ```
-2. Open `config/config.yml` using your preferred text editor, and add values,
+2. Open `.env` using your preferred text editor, and add values,
 using the comments to guide you.
 
 For local development, you may need to set up an SSH key and add it to your `ssh-agent`
@@ -46,7 +46,7 @@ The recommended approach is to use the `database` service
 (defined in [`docker-compose.yml`](/docker-compose.yml) with the Docker approach described below.
 However, it is possible -- though not explicitly supported -- to use a MariaDB or MySQL
 database from a server running on your local machine or elsewhere.
-The following sections will assume you are not using a database with Ruby alone.
+The following sections will assume you are not using a database with Ruby outside a container.
 
 ### Ruby
 
@@ -59,14 +59,15 @@ bundle install
 
 #### Usage
 
+*Note*: The application expects to find necessary configuration in environment variables.
+To assist with local development, it includes the [`dotenv`](https://github.com/bkeepers/dotenv) gem,
+which will populate the Ruby global `ENV` with key-value pairs from the prepared `.env` file.
+When using only Ruby to execute a file, if configuration is needed,
+precede your `ruby script.rb` with `dotenv`, as shown below.
+
 The primary job or process is `run_dark_blue.rb`.
 ```sh
-ruby run_dark_blue.rb
-```
-
-The latest deposits to APTrust can be verified using `verify_aptrust.rb`.
-```sh
-ruby verify_aptrust.rb
+dotenv ruby run_dark_blue.rb
 ```
 
 If you're working on a new job or just want to try out the classes,
@@ -74,12 +75,15 @@ you can copy `run_example.rb` and modify it as necessary.
 ```sh
 cp run_example.rb run_test.rb
 # Tweak as necessary
-ruby run_test.rb
+dotenv ruby run_test.rb
 ```
 
 ### Docker
 
 #### Installation
+
+*Note*: The provided `docker-compose.yml` file will detect your `.env` and create the appropriate
+environment variables.
 
 Build the image for the `dark-blue` service.
 ```sh
@@ -103,7 +107,8 @@ Run the `dark-blue` service to start `run_dark_blue.rb`.
 docker compose up dark-blue
 ```
 
-To use `verify_aptrust.rb`, override the entry command for the `dark-blue` service with `run`.
+The latest deposits to APTrust can be verified using `verify_aptrust.rb`.
+Override the entry command for the `dark-blue` service with `run`.
 ```sh
 docker compose run dark-blue ruby verify_aptrust.rb
 ```

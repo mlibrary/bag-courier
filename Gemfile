@@ -16,6 +16,10 @@ gem "sftp",
   git: "https://github.com/mlibrary/sftp",
   tag: "sftp/v0.4.2"
 
+group :development do
+  gem "dotenv", "~> 3.1.0"
+end
+
 group :test do
   gem "minitest", "~> 5.20"
   gem "rake", "~> 13.1"

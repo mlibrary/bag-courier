@@ -22,15 +22,13 @@ COPY . /app
 
 FROM base AS development
 
-RUN bundle install
+RUN bundle config set --local without development && bundle install
 
 CMD ["tail", "-f", "/dev/null"]
 
 FROM base AS production
 
-RUN bundle config set --local without test
-
-RUN bundle install
+RUN bundle config set --local without development test && bundle install
 
 RUN groupadd -g ${GID} -o ${UNAME}
 RUN useradd -m -d /app -u ${UID} -g ${GID} -o -s /bin/bash ${UNAME}

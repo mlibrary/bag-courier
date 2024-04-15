@@ -12,7 +12,7 @@ services:
         target: /run/host-services/ssh-auth.sock
     environment:
      - SSH_AUTH_SOCK=/run/host-services/ssh-auth.sock
-     - CONFIG_YML_PATH=./config/config.tests.yml
+    env_file: .env
     depends_on:
       database:
         condition: "service_healthy"
@@ -21,9 +21,9 @@ services:
     image: mariadb:11
     environment:
       - MARIADB_ROOT_PASSWORD=root_pw
-      - MARIADB_DATABASE=dpact_pres_service
-      - MARIADB_USER=dpact_user
-      - MARIADB_PASSWORD=dpact_pw
+      - MARIADB_DATABASE=darkblue_aptrust
+      - MARIADB_USER=darkblue_aptrust_user
+      - MARIADB_PASSWORD=darkblue_aptrust_pw
     command: [
       '--character-set-server=utf8mb4',
       '--collation-server=utf8mb4_unicode_ci'
