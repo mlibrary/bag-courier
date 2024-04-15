@@ -4,8 +4,15 @@ module Config
   class ConfigError < StandardError
   end
 
+  # Check subclasses will validate the values of environment variables,
+  # which will either be nil or string. Conversion to other data types,
+  # if necessary, must be done subsequently.
   class CheckBase
     def check?(value)
+      raise NotImplementedError
+    end
+
+    def reason
       raise NotImplementedError
     end
   end
@@ -14,41 +21,41 @@ module Config
     def check?(value)
      !value.nil?
     end
-  end
 
-  # class StringCheck < CheckBase
-  #   def check?(value)
-  #     value.is_a?(String)
-  #   end
-  # end
+    def reason
+      "Value cannot be nil."
+    end
+  end
 
   class IntegerCheck < CheckBase
     def check?(value)
       Integer(value, exception: false).is_a?(Integer)
     end
-  end
 
-  class BooleanCheck < CheckBase
-    def check?(value)
-      ["true", "false"].include?(value)
+    def reason
+      "Value is not an integer."
     end
   end
 
-  class LogLevelCheck < CheckBase
-    LOG_LEVELS = ["info", "debug", "trace", "warn", "error", "fatal"]
+  class ControlledVocabularyCheck < CheckBase
+    def initialize(members)
+      @members = members
+    end
 
     def check?(value)
-      LOG_LEVELS.include?(value)
+      @members.include?(value)
+    end
+
+    def reason
+      "Value is not in the list #{@members}."
     end
   end
 
-  class RemoteTypeCheck < CheckBase
-    REMOTE_TYPES = ["file_system", "aptrust", "sftp"]
-
-    def check?(value)
-      REMOTE_TYPES.include?(value)
-    end
-  end
+  BOOLEAN_CHECK = ControlledVocabularyCheck.new(["true", "false"])
+  LOG_LEVEL_CHECK = ControlledVocabularyCheck.new(
+    ["info", "debug", "trace", "warn", "error", "fatal"]
+  )
+  REMOTE_TYPE_CHECK = ControlledVocabularyCheck.new(["file_system", "aptrust", "sftp"])
 
   class CheckableData
     attr_reader :data
@@ -79,10 +86,7 @@ module Config
       return value if optional && value.nil?
 
       [NotNilCheck.new, *checks].each do |check|
-        if !check.check?(value)
-          reason = "#{check.class.name.split("::").last} failed."
-          raise_error(key: key, value: value, reason: reason)
-        end
+        raise_error(key: key, value: value, reason: check.reason) if !check.check?(value)
       end
       value
     end
@@ -223,7 +227,7 @@ module Config
     end
 
     def self.create_remote_config(data)
-      type = data.get_value(key: "TYPE", checks: [RemoteTypeCheck.new]).to_sym
+      type = data.get_value(key: "TYPE", checks: [REMOTE_TYPE_CHECK]).to_sym
       settings = data.get_subset_by_key_stem("SETTINGS_")
       RemoteConfig.new(
         type: type,
@@ -280,13 +284,13 @@ module Config
 
       config = Config.new(
         settings: SettingsConfig.new(
-          log_level: data.get_value(key: "SETTINGS_LOG_LEVEL", checks: [LogLevelCheck.new]).to_sym,
+          log_level: data.get_value(key: "SETTINGS_LOG_LEVEL", checks: [LOG_LEVEL_CHECK]).to_sym,
           working_dir: data.get_value(key: "SETTINGS_WORKING_DIR"),
           export_dir: data.get_value(key: "SETTINGS_EXPORT_DIR"),
-          dry_run: data.get_value(key: "SETTINGS_DRY_RUN", checks: [BooleanCheck.new]) == "true",
+          dry_run: data.get_value(key: "SETTINGS_DRY_RUN", checks: [BOOLEAN_CHECK]) == "true",
           object_size_limit: data.get_value(
             key: "SETTINGS_OBJECT_SIZE_LIMIT", checks: [IntegerCheck.new], optional: true
-          ).tap { |v| !v.nil? && v.to_i }
+          )&.to_i
         ),
         repository: RepositoryConfig.new(
           name: data.get_value(key: "REPOSITORY_NAME"),

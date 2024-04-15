@@ -13,7 +13,7 @@ class CheckableDataTest < Minitest::Test
 
   def test_get_value_when_key_does_not_exist
     data = CheckableData.new({})
-    expected_message = "Value \"\" for key \"some_key\" is not valid. NotNilCheck failed."
+    expected_message = "Value \"\" for key \"some_key\" is not valid. Value cannot be nil."
     error = assert_raises(ConfigError) { data.get_value(key: "some_key") }
     assert_equal expected_message, error.message
   end
@@ -31,20 +31,21 @@ class CheckableDataTest < Minitest::Test
 
   def test_get_value_with_invalid_integer_string
     data = CheckableData.new({"some_key" => "11a1"})
-    expected_message = "Value \"11a1\" for key \"some_key\" is not valid. IntegerCheck failed."
+    expected_message = "Value \"11a1\" for key \"some_key\" is not valid. Value is not an integer."
     error = assert_raises(ConfigError) { data.get_value(key: "some_key", checks: [IntegerCheck.new]) }
     assert_equal expected_message, error.message
   end
 
   def test_get_value_with_valid_boolean_string
     data = CheckableData.new({"some_key" => "true"})
-    assert_equal "true", data.get_value(key: "some_key", checks: [BooleanCheck.new])
+    assert_equal "true", data.get_value(key: "some_key", checks: [BOOLEAN_CHECK])
   end
 
   def test_get_value_with_invalid_boolean_string
     data = CheckableData.new({"some_key" => "YES!!"})
-    expected_message = "Value \"YES!!\" for key \"some_key\" is not valid. BooleanCheck failed."
-    error = assert_raises(ConfigError) { data.get_value(key: "some_key", checks: [BooleanCheck.new]) }
+    expected_message = "Value \"YES!!\" for key \"some_key\" is not valid. " \
+      "Value is not in the list [\"true\", \"false\"]."
+    error = assert_raises(ConfigError) { data.get_value(key: "some_key", checks: [BOOLEAN_CHECK]) }
     assert_equal expected_message, error.message
   end
 
