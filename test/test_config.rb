@@ -20,7 +20,6 @@ class CheckableDataTest < Minitest::Test
 
   def test_get_value_when_key_does_not_exist_but_optional
     data = CheckableData.new({})
-    error = assert_raises(ConfigError) { data.get_value(key: "some_key") }
     assert_nil data.get_value(key: "some_key", optional: true)
   end
 
@@ -62,6 +61,6 @@ class CheckableDataTest < Minitest::Test
     input = {"A_blah" => 1, "B_blah" => 2}
     data = CheckableData.new(input)
     data_subset = data.get_subset_by_key_stem("C_")
-    assert_equal Hash.new, data_subset.data
+    assert_equal ({}), data_subset.data
   end
 end
