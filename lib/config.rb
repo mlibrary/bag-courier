@@ -17,7 +17,7 @@ module Config
 
   class NotNilCheck < CheckBase
     def check?(value)
-     !value.nil?
+      !value.nil?
     end
 
     def reason
@@ -209,7 +209,7 @@ module Config
   )
 
   class ConfigService
-    ARCHIVEMATICA_INSTANCES = ["ARCHIVEMATICA_DEV",  "ARCHIVEMATICA_LAB", "ARCHIVEMATICA_AMI", "ARCHIVEMATICA_VGA"]
+    ARCHIVEMATICA_INSTANCES = ["ARCHIVEMATICA_DEV", "ARCHIVEMATICA_LAB", "ARCHIVEMATICA_AMI", "ARCHIVEMATICA_VGA"]
 
     def self.create_database_config(data)
       DatabaseConfig.new(
@@ -277,7 +277,7 @@ module Config
         arch_configs << create_archivematica_config(instance_data) if instance_data.keys.length > 0
       end
 
-      config = Config.new(
+      Config.new(
         settings: SettingsConfig.new(
           log_level: data.get_value(key: "SETTINGS_LOG_LEVEL", checks: [LOG_LEVEL_CHECK]).to_sym,
           working_dir: data.get_value(key: "SETTINGS_WORKING_DIR"),
@@ -291,7 +291,7 @@ module Config
           name: data.get_value(key: "REPOSITORY_NAME"),
           description: data.get_value(key: "REPOSITORY_DESCRIPTION")
         ),
-        database: db_data.keys.length > 0 ? create_database_config(db_data) : nil,
+        database: (db_data.keys.length > 0) ? create_database_config(db_data) : nil,
         dark_blue: DarkBlueConfig.new(archivematicas: arch_configs),
         aptrust: APTrustConfig.new(
           api: APTrustAPIConfig.new(
@@ -306,7 +306,7 @@ module Config
 
     def self.database_config_from_env
       db_data = CheckableData.new(ENV.to_hash).get_subset_by_key_stem("DATABASE_")
-      db_data.keys.length > 0 ? create_database_config(db_data) : nil
+      (db_data.keys.length > 0) ? create_database_config(db_data) : nil
     end
 
     def self.from_env
