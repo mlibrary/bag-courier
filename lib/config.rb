@@ -1,5 +1,3 @@
-require "semantic_logger"
-
 module Config
   class ConfigError < StandardError
   end
@@ -211,9 +209,6 @@ module Config
   )
 
   class ConfigService
-    include SemanticLogger::Loggable
-    attr_reader :data
-
     ARCHIVEMATICA_INSTANCES = ["ARCHIVEMATICA_DEV",  "ARCHIVEMATICA_LAB", "ARCHIVEMATICA_AMI", "ARCHIVEMATICA_VGA"]
 
     def self.create_database_config(data)
