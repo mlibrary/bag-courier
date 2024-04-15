@@ -6,7 +6,7 @@ require_relative "../lib/config"
 class CheckableDataTest < Minitest::Test
   include Config
 
-  def test_get_value_when_it_exists
+  def test_get_value_when_key_exists
     data = CheckableData.new({"some_key" => "some_value"})
     assert_equal "some_value", data.get_value(key: "some_key")
   end
