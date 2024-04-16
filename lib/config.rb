@@ -238,7 +238,7 @@ module Config
             )
           when :file_system
             FileSystemRemoteConfig.new(
-              remote_path: settings.get_value("FILE_SYSTEM_REMOTE_PATH")
+              remote_path: settings.get_value(key: "FILE_SYSTEM_REMOTE_PATH")
             )
           when :sftp
             SftpRemoteConfig.new(
