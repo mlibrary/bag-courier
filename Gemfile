@@ -1,5 +1,4 @@
 source "https://rubygems.org"
-git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
 gem "aws-sdk-s3", "~> 1.136"
 gem "bagit", "~> 0.4.6"
@@ -11,7 +10,6 @@ gem "mysql2", "~> 0.5.6"
 gem "rexml", "~> 3.2.6"
 gem "semantic_logger", "~> 4.15"
 gem "sequel", "~> 5.77"
-gem "canister"
 
 gem "sftp",
   git: "https://github.com/mlibrary/sftp",
