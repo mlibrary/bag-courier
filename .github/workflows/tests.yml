@@ -40,7 +40,9 @@ jobs:
           SETTINGS_WORKING_DIR: ./prep
           SETTINGS_EXPORT_DIR: ./export
           SETTINGS_DRY_RUN: false
-          SETTINGS_OBJECT_SIZE_LIMIT: 20000000
+          SETTINGS_OBJECT_SIZE_LIMIT: 2000
+          REPOSITORY_NAME: test
+          REPOSITORY_DESCRIPTION: test
           DATABASE_HOST: 127.0.0.1
           DATABASE_DATABASE: test_database
           DATABASE_PORT: 3306
