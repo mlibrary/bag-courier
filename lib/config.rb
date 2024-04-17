@@ -106,6 +106,7 @@ module Config
     :log_level,
     :working_dir,
     :export_dir,
+    :restore_dir,
     :remove_export,
     :dry_run,
     :object_size_limit,
@@ -179,9 +180,16 @@ module Config
     keyword_init: true
   )
 
+  DarkBlueStagingConfig = Struct.new(
+    "DarkBlueStagingConfig",
+    :remote,
+    keyword_init: true
+  )
+
   DarkBlueConfig = Struct.new(
     "DarkBlueConfig",
     :archivematicas,
+    :staging,
     keyword_init: true
   )
 
@@ -284,6 +292,7 @@ module Config
           log_level: data.get_value(key: "SETTINGS_LOG_LEVEL", checks: [LOG_LEVEL_CHECK]).to_sym,
           working_dir: data.get_value(key: "SETTINGS_WORKING_DIR"),
           export_dir: data.get_value(key: "SETTINGS_EXPORT_DIR"),
+          restore_dir: data.get_value(key: "SETTINGS_RESTORE_DIR"),
           dry_run: data.get_value(key: "SETTINGS_DRY_RUN", checks: [BOOLEAN_CHECK]) == "true",
           remove_export: data.get_value(key: "SETTINGS_REMOVE_EXPORT", checks: [BOOLEAN_CHECK]) == "true",
           object_size_limit: data.get_value(
@@ -298,7 +307,12 @@ module Config
           description: data.get_value(key: "REPOSITORY_DESCRIPTION")
         ),
         database: (db_data.keys.length > 0) ? create_database_config(db_data) : nil,
-        dark_blue: DarkBlueConfig.new(archivematicas: arch_configs),
+        dark_blue: DarkBlueConfig.new(
+          archivematicas: arch_configs,
+          staging: DarkBlueStagingConfig.new(
+            remote: create_remote_config(data.get_subset_by_key_stem("DARK_BLUE_STAGING_REMOTE_"))
+          )
+        ),
         aptrust: APTrustConfig.new(
           api: APTrustAPIConfig.new(
             username: data.get_value(key: "APTRUST_API_USERNAME"),
