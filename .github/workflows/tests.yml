@@ -37,16 +37,6 @@ jobs:
       - name: Run tests
         env:
           SETTINGS_LOG_LEVEL: debug
-          SETTINGS_WORKING_DIR: ./prep
-          SETTINGS_EXPORT_DIR: ./export
-          SETTINGS_DRY_RUN: false
-          SETTINGS_OBJECT_SIZE_LIMIT: 2000
-          REPOSITORY_NAME: test
-          REPOSITORY_DESCRIPTION: test
-          TYPE: aptrust
-          APTRUST_API_USERNAME: user
-          APTRUST_API_API_KEY: key
-          APTRUST_API_BASE_URL: url
           DATABASE_HOST: 127.0.0.1
           DATABASE_DATABASE: test_database
           DATABASE_PORT: 3306
