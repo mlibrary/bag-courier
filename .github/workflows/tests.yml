@@ -43,4 +43,3 @@ jobs:
           DATABASE_USER: user
           DATABASE_PASSWORD: password
         run: bundle exec rake test
-        
