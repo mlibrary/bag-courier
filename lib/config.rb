@@ -312,9 +312,5 @@ module Config
     def self.from_env
       create_config(ENV.to_hash)
     end
-
-    def self.log_level_from_env
-      CheckableData.new(ENV.to_hash).get_value(key: "SETTINGS_LOG_LEVEL", checks: [LOG_LEVEL_CHECK]).to_sym
-    end
   end
 end

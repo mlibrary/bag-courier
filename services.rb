@@ -32,7 +32,7 @@ module DarkBlueLogger
       S.register(:logger) do
         if !SemanticLogger::Logger.processor.appenders.console_output?
           SemanticLogger.add_appender(io: S.log_stream, formatter: :color)
-          SemanticLogger.default_level = S.config.settings.log_level || "debug"
+          SemanticLogger.default_level = S.config.settings.log_level
         end
       end
     end
@@ -42,11 +42,12 @@ end
 
 # Database Connection
 S.register(:dbconnect) do
+  db_config = S.db_config
   Sequel.connect(adapter: "mysql2",
-    host: S.config.database.host,
-    port: S.config.database.port,
-    database: S.config.database.database,
-    user: S.config.database.user,
-    password: S.config.database.password,
+    host: db_config.database.host,
+    port: db_config.database.port,
+    database: db_config.database.database,
+    user: db_config.database.user,
+    password: db_config.database.password,
     fractional_seconds: true)
 end
