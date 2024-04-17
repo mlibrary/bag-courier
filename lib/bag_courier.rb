@@ -1,10 +1,9 @@
-$LOAD_PATH.unshift(File.dirname(__FILE__))
 require "minitar"
-require "services"
 
 require_relative "bag_adapter"
 require_relative "bag_status"
 require_relative "remote_client"
+require_relative "../services"
 
 module BagCourier
   class BagId

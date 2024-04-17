@@ -1,7 +1,5 @@
-$LOAD_PATH.unshift(File.dirname(__FILE__))
-require "services"
-
 require_relative "../db/database_schema" if DB
+require_relative "../services"
 
 module RepositoryPackageRepository
   RepositoryPackage = Struct.new(

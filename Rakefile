@@ -1,4 +1,3 @@
-$LOAD_PATH.unshift(File.dirname(__FILE__))
 require "minitest/test_task"
 
 Minitest::TestTask.create
@@ -10,16 +9,15 @@ namespace :db do
   task :migrate, [:version] do |t, args|
     require "sequel/core"
     require_relative "db/database_error"
-    require "services"
+    require_relative "services"
 
     Sequel.extension :migration
 
-    db_config = Config::ConfigService.database_config_from_env
-    if !db_config
+    if !S.db_config
       raise DatabaseError, "Migration failed. A database connection is not configured."
     end
 
     version = args[:version].to_i if args[:version]
-    Sequel::Migrator.run(dbconnect, "db/migrations", target: version)
+    Sequel::Migrator.run(S.dbconnect, "db/migrations", target: version)
   end
 end

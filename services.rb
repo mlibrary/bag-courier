@@ -1,6 +1,7 @@
 require "canister"
 require "semantic_logger"
 require "sequel"
+
 require_relative "lib/config"
 
 Services = Canister.new
@@ -9,20 +10,13 @@ S = Services
 
 # Config
 S.register(:config) do
-  Config::ConfigService.from_file(ENV.fetch("CONFIG_YML_PATH", File.join(".", "config", "config.yml")))
+  Config::ConfigService.from_env
 end
 
 S.register(:db_config) do
-  Config::ConfigService.database_config_from_file(ENV.fetch("CONFIG_YML_PATH", File.join(".", "config", "config.yml")))
+  Config::ConfigService.database_config_from_env
 end
 
-def config
-  S.config
-end
-
-def db_config
-  S.db_config
-end
 
 # Logger
 module DarkBlueLogger
@@ -32,13 +26,13 @@ module DarkBlueLogger
       include SemanticLogger::Loggable
       SemanticLogger[klass]
       S.register(:log_stream) do
-        $stdout.sync = true
-        $stdout
+        $stderr.sync = true
+        $stderr
       end
       S.register(:logger) do
         if !SemanticLogger::Logger.processor.appenders.console_output?
           SemanticLogger.add_appender(io: S.log_stream, formatter: :color)
-          SemanticLogger.default_level = config.settings.log_level
+          SemanticLogger.default_level = S.config.settings.log_level
         end
       end
     end
@@ -49,14 +43,10 @@ end
 # Database Connection
 S.register(:dbconnect) do
   Sequel.connect(adapter: "mysql2",
-    host: config.database.host,
-    port: config.database.port,
-    database: config.database.database,
-    user: config.database.user,
-    password: config.database.password,
+    host: S.config.database.host,
+    port: S.config.database.port,
+    database: S.config.database.database,
+    user: S.config.database.user,
+    password: S.config.database.password,
     fractional_seconds: true)
-end
-
-def dbconnect
-  S.dbconnect
 end

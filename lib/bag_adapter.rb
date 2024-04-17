@@ -1,6 +1,5 @@
-$LOAD_PATH.unshift(File.dirname(__FILE__))
 require "bagit"
-require "services"
+require_relative "../services"
 
 module BagAdapter
   class BagAdapter

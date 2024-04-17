@@ -1,24 +1,11 @@
-$LOAD_PATH.unshift(File.dirname(__FILE__))
 require "optparse"
-
 require "sequel"
-require "services"
 
-require_relative "lib/config"
+require_relative "services"
 
-SemanticLogger.add_appender(io: $stderr, formatter: :color)
-config = Config::ConfigService.from_env
-SemanticLogger.default_level = config.settings.log_level
+config = S.config
 
-DB = config.database && Sequel.connect(
-  adapter: "mysql2",
-  host: config.database.host,
-  port: config.database.port,
-  database: config.database.database,
-  user: config.database.user,
-  password: config.database.password,
-  fractional_seconds: true
-)
+DB = config.database && S.dbconnect
 
 require_relative "lib/archivematica"
 require_relative "lib/bag_repository"
@@ -33,8 +20,8 @@ class DarkBlueError < StandardError
 end
 
 class DarkBlueJob
-  include SemanticLogger::Loggable
-  
+  include DarkBlueLogger
+
   module ExtraBagInfoData
     CONTENT_TYPE_KEY = "Dark-Blue-Content-Type"
     LOCATION_UUID_KEY = "Archivematica-Location-UUID"

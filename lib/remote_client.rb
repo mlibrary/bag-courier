@@ -1,9 +1,9 @@
-$LOAD_PATH.unshift(File.dirname(__FILE__))
 require "bundler/setup"
 
 require "aws-sdk-s3"
-require "services"
 require "sftp"
+
+require_relative "../services"
 
 module RemoteClient
   class RemoteClientError < StandardError

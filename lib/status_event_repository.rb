@@ -1,7 +1,5 @@
-$LOAD_PATH.unshift(File.dirname(__FILE__))
-require "services"
-
 require_relative "bag_status"
+require_relative "../services"
 
 require_relative "../db/database_schema" if DB
 

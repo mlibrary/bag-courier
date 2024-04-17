@@ -1,8 +1,6 @@
-$LOAD_PATH.unshift(File.dirname(__FILE__))
-require "services"
-
 require_relative "api_backend"
 require_relative "repository_data"
+require_relative "../services"
 
 module Archivematica
   Package = Struct.new(

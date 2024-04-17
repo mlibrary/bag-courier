@@ -1,8 +1,6 @@
-$LOAD_PATH.unshift(File.dirname(__FILE__))
-require "services"
-
 require_relative "api_backend"
 require_relative "bag_status"
+require_relative "../services"
 
 module APTrust
   module IngestStatus

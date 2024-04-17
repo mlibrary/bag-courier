@@ -1,22 +1,10 @@
-$LOAD_PATH.unshift(File.dirname(__FILE__))
-require "services"
 require "sequel"
 
-require_relative "lib/config"
+require_relative "services"
 
-SemanticLogger.add_appender(io: $stderr, formatter: :color)
-config = Config::ConfigService.from_env
-SemanticLogger.default_level = config.settings.log_level
+config = S.config
 
-DB = config.database && Sequel.connect(
-  adapter: "mysql2",
-  host: config.database.host,
-  port: config.database.port,
-  database: config.database.database,
-  user: config.database.user,
-  password: config.database.password,
-  fractional_seconds: true
-)
+DB = config.database && S.dbconnect
 
 require_relative "lib/aptrust"
 require_relative "lib/bag_repository"
