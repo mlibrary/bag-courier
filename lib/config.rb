@@ -279,7 +279,7 @@ module Config
 
       Config.new(
         settings: SettingsConfig.new(
-          log_level: data.get_value(key: "SETTINGS_LOG_LEVEL", checks: [LOG_LEVEL_CHECK]).to_sym || "debug",
+          log_level: data.get_value(key: "SETTINGS_LOG_LEVEL", checks: [LOG_LEVEL_CHECK]|| "debug").to_sym,
           working_dir: data.get_value(key: "SETTINGS_WORKING_DIR"),
           export_dir: data.get_value(key: "SETTINGS_EXPORT_DIR"),
           dry_run: data.get_value(key: "SETTINGS_DRY_RUN", checks: [BOOLEAN_CHECK]) == "true",
