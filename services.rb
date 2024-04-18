@@ -32,7 +32,7 @@ module DarkBlueLogger
       S.register(:logger) do
         if !SemanticLogger::Logger.processor.appenders.console_output?
           SemanticLogger.add_appender(io: S.log_stream, formatter: :color)
-          SemanticLogger.default_level = S.config.settings.log_level
+          SemanticLogger.default_level = Config::ConfigService.log_level_from_env
         end
       end
     end
