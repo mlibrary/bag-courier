@@ -44,10 +44,10 @@ end
 S.register(:dbconnect) do
   db_config = S.db_config
   Sequel.connect(adapter: "mysql2",
-    host: db_config.database.host,
-    port: db_config.database.port,
-    database: db_config.database.database,
-    user: db_config.database.user,
-    password: db_config.database.password,
+    host: db_config.host,
+    port: db_config.port,
+    database: db_config.database,
+    user: db_config.user,
+    password: db_config.password,
     fractional_seconds: true)
 end
