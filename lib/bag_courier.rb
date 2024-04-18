@@ -64,29 +64,23 @@ module BagCourier
       )
     end
 
-    def tar(target_path)
-      logger.debug(["target_path=#{target_path}", "bag_id=#{@bag_id}"])
-
-      parent = File.dirname target_path
-      Dir.chdir(parent) do
-        tar_src = File.basename target_path
-        tar_file = File.basename(target_path) + EXT_TAR
-        logger.debug([
-          "target_path=#{target_path}",
-          "parent=#{parent}",
-          "tar_src=#{tar_src}",
-          "tar_file=#{tar_file}"
-        ])
-        track!(status: BagStatus::PACKING)
-        Minitar.pack(tar_src, File.open(tar_file, "wb"))
-        track!(status: BagStatus::PACKED)
-      end
-      new_path = target_path + EXT_TAR
+    def tar(target_path:, output_dir_path:)
       logger.debug([
         "target_path=#{target_path}",
-        "bag_id=#{@bag_id}",
-        "new_path=#{new_path}"
+        "output_dir_path=#{output_dir_path}",
+        "bag_id=#{@bag_id}"
       ])
+
+      parent = File.dirname(target_path)
+      tar_src = File.basename(target_path)
+      tar_file = File.basename(target_path) + EXT_TAR
+      new_path = File.join(output_dir_path, tar_file)
+
+      Dir.chdir(parent) do
+        track!(status: BagStatus::PACKING)
+        Minitar.pack(tar_src, File.open(new_path, "wb"))
+        track!(status: BagStatus::PACKED)
+      end
       new_path
     end
 
@@ -136,16 +130,7 @@ module BagCourier
         bag.add_manifests
         track!(status: BagStatus::BAGGED, note: "bag_path: #{bag_path}")
 
-        tar_file_path = tar(bag.bag_dir)
-        export_tar_file_path = File.join(@export_dir, File.basename(tar_file_path))
-        logger.debug([
-          "export_dir=#{@export_dir}",
-          "tar_file_path=#{tar_file_path}",
-          "export_tar_file_path=#{export_tar_file_path}"
-        ])
-        FileUtils.mv(tar_file_path, export_tar_file_path)
-        FileUtils.rm_r(bag.bag_dir)
-
+        export_tar_file_path = tar(target_path: bag.bag_dir, output_dir_path: @export_dir)
         deposit(file_path: export_tar_file_path)
       rescue => e
         note = "failed with error #{e.class}: #{e.full_message}"
