@@ -133,8 +133,8 @@ module BagCourier
         track!(status: BagStatus::BAGGED, note: "bag_path: #{bag_path}")
 
         export_tar_file_path = tar(target_path: bag.bag_dir, output_dir_path: @export_dir)
+        FileUtils.rm_r(bag.bag_dir)
         deposit(file_path: export_tar_file_path)
-
         FileUtils.rm(export_tar_file_path) if @remove_export
       rescue => e
         note = "failed with error #{e.class}: #{e.full_message}"
