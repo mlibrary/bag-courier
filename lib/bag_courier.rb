@@ -37,6 +37,7 @@ module BagCourier
       target_client:,
       working_dir:,
       export_dir:,
+      remove_export:,
       dry_run:,
       status_event_repo:,
       validator:
@@ -51,6 +52,7 @@ module BagCourier
 
       @working_dir = working_dir
       @export_dir = export_dir
+      @remove_export = remove_export
       @dry_run = dry_run
       @validator = validator
     end
@@ -73,7 +75,7 @@ module BagCourier
 
       parent = File.dirname(target_path)
       tar_src = File.basename(target_path)
-      tar_file = File.basename(target_path) + EXT_TAR
+      tar_file = tar_src + EXT_TAR
       new_path = File.join(output_dir_path, tar_file)
 
       Dir.chdir(parent) do
@@ -132,6 +134,8 @@ module BagCourier
 
         export_tar_file_path = tar(target_path: bag.bag_dir, output_dir_path: @export_dir)
         deposit(file_path: export_tar_file_path)
+
+        FileUtils.rm(export_tar_file_path) if @remove_export
       rescue => e
         note = "failed with error #{e.class}: #{e.full_message}"
         track!(status: BagStatus::FAILED, note: note)

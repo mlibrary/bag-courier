@@ -91,7 +91,7 @@ class DarkBlueJob
     end
 
     extra_bag_info_data = create_extra_bag_info_data(
-      content_type: arch_config.name, location_uuid: api_config.location_uuid
+      content_type: arch_config.name, location_uuid: arch_config.api.location_uuid
     )
     arch_service = prepare_arch_service(name: arch_config.name, api_config: arch_config.api)
     package_data = arch_service.get_package_data_object(package.identifier)

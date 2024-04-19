@@ -106,6 +106,7 @@ module Config
     :log_level,
     :working_dir,
     :export_dir,
+    :remove_export,
     :dry_run,
     :object_size_limit,
     keyword_init: true
@@ -283,6 +284,7 @@ module Config
           working_dir: data.get_value(key: "SETTINGS_WORKING_DIR"),
           export_dir: data.get_value(key: "SETTINGS_EXPORT_DIR"),
           dry_run: data.get_value(key: "SETTINGS_DRY_RUN", checks: [BOOLEAN_CHECK]) == "true",
+          remove_export: data.get_value(key: "SETTINGS_REMOVE_EXPORT", checks: [BOOLEAN_CHECK]) == "true",
           object_size_limit: data.get_value(
             key: "SETTINGS_OBJECT_SIZE_LIMIT", checks: [IntegerCheck.new], optional: true
           )&.to_i

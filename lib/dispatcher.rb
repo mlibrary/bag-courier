@@ -75,6 +75,7 @@ module Dispatcher
         status_event_repo: @status_event_repo,
         working_dir: @settings.working_dir,
         export_dir: @settings.export_dir,
+        remove_export: @settings.remove_export,
         dry_run: @settings.dry_run,
         validator: validator
       )
