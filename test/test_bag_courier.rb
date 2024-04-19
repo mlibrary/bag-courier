@@ -1,4 +1,3 @@
-require "minitar"
 require "minitest/autorun"
 require "minitest/pride"
 require "semantic_logger"
@@ -156,7 +155,10 @@ class BagCourierTest < SequelTestCase
     assert_equal expected_statuses, statuses
 
     assert File.exist?(expected_tar_file_path)
-    Minitar.unpack(expected_tar_file_path, @export_path)
+    BagCourier::TarFileCreator.open(
+      src_file_path: expected_tar_file_path,
+      dest_dir_path: @export_path
+    )
     untarred_bag_path = File.join(@export_path, @bag_id.to_s)
     assert Dir.exist?(untarred_bag_path)
     assert File.exist?(File.join(untarred_bag_path, "data", "package", "data", "something.txt"))
