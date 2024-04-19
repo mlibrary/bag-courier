@@ -1,4 +1,5 @@
 require "minitar"
+require "tty-command"
 
 require_relative "bag_adapter"
 require_relative "bag_status"
@@ -6,6 +7,15 @@ require_relative "remote_client"
 require_relative "../services"
 
 module BagCourier
+  class TarFileCreator
+    def self.create(src_dir_path:, dest_file_path:, verbose: false)
+      src_parent = File.dirname(src_dir_path)
+      src_dir = File.basename(src_dir_path)
+      flags = "-cf#{verbose ? "v" : ""}"
+      TTY::Command.new.run("tar", flags, dest_file_path, "--directory=#{src_parent}", src_dir)
+    end
+  end
+
   class BagId
     attr_reader :repository, :object_id, :context, :part_id
 
@@ -66,23 +76,20 @@ module BagCourier
       )
     end
 
-    def tar(target_path:, output_dir_path:)
+    def create_tar(target_path:, output_dir_path:)
       logger.debug([
         "target_path=#{target_path}",
         "output_dir_path=#{output_dir_path}",
         "bag_id=#{@bag_id}"
       ])
 
-      parent = File.dirname(target_path)
       tar_src = File.basename(target_path)
       tar_file = tar_src + EXT_TAR
       new_path = File.join(output_dir_path, tar_file)
 
-      Dir.chdir(parent) do
-        track!(status: BagStatus::PACKING)
-        Minitar.pack(tar_src, File.open(new_path, "wb"))
-        track!(status: BagStatus::PACKED)
-      end
+      track!(status: BagStatus::PACKING)
+      TarFileCreator.create(src_dir_path: target_path, dest_file_path: new_path)
+      track!(status: BagStatus::PACKED)
       new_path
     end
 
@@ -132,7 +139,11 @@ module BagCourier
         bag.add_manifests
         track!(status: BagStatus::BAGGED, note: "bag_path: #{bag_path}")
 
-        export_tar_file_path = tar(target_path: bag.bag_dir, output_dir_path: @export_dir)
+        export_tar_file_path = create_tar(
+          target_path: bag.bag_dir, output_dir_path: @export_dir
+        )
+        logger.debug("export_tar_file_path=#{export_tar_file_path}")
+
         FileUtils.rm_r(bag.bag_dir)
         deposit(file_path: export_tar_file_path)
         FileUtils.rm(export_tar_file_path) if @remove_export
