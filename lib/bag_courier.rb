@@ -1,4 +1,3 @@
-require "minitar"
 require "tty-command"
 
 require_relative "bag_adapter"
@@ -13,6 +12,10 @@ module BagCourier
       src_dir = File.basename(src_dir_path)
       flags = "-cf#{verbose ? "v" : ""}"
       TTY::Command.new.run("tar", flags, dest_file_path, "--directory=#{src_parent}", src_dir)
+    end
+
+    def self.open(src_file_path:, dest_dir_path:)
+      TTY::Command.new.run("tar", "-xf", src_file_path, "-C", dest_dir_path)
     end
   end
 
