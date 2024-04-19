@@ -1,8 +1,7 @@
 # Data directories
-export
-prep
-restore
-source
+export/*
+prep/*
+restore/*
 
 # Configuration
 .ssh

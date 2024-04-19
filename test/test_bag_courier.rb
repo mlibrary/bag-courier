@@ -1,6 +1,7 @@
 require "minitar"
 require "minitest/autorun"
 require "minitest/pride"
+require "semantic_logger"
 
 require_relative "setup_db"
 require_relative "../lib/bag_adapter"
@@ -14,6 +15,9 @@ require_relative "../lib/data_transfer"
 require_relative "../lib/remote_client"
 require_relative "../lib/repository_package_repository"
 require_relative "../lib/status_event_repository"
+
+SemanticLogger.add_appender(io: $stderr, formatter: :color)
+SemanticLogger.default_level = :debug
 
 class BagIdTest < Minitest::Test
   def test_to_s
@@ -120,7 +124,7 @@ class BagCourierTest < SequelTestCase
     )
   end
 
-  def create_courier(dry_run:, target_client:, validator: @validator)
+  def create_courier(dry_run:, target_client:, validator: @validator, remove_export: false)
     BagCourier::BagCourier.new(
       bag_id: @bag_id,
       bag_info: @bag_info,
@@ -128,6 +132,7 @@ class BagCourierTest < SequelTestCase
       data_transfer: @data_transfer,
       working_dir: @prep_path,
       export_dir: @export_path,
+      remove_export: remove_export,
       dry_run: dry_run,
       status_event_repo: @status_event_repo,
       target_client: target_client,
@@ -186,5 +191,16 @@ class BagCourierTest < SequelTestCase
     ]
     statuses = @status_event_repo.get_all.sort_by(&:timestamp).map(&:status)
     assert_equal expected_statuses, statuses
+  end
+
+  def test_deliver_with_remove_export
+    courier = create_courier(dry_run: false, target_client: @mock_target_client, remove_export: true)
+    expected_tar_file_path = File.join(@export_path, @bag_id.to_s + ".tar")
+    @mock_target_client.expect(:remote_text, "AWS S3 remote location in bucket fake")
+    @mock_target_client.expect(:send_file, nil, local_file_path: expected_tar_file_path)
+    courier.deliver
+    @mock_target_client.verify
+
+    refute File.exist?(expected_tar_file_path)
   end
 end
