@@ -18,7 +18,7 @@ class DarkBlueError < StandardError
 end
 
 class DarkBlueJob
-  include SemanticLogger::Loggable
+  include DarkBlueLogger
 
   module ExtraBagInfoData
     CONTENT_TYPE_KEY = "Dark-Blue-Content-Type"
