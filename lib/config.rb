@@ -238,7 +238,7 @@ module Config
             )
           when :file_system
             FileSystemRemoteConfig.new(
-              remote_path: settings.get_value(key: "FILE_SYSTEM_REMOTE_PATH")
+              remote_path: settings.get_value("FILE_SYSTEM_REMOTE_PATH")
             )
           when :sftp
             SftpRemoteConfig.new(
@@ -311,10 +311,6 @@ module Config
 
     def self.from_env
       create_config(ENV.to_hash)
-    end
-
-    def self.log_level_from_env
-      CheckableData.new(ENV.to_hash).get_value(key: "SETTINGS_LOG_LEVEL", checks: [LOG_LEVEL_CHECK]).to_sym
     end
   end
 end
