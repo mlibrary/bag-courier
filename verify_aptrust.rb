@@ -1,5 +1,3 @@
-require "sequel"
-
 require_relative "services"
 
 config = S.config
