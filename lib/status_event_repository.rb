@@ -1,6 +1,5 @@
-require "semantic_logger"
-
 require_relative "bag_status"
+require_relative "../services"
 
 require_relative "../db/database_schema" if DB
 
@@ -91,8 +90,7 @@ module StatusEventRepository
   end
 
   class StatusEventDatabaseRepository
-    include SemanticLogger::Loggable
-
+    include DarkBlueLogger
     def find_or_create_status(status_name)
       DatabaseSchema::Status.find_or_create(name: status_name)
     end

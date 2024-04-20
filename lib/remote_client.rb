@@ -1,8 +1,9 @@
 require "bundler/setup"
 
 require "aws-sdk-s3"
-require "semantic_logger"
 require "sftp"
+
+require_relative "../services"
 
 module RemoteClient
   class RemoteClientError < StandardError
@@ -27,7 +28,7 @@ module RemoteClient
   end
 
   class FileSystemRemoteClient < RemoteClientBase
-    include SemanticLogger::Loggable
+    include DarkBlueLogger
 
     def initialize(base_dir_path)
       @base_dir_path = base_dir_path
@@ -67,7 +68,7 @@ module RemoteClient
   end
 
   class AwsS3RemoteClient < RemoteClientBase
-    include SemanticLogger::Loggable
+    include DarkBlueLogger
 
     UPLOAD_PROGRESS = proc do |bytes, totals|
       percentage = (100.0 * bytes.sum / totals.sum).round(2)

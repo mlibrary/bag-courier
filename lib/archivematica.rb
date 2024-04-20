@@ -1,7 +1,6 @@
-require "semantic_logger"
-
 require_relative "api_backend"
 require_relative "repository_data"
+require_relative "../services"
 
 module Archivematica
   Package = Struct.new(
@@ -19,7 +18,7 @@ module Archivematica
   end
 
   class ArchivematicaAPI
-    include SemanticLogger::Loggable
+    include DarkBlueLogger
 
     LOCATION_PATH = "location/"
     PACKAGE_PATH = "file/"
@@ -129,7 +128,7 @@ module Archivematica
   end
 
   class SizePackageFilter < PackageFilterBase
-    include SemanticLogger::Loggable
+    include DarkBlueLogger
 
     def initialize(size_limit)
       @size_limit = size_limit
@@ -143,7 +142,7 @@ module Archivematica
   end
 
   class ArchivematicaService
-    include SemanticLogger::Loggable
+    include DarkBlueLogger
 
     NA = "Not available"
 

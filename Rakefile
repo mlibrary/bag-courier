@@ -9,26 +9,15 @@ namespace :db do
   task :migrate, [:version] do |t, args|
     require "sequel/core"
     require_relative "db/database_error"
-    require_relative "lib/config"
+    require_relative "services"
 
     Sequel.extension :migration
 
-    db_config = Config::ConfigService.database_config_from_env
-    if !db_config
+    if !S.db_config
       raise DatabaseError, "Migration failed. A database connection is not configured."
     end
 
     version = args[:version].to_i if args[:version]
-    Sequel.connect(
-      adapter: "mysql2",
-      host: db_config.host,
-      port: db_config.port,
-      database: db_config.database,
-      user: db_config.user,
-      password: db_config.password,
-      fractional_seconds: true
-    ) do |db|
-      Sequel::Migrator.run(db, "db/migrations", target: version)
-    end
+    Sequel::Migrator.run(S.dbconnect, "db/migrations", target: version)
   end
 end

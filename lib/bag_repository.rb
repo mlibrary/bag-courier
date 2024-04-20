@@ -1,6 +1,5 @@
-require "semantic_logger"
-
 require_relative "../db/database_schema" if DB
+require_relative "../services"
 
 module BagRepository
   Bag = Struct.new(
@@ -30,7 +29,7 @@ module BagRepository
   end
 
   class BagInMemoryRepository < BagRepositoryBase
-    include SemanticLogger::Loggable
+    include DarkBlueLogger
 
     attr_reader :bags
 
@@ -72,7 +71,7 @@ module BagRepository
   end
 
   class BagDatabaseRepository < BagRepositoryBase
-    include SemanticLogger::Loggable
+    include DarkBlueLogger
 
     def create(identifier:, group_part:, repository_package_identifier:)
       package = DatabaseSchema::RepositoryPackage.find(identifier: repository_package_identifier)

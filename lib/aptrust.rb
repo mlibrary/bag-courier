@@ -1,7 +1,6 @@
-require "semantic_logger"
-
 require_relative "api_backend"
 require_relative "bag_status"
+require_relative "../services"
 
 module APTrust
   module IngestStatus
@@ -13,7 +12,7 @@ module APTrust
   end
 
   class APTrustAPI
-    include SemanticLogger::Loggable
+    include DarkBlueLogger
 
     API_V3 = "/member-api/v3/"
     DEFAULT_OBJECT_ID_PREFIX = "umich.edu/"
@@ -75,7 +74,7 @@ module APTrust
   end
 
   class APTrustVerifier
-    include SemanticLogger::Loggable
+    include DarkBlueLogger
 
     def initialize(aptrust_api:, status_event_repo:)
       @aptrust_api = aptrust_api

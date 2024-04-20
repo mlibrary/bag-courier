@@ -1,9 +1,9 @@
 require "minitar"
-require "semantic_logger"
 
 require_relative "bag_adapter"
 require_relative "bag_status"
 require_relative "remote_client"
+require_relative "../services"
 
 module BagCourier
   class BagId
@@ -23,7 +23,7 @@ module BagCourier
   end
 
   class BagCourier
-    include SemanticLogger::Loggable
+    include DarkBlueLogger
 
     EXT_TAR = ".tar"
 

@@ -1,9 +1,10 @@
 require "bagit"
-require "semantic_logger"
+
+require_relative "../services"
 
 module BagAdapter
   class BagAdapter
-    include SemanticLogger::Loggable
+    include DarkBlueLogger
 
     attr_reader :additional_tag_files
 

@@ -5,6 +5,7 @@ class BagValidator
     raise NotImplementedError, "subclass must implement the validate method"
   end
 end
+
 class InnerBagValidator < BagValidator
   def initialize(inner_bag_name)
     @inner_bag_name = inner_bag_name
@@ -20,9 +21,9 @@ class InnerBagValidator < BagValidator
     validity = @bag.valid?
 
     if !validity
-      raise BagValidationError, "Inner bag is not valid: #{@bag.errors.full_messages.join(', ')}"
+      raise BagValidationError, "Inner bag is not valid: #{@bag.errors.full_messages.join(", ")}"
     else
-      return validity
+      validity
     end
   end
 end

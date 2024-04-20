@@ -1,6 +1,5 @@
-require "semantic_logger"
-
 require_relative "../db/database_schema" if DB
+require_relative "../services"
 
 module RepositoryPackageRepository
   RepositoryPackage = Struct.new(
@@ -38,7 +37,7 @@ module RepositoryPackageRepository
   end
 
   class RepositoryPackageInMemoryRepository < RepositoryPackageRepositoryBase
-    include SemanticLogger::Loggable
+    include DarkBlueLogger
 
     attr_reader :repository_packages
 
@@ -96,7 +95,7 @@ module RepositoryPackageRepository
   end
 
   class RepositoryPackageDatabaseRepository < RepositoryPackageRepositoryBase
-    include SemanticLogger::Loggable
+    include DarkBlueLogger
 
     def create(identifier:, repository_name:, updated_at:)
       repository = DatabaseSchema::Repository.find_or_create(name: repository_name)
