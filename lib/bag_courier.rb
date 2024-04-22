@@ -98,7 +98,6 @@ module BagCourier
       logger.measure_info("Bag #{@bag_id} deposited.") do
         @target_client.send_file(local_file_path: file_path)
       end
-      @target_client.send_file(local_file_path: file_path)
       track!(status: BagStatus::DEPOSITED)
     end
 
