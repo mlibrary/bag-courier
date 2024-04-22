@@ -11,9 +11,8 @@ restore/*
 
 # Testing directories
 test/bag_test_dir
-test/remote_test
-test/bag_courier_test
 test/test_bag_val_dir
+test/*_test
 
 # Misc.
 .DS_Store
