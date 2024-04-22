@@ -1,6 +1,5 @@
 require "minitest/autorun"
 require "minitest/pride"
-require "semantic_logger"
 
 require_relative "setup_db"
 require_relative "../lib/bag_adapter"
@@ -14,9 +13,7 @@ require_relative "../lib/data_transfer"
 require_relative "../lib/remote_client"
 require_relative "../lib/repository_package_repository"
 require_relative "../lib/status_event_repository"
-
-SemanticLogger.add_appender(io: $stderr, formatter: :color)
-SemanticLogger.default_level = :debug
+require_relative "../lib/tar_file_creator"
 
 class BagIdTest < Minitest::Test
   def test_to_s
@@ -155,7 +152,7 @@ class BagCourierTest < SequelTestCase
     assert_equal expected_statuses, statuses
 
     assert File.exist?(expected_tar_file_path)
-    BagCourier::TarFileCreator.open(
+    TarFileCreator::TarFileCreator.setup.open(
       src_file_path: expected_tar_file_path,
       dest_dir_path: @export_path
     )
