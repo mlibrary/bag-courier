@@ -6,16 +6,28 @@ require_relative "remote_client"
 require_relative "../services"
 
 module BagCourier
+  class TarFileCreatorError < StandardError
+  end
+
   class TarFileCreator
+    def self.create_error_message(error)
+      "#{self.class} failed: #{error.info}"
+    end
+    private_class_method :error_message
+
     def self.create(src_dir_path:, dest_file_path:, verbose: false)
       src_parent = File.dirname(src_dir_path)
       src_dir = File.basename(src_dir_path)
       flags = "-cf#{verbose ? "v" : ""}"
       TTY::Command.new.run("tar", flags, dest_file_path, "--directory=#{src_parent}", src_dir)
+    rescue TTY::Command::ExitError => e
+      raise TarFileCreatorError, create_error_message(e)
     end
 
     def self.open(src_file_path:, dest_dir_path:)
       TTY::Command.new.run("tar", "-xf", src_file_path, "-C", dest_dir_path)
+    rescue TTY::Command::ExitError => e
+      raise TarFileCreatorError, create_error_message(e)
     end
   end
 
