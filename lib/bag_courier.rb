@@ -82,7 +82,7 @@ module BagCourier
       new_path
     end
 
-    def deposit(file_path:)
+    def deposit(file_path)
       logger.debug(["file_path=#{file_path}", "bag_id=#{@bag_id}"])
 
       logger.debug("dry_run=#{@dry_run}")
@@ -132,9 +132,9 @@ module BagCourier
           target_path: bag.bag_dir, output_dir_path: @export_dir
         )
         logger.debug("export_tar_file_path=#{export_tar_file_path}")
-
         FileUtils.rm_r(bag.bag_dir)
-        deposit(file_path: export_tar_file_path)
+
+        deposit(export_tar_file_path)
         FileUtils.rm(export_tar_file_path) if @remove_export
       rescue => e
         note = "failed with error #{e.class}: #{e.full_message}"
