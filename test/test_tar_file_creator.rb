@@ -59,4 +59,13 @@ class TarFileCreatorTest < Minitest::Test
       )
     end
   end
+
+  def test_create_if_dest_in_src
+    assert_raises TarFileCreatorError do
+      TarFileCreator.setup.create(
+        src_dir_path: @data_dir_path,
+        dest_file_path: File.join(@data_dir_path, "test")
+      )
+    end
+  end
 end

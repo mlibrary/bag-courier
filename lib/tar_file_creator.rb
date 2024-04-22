@@ -26,6 +26,11 @@ module TarFileCreator
     private :run_command
 
     def create(src_dir_path:, dest_file_path:, verbose: false)
+      dest_parent = File.dirname(dest_file_path)
+      if dest_parent.start_with?(src_dir_path)
+        raise TarFileCreatorError, "Destination file path cannot be within the source directory."
+      end
+
       src_parent = File.dirname(src_dir_path)
       src_dir = File.basename(src_dir_path)
       flags = "-cf#{verbose ? "v" : ""}"
