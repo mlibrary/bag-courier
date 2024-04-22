@@ -6,13 +6,6 @@ require_relative "../lib/tar_file_creator"
 class TarFileCreatorTest < Minitest::Test
   include TarFileCreator
 
-  def add_data_file
-    File.write(
-      File.join(@data_dir_path, "something.txt"),
-      "Something to be preserved"
-    )
-  end
-
   def setup
     @test_dir_path = File.join(__dir__, "tar_test")
     @data_dir_path = File.join(@test_dir_path, "test")
