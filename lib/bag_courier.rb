@@ -112,7 +112,6 @@ module BagCourier
         logger.measure_info("Copied data for bag #{@bag_id} in #{@working_dir}.") do
           @data_transfer.transfer(bag.data_dir)
         end
-        @data_transfer.transfer(bag.data_dir)
         track!(status: BagStatus::COPIED)
 
         if @validator
