@@ -72,12 +72,14 @@ class DarkBlueJob
       validator: InnerBagValidator.new(package_data.dir_name),
       extra_bag_info_data: extra_bag_info_data
     )
-    logger.measure_info("Delivered") { courier.deliver }
+    logger.measure_info("Delivered package #{package_data.metadata.id}.") do
+      courier.deliver
+    end
   end
   private :deliver_package
 
   def redeliver_package(identifier)
-    logger.info("Attempting re-delivery of Archivematica package #{identifier}")
+    logger.info("Re-delivering Archivematica package #{identifier}")
     package = @package_repo.get_by_identifier(identifier)
     unless package
       message = "No repository package was found with identifier #{identifier}"
@@ -121,8 +123,8 @@ class DarkBlueJob
 
   def process_arch_instance(arch_config)
     logger.info(
-      "Starting search and delivery process for new objects \
-      in Archivematica instance #{arch_config.name}"
+      "Starting search and delivery process for new packages " \
+      "in Archivematica instance #{arch_config.name}"
     )
     extra_bag_info_data = create_extra_bag_info_data(
       content_type: arch_config.name, location_uuid: arch_config.api.location_uuid
