@@ -79,7 +79,7 @@ module BagCourier
       track!(status: BagStatus::PACKING)
       TarFileCreator::TarFileCreator.setup.create(src_dir_path: target_path, dest_file_path: new_path)
       track!(status: BagStatus::PACKED)
-      logger.info("Tar file for bag #{@bag_id} created at #{new_path}")
+      logger.info("Created tar file for bag #{@bag_id} at #{new_path}.")
       logger.info("Tar file size in MB: #{File.size(new_path).to_f / (10**6)}")
       new_path
     end
@@ -95,21 +95,21 @@ module BagCourier
 
       logger.info("Depositing bag #{@bag_id} at #{@target_client.remote_text}")
       track!(status: BagStatus::DEPOSITING)
-      logger.measure_info("Bag #{@bag_id} deposited.") do
+      logger.measure_info("Deposited bag #{@bag_id}.") do
         @target_client.send_file(local_file_path: file_path)
       end
       track!(status: BagStatus::DEPOSITED)
     end
 
     def deliver
-      logger.info("Starting delivery of bag #{@bag_id}")
+      logger.info("Assembling bag #{@bag_id}")
       begin
         track!(status: BagStatus::BAGGING)
         bag_path = File.join(@working_dir, @bag_id.to_s)
         bag = BagAdapter::BagAdapter.new(bag_path)
 
         track!(status: BagStatus::COPYING)
-        logger.measure_info("Data copied for bag #{@bag_id} in #{@working_dir}") do
+        logger.measure_info("Copied data for bag #{@bag_id} in #{@working_dir}.") do
           @data_transfer.transfer(bag.data_dir)
         end
         @data_transfer.transfer(bag.data_dir)
@@ -132,7 +132,7 @@ module BagCourier
         bag.add_bag_info(@bag_info.data)
         bag.add_manifests
         track!(status: BagStatus::BAGGED, note: "bag_path: #{bag_path}")
-        logger.info("Generation of bag #{@bag_id} completed.")
+        logger.info("Assembled bag #{@bag_id}.")
 
         export_tar_file_path = create_tar(
           target_path: bag.bag_dir, output_dir_path: @export_dir
