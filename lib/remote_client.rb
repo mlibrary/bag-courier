@@ -104,8 +104,8 @@ module RemoteClient
       logger.debug("Sending file \"#{file_name}\" to \"#{remote_path}\"")
       aws_object = @bucket.object(object_key)
       aws_object.upload_file(local_file_path, progress_callback: UPLOAD_PROGRESS)
-    rescue Aws::S3::Errors::ServiceError => e
-      raise RemoteClientError, "Error occurred while uploading file to AWS S3: #{e}"
+    rescue Aws::S3::MultipartUploadError, Aws::S3::Errors::ServiceError => e
+      raise RemoteClientError, "Error occurred while uploading file to AWS S3: #{e.full_message}"
     end
 
     def retrieve_file(remote_file_path:, local_dir_path:)
@@ -114,7 +114,7 @@ module RemoteClient
       aws_object = @bucket.object(remote_file_path)
       aws_object.download_file(File.join(local_dir_path, file_name))
     rescue Aws::S3::Errors::ServiceError => e
-      raise RemoteClientError, "Error occurred while downloading file from AWS S3: #{e}"
+      raise RemoteClientError, "Error occurred while downloading file from AWS S3: #{e.full_message}"
     end
 
     def get_files_at_path(remote_path = nil)
