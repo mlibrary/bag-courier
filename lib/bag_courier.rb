@@ -140,7 +140,7 @@ module BagCourier
 
         deposit(export_tar_file_path)
         FileUtils.rm(export_tar_file_path) if @remove_export
-      rescue => e
+      rescue RemoteClient::RemoteClientError, TarFileCreator::TarFileCreatorError, BagValidationError => e
         note = "failed with error #{e.class}: #{e.full_message}"
         track!(status: BagStatus::FAILED, note: note)
         logger.error("BagCourier.deliver #{note}")
