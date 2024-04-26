@@ -200,20 +200,21 @@ class ArchivematicaServiceTest < Minitest::Test
     @location_uuid = SecureRandom.uuid
     @stored_date = Time.utc(2024, 2, 17)
 
-    @test_packages = [
-      Package.new(
-        uuid: "0948e2ae-eb24-4984-a71b-43bc440534d0",
-        path: "/storage/0948/e2ae/eb24/4984/a71b/43bc/4405/34d0/identifier-one-0948e2ae-eb24-4984-a71b-43bc440534d0",
-        size: 200000,
-        stored_date: "2024-02-18T00:00:00.000000"
-      ),
-      Package.new(
-        uuid: "0baa468e-dd42-49ff-ba90-5dedc30c8541",
-        path: "/storage/0baa/468e/dd42/49ff/ba90/5ded/c30c/8541/identifier-two-0baa468e-dd42-49ff-ba90-5dedc30c8541",
-        size: 500000000,
-        stored_date: "2024-02-19T00:00:00.000000"
-      )
-    ]
+    @first_package = Package.new(
+      uuid: "0948e2ae-eb24-4984-a71b-43bc440534d0",
+      path: "/storage/0948/e2ae/eb24/4984/a71b/43bc/4405/34d0/identifier-one-0948e2ae-eb24-4984-a71b-43bc440534d0",
+      size: 200000,
+      stored_date: "2024-02-18T00:00:00.000000"
+    )
+    @second_package = Package.new(
+      uuid: "0baa468e-dd42-49ff-ba90-5dedc30c8541",
+      path: "/storage/0baa/468e/dd42/49ff/ba90/5ded/c30c/8541/identifier-two-0baa468e-dd42-49ff-ba90-5dedc30c8541",
+      size: 500000000,
+      stored_date: "2024-02-19T00:00:00.000000"
+    )
+    # We expect packages to be in ascending order by stored date,
+    # but switching it here to ensure our code corrects it if another order occurs
+    @test_packages = [@second_package, @first_package]
 
     @service = ArchivematicaService.new(
       name: "test",
@@ -223,30 +224,31 @@ class ArchivematicaServiceTest < Minitest::Test
   end
 
   def test_get_package_data_objects_with_no_filter
-    @mock_api.expect(:get_packages, @test_packages, location_uuid: @location_uuid, stored_date: @stored_date)
+    @mock_api.expect(
+      :get_packages, @test_packages, location_uuid: @location_uuid, stored_date: @stored_date
+    )
     package_data_objs = @service.get_package_data_objects(stored_date: @stored_date)
     @mock_api.verify
 
     # No objects are filtered out
-    first_package, second_package = @test_packages
     expected = [
       RepositoryPackageData.new(
-        remote_path: first_package.path,
+        remote_path: @first_package.path,
         dir_name: "identifier-one-0948e2ae-eb24-4984-a71b-43bc440534d0",
         metadata: ObjectMetadata.new(
-          id: first_package.uuid,
-          title: "#{first_package.uuid} / identifier-one",
+          id: @first_package.uuid,
+          title: "#{@first_package.uuid} / identifier-one",
           creator: "Not available",
           description: "Not available"
         ),
         stored_time: Time.utc(2024, 2, 18)
       ),
       RepositoryPackageData.new(
-        remote_path: second_package.path,
+        remote_path: @second_package.path,
         dir_name: "identifier-two-0baa468e-dd42-49ff-ba90-5dedc30c8541",
         metadata: ObjectMetadata.new(
-          id: second_package.uuid,
-          title: "#{second_package.uuid} / identifier-two",
+          id: @second_package.uuid,
+          title: "#{@second_package.uuid} / identifier-two",
           creator: "Not available",
           description: "Not available"
         ),
@@ -266,16 +268,15 @@ class ArchivematicaServiceTest < Minitest::Test
 
     # Larger object is filtered out
     assert_equal 1, package_data_objs.length
-    assert_equal package_data_objs[0].metadata.id, @test_packages[0].uuid
+    assert_equal @first_package.uuid, package_data_objs[0].metadata.id
   end
 
   def test_get_package_data_object_when_exists
-    first_package = @test_packages[0]
-    @mock_api.expect(:get_package, first_package, [first_package.uuid])
-    package_data_obj = @service.get_package_data_object(first_package.uuid)
+    @mock_api.expect(:get_package, @first_package, [@first_package.uuid])
+    package_data_obj = @service.get_package_data_object(@first_package.uuid)
     @mock_api.verify
     assert package_data_obj.is_a?(RepositoryPackageData)
-    assert_equal first_package.path, package_data_obj.remote_path
+    assert_equal @first_package.path, package_data_obj.remote_path
   end
 
   def test_get_package_data_object_when_does_not_exist
