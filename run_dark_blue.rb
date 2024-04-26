@@ -140,6 +140,11 @@ class DarkBlueJob
       stored_date: max_updated_at,
       **(@object_size_limit ? {package_filter: Archivematica::SizePackageFilter.new(@object_size_limit)} : {})
     )
+
+    if @settings.num_objects_per_repo && package_data_objs.length > @settings.num_objects_per_repo
+      package_data_objs = package_data_objs.take(@settings.num_objects_per_repo)
+    end
+
     package_data_objs.each do |package_data|
       logger.debug(package_data)
       created = @package_repo.create(
