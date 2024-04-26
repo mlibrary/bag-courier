@@ -27,8 +27,9 @@ class DarkBlueJob
 
   def initialize(config)
     @package_repo = RepositoryPackageRepository::RepositoryPackageRepositoryFactory.for(use_db: DB)
+    @settings = config.settings
     @dispatcher = Dispatcher::APTrustDispatcher.new(
-      settings: config.settings,
+      settings: @settings,
       repository: config.repository,
       target_client: RemoteClient::RemoteClientFactory.from_config(
         type: config.aptrust.remote.type,
