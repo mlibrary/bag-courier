@@ -25,12 +25,14 @@ module Dispatcher
       repository:,
       target_client:,
       context: nil,
+      extra_bag_info_data: nil,
       status_event_repo: StatusEventRepository::StatusEventInMemoryRepository.new,
       bag_repo: BagRepository::BagInMemoryRepository.new
     )
       @settings = settings
       @repository = repository
       @context = context
+      @extra_bag_info_data = extra_bag_info_data
       @target_client = target_client
       @status_event_repo = status_event_repo
       @bag_repo = bag_repo
@@ -39,8 +41,7 @@ module Dispatcher
     def dispatch(
       object_metadata:,
       data_transfer:,
-      validator: nil,
-      extra_bag_info_data: nil
+      validator: nil
     )
       bag_id = BagCourier::BagId.new(
         repository: @repository.name,
@@ -50,7 +51,7 @@ module Dispatcher
       bag_info = BagTag::BagInfoBagTag.new(
         identifier: object_metadata.id,
         description: @repository.description,
-        extra_data: extra_bag_info_data
+        extra_data: @extra_bag_info_data
       )
       tags = [
         BagTag::AptrustInfoBagTag.new(
