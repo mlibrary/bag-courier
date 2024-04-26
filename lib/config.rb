@@ -148,18 +148,18 @@ module Config
     keyword_init: true
   )
 
-  RemoteConfig = Struct.new(
-    "RemoteConfig",
-    :type,
-    :settings,
-    keyword_init: true
-  )
-
   SftpRemoteConfig = Struct.new(
     "SftpRemoteConfig",
     :host,
     :user,
     :key_path,
+    keyword_init: true
+  )
+
+  RemoteConfig = Struct.new(
+    "RemoteConfig",
+    :type,
+    :settings,
     keyword_init: true
   )
 
