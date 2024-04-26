@@ -9,7 +9,7 @@ end
 class RestoreJob
   include DarkBlueLogger
 
-  def initialize(config:, base_path: "umich.edu")
+  def initialize(config:)
     aws_config = config.aptrust.remote.settings
     if config.aptrust.remote.type != :aptrust
       raise RestoreError, "The APTrust remote type must be \"aptrust\" to use the restore script."
@@ -18,7 +18,7 @@ class RestoreJob
       access_key_id: aws_config.access_key_id,
       secret_access_key: aws_config.secret_access_key
     )
-    @base_path = base_path
+    @base_path = aws_config.restore_path
     @restore_dir = config.settings.restore_dir
     @aptrust_client = RemoteClient::AwsS3RemoteClient.from_config(
       region: aws_config.region,
@@ -27,11 +27,12 @@ class RestoreJob
   end
 
   def restore_all
-    logger.info("Retrieving all files in #{@aptrust_client.remote_text} from path: #{@base_path}")
+    logger.info("Retrieving all bag files in #{@aptrust_client.remote_text} from path: #{@base_path}")
     @aptrust_client.retrieve_from_path(remote_path: @base_path, local_path: @restore_dir)
   end
 
   def restore_bags(bag_identifiers)
+    logger.info("Retrieving bag files with these identifiers from #{@base_path}: #{bag_identifiers}")
     bag_identifiers.each do |bag_identifier|
       @aptrust_client.retrieve_file(
         remote_path: [@base_path, bag_identifier, ".tar"].join(""),

@@ -135,6 +135,7 @@ module Config
     :region,
     :receiving_bucket,
     :restore_bucket,
+    :restore_path,
     :access_key_id,
     :secret_access_key,
     keyword_init: true
@@ -235,6 +236,7 @@ module Config
               region: settings.get_value(key: "BUCKET_REGION"),
               receiving_bucket: settings.get_value(key: "RECEIVING_BUCKET"),
               restore_bucket: settings.get_value(key: "RESTORE_BUCKET"),
+              restore_path: settings.get_value(key: "RESTORE_PATH"),
               access_key_id: settings.get_value(key: "AWS_ACCESS_KEY_ID"),
               secret_access_key: settings.get_value(key: "AWS_SECRET_ACCESS_KEY")
             )
