@@ -52,6 +52,7 @@ class APTrustDispatcherTest < SequelTestCase
       settings: settings,
       repository: repository,
       context: "some-context",
+      extra_bag_info_data: {"something_extra" => true},
       target_client: target_client,
       bag_repo: BagRepository::BagDatabaseRepository.new,
       status_event_repo: StatusEventRepository::StatusEventDatabaseRepository.new
@@ -72,8 +73,7 @@ class APTrustDispatcherTest < SequelTestCase
         remote_client: RemoteClient::FileSystemRemoteClient.new("/some/path"),
         remote_path: "some_subdir"
       ),
-      validator: InnerBagValidator.new("some-inner-bag-name"),
-      extra_bag_info_data: {"something_extra" => true}
+      validator: InnerBagValidator.new("some-inner-bag-name")
     )
   end
 
