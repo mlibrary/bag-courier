@@ -109,6 +109,7 @@ module Config
     :remove_export,
     :dry_run,
     :object_size_limit,
+    :num_objects_per_repo,
     keyword_init: true
   )
 
@@ -287,7 +288,10 @@ module Config
           remove_export: data.get_value(key: "SETTINGS_REMOVE_EXPORT", checks: [BOOLEAN_CHECK]) == "true",
           object_size_limit: data.get_value(
             key: "SETTINGS_OBJECT_SIZE_LIMIT", checks: [IntegerCheck.new], optional: true
-          )&.to_i
+          )&.to_i,
+          num_objects_per_repo: data.get_value(
+            key: SETTINGS_NUM_OBJECTS_PER_REPOSITORY, checks: [IntegerCheck.new], optional: true
+          )
         ),
         repository: RepositoryConfig.new(
           name: data.get_value(key: "REPOSITORY_NAME"),
