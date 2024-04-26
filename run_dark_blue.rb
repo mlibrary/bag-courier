@@ -28,19 +28,30 @@ class DarkBlueJob
 
   def initialize(config)
     @package_repo = RepositoryPackageRepository::RepositoryPackageRepositoryFactory.for(use_db: DB)
-    @settings = config.settings
-    @dispatcher = Dispatcher::APTrustDispatcher.new(
-      settings: @settings,
-      repository: config.repository,
-      target_client: RemoteClient::RemoteClientFactory.from_config(
-        type: config.aptrust.remote.type,
-        settings: config.aptrust.remote.settings
-      ),
-      status_event_repo: S.status_event_repo,
-      bag_repo: BagRepository::BagRepositoryFactory.for(use_db: DB)
-    )
+    @bag_repo = BagRepository::BagRepositoryFactory.for(use_db: DB)
+    @status_event_repo = S.status_event_repo
+
+    @settings_config = config.settings
+    @repository_config = config.repository
+    @aptrust_config = config.aptrust
+
     @arch_configs = config.dark_blue.archivematicas
     @object_size_limit = config.settings.object_size_limit
+  end
+
+  def create_dispatcher(context:, extra_bag_info_data:)
+    Dispatcher::APTrustDispatcher.new(
+      settings: @settings_config,
+      repository: @repository_config,
+      target_client: RemoteClient::RemoteClientFactory.from_config(
+        type: @aptrust_config.remote.type,
+        settings: @aptrust_config.remote.settings
+      ),
+      status_event_repo: @status_event_repo,
+      bag_repo: @bag_repo,
+      context: context,
+      extra_bag_info_data: extra_bag_info_data
+    )
   end
 
   def prepare_arch_service(name:, api_config:)
@@ -63,16 +74,14 @@ class DarkBlueJob
     }
   end
 
-  def deliver_package(package_data:, remote_client:, context:, extra_bag_info_data:)
-    courier = @dispatcher.dispatch(
+  def deliver_package(dispatcher:, package_data:, remote_client:)
+    courier = dispatcher.dispatch(
       object_metadata: package_data.metadata,
       data_transfer: DataTransfer::RemoteClientDataTransfer.new(
         remote_client: remote_client,
         remote_path: package_data.remote_path
       ),
-      context: context,
-      validator: InnerBagValidator.new(package_data.dir_name),
-      extra_bag_info_data: extra_bag_info_data
+      validator: InnerBagValidator.new(package_data.dir_name)
     )
     logger.measure_info("Delivered package #{package_data.metadata.id}.") do
       courier.deliver
@@ -98,6 +107,8 @@ class DarkBlueJob
     extra_bag_info_data = create_extra_bag_info_data(
       content_type: arch_config.name, location_uuid: arch_config.api.location_uuid
     )
+    dispatcher = create_dispatcher(context: arch_config.name, extra_bag_info_data: extra_bag_info_data)
+
     arch_service = prepare_arch_service(name: arch_config.name, api_config: arch_config.api)
     package_data = arch_service.get_package_data_object(package.identifier)
     unless package_data
@@ -111,10 +122,7 @@ class DarkBlueJob
       settings: arch_config.remote.settings
     )
     deliver_package(
-      package_data: package_data,
-      remote_client: source_remote_client,
-      context: arch_config.name,
-      extra_bag_info_data: extra_bag_info_data
+      dispatcher: dispatcher, package_data: package_data, remote_client: source_remote_client
     )
   end
   private :redeliver_package
@@ -131,6 +139,8 @@ class DarkBlueJob
     extra_bag_info_data = create_extra_bag_info_data(
       content_type: arch_config.name, location_uuid: arch_config.api.location_uuid
     )
+    dispatcher = create_dispatcher(context: arch_config.name, extra_bag_info_data: extra_bag_info_data)
+
     arch_service = prepare_arch_service(name: arch_config.name, api_config: arch_config.api)
     source_remote_client = RemoteClient::RemoteClientFactory.from_config(
       type: arch_config.remote.type,
@@ -161,10 +171,7 @@ class DarkBlueJob
         )
       end
       deliver_package(
-        package_data: package_data,
-        remote_client: source_remote_client,
-        context: arch_config.name,
-        extra_bag_info_data: extra_bag_info_data
+        dispatcher: dispatcher, package_data: package_data, remote_client: source_remote_client
       )
     end
   end
