@@ -180,16 +180,9 @@ module Config
     keyword_init: true
   )
 
-  DarkBlueStagingConfig = Struct.new(
-    "DarkBlueStagingConfig",
-    :remote,
-    keyword_init: true
-  )
-
   DarkBlueConfig = Struct.new(
     "DarkBlueConfig",
     :archivematicas,
-    :staging,
     keyword_init: true
   )
 
@@ -307,12 +300,7 @@ module Config
           description: data.get_value(key: "REPOSITORY_DESCRIPTION")
         ),
         database: (db_data.keys.length > 0) ? create_database_config(db_data) : nil,
-        dark_blue: DarkBlueConfig.new(
-          archivematicas: arch_configs,
-          staging: DarkBlueStagingConfig.new(
-            remote: create_remote_config(data.get_subset_by_key_stem("DARK_BLUE_STAGING_REMOTE_"))
-          )
-        ),
+        dark_blue: DarkBlueConfig.new(archivematicas: arch_configs),
         aptrust: APTrustConfig.new(
           api: APTrustAPIConfig.new(
             username: data.get_value(key: "APTRUST_API_USERNAME"),

@@ -24,23 +24,10 @@ class RestoreJob
       region: aws_config.region,
       bucket_name: aws_config.restore_bucket
     )
-    staging_remote_config = config.dark_blue.staging.remote
-    @staging_client = RemoteClient::RemoteClientFactory.from_config(
-      type: staging_remote_config.type,
-      settings: staging_remote_config.settings
-    )
-  end
-
-  def send_to_staging
-    logger.info("Sending all files in restore directory to #{staging_client.remote_text}")
-    Dir[@restore_path].each do |bag_path|
-      logger.debug(bag_path)
-      @staging_client.send_file(local_file_path: bag_path)
-    end
   end
 
   def restore_all
-    logger.info("Retrieving all files in #{@aptrust_client.remote_text}from path: #{@base_path}")
+    logger.info("Retrieving all files in #{@aptrust_client.remote_text} from path: #{@base_path}")
     @aptrust_client.retrieve_from_path(remote_path: @base_path, local_path: @restore_dir)
   end
 
@@ -54,7 +41,7 @@ class RestoreJob
   end
 end
 
-RestoreOptions = Struct.new(:bags, :send_to_staging)
+RestoreOptions = Struct.new(:bags)
 
 class RestoreParser
   def self.parse(options)
@@ -68,14 +55,6 @@ class RestoreParser
         "List of comma-separated bag identifiers"
       ) do |b|
         args.bags = b
-      end
-      parser.on(
-        "-s",
-        "--send-to-staging",
-        TrueClass,
-        "Flag determing whether to send bags to staging"
-      ) do |s|
-        args.send_to_staging = s
       end
       parser.on("-h", "--help", "Prints this help") do
         puts parser
@@ -95,4 +74,3 @@ if options.bags.length > 0
 else
   restore_job.restore_all
 end
-restore_job.send_to_staging if options.send_to_staging
