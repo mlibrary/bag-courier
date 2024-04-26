@@ -24,11 +24,13 @@ module Dispatcher
       settings:,
       repository:,
       target_client:,
+      context: nil,
       status_event_repo: StatusEventRepository::StatusEventInMemoryRepository.new,
       bag_repo: BagRepository::BagInMemoryRepository.new
     )
       @settings = settings
       @repository = repository
+      @context = context
       @target_client = target_client
       @status_event_repo = status_event_repo
       @bag_repo = bag_repo
@@ -37,14 +39,13 @@ module Dispatcher
     def dispatch(
       object_metadata:,
       data_transfer:,
-      context: nil,
       validator: nil,
       extra_bag_info_data: nil
     )
       bag_id = BagCourier::BagId.new(
         repository: @repository.name,
         object_id: object_metadata.id,
-        context: context
+        context: @context
       )
       bag_info = BagTag::BagInfoBagTag.new(
         identifier: object_metadata.id,
