@@ -290,8 +290,8 @@ module Config
             key: "SETTINGS_OBJECT_SIZE_LIMIT", checks: [IntegerCheck.new], optional: true
           )&.to_i,
           num_objects_per_repo: data.get_value(
-            key: SETTINGS_NUM_OBJECTS_PER_REPOSITORY, checks: [IntegerCheck.new], optional: true
-          )
+            key: "SETTINGS_NUM_OBJECTS_PER_REPOSITORY", checks: [IntegerCheck.new], optional: true
+          )&.to_i
         ),
         repository: RepositoryConfig.new(
           name: data.get_value(key: "REPOSITORY_NAME"),
