@@ -26,7 +26,7 @@ module BagCourier
 
     EXT_TAR = ".tar"
 
-    attr_reader :bag_id, :status_event_repo
+    attr_reader :bag_id, :bag_info, :tags, :status_event_repo
 
     def initialize(
       bag_id:,
