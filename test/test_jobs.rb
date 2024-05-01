@@ -2,6 +2,8 @@ require "minitest/autorun"
 require "minitest/pride"
 require "minitest/mock"
 
+require_relative "setup_db"
+require_relative "../db/database_schema"
 require_relative "../lib/jobs"
 
 class DarkBlueMetricTest < Minitest::Test
@@ -95,3 +97,12 @@ class DarkBlueMetricTest < Minitest::Test
   #     bag_transfer_metrics.set(start_time + (60 * 60 * 24 * 3) , labels: labels)
   #     gateway.add(registry)
 end
+
+# class DarkBlueMetricsFactoryTest < Minitest::Test
+#   def test_for_creates_db_repo
+#     db = Sequel.connect("mock://mysql2")
+#     repo = Job::DarkBlueMetricsFactory.for(use_db: db)
+#     assert repo.is_a?(Job::DarkBlueMetrics)
+#   end
+
+# end

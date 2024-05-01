@@ -1,5 +1,4 @@
 require "time"
-require "date"
 require "prometheus/client"
 require "prometheus/client/push"
 require "prometheus/client/registry"
@@ -114,4 +113,10 @@ module Jobs
     end
 
   end
+
+  # class DarkBlueMetricsFactory
+  #   def self.for(use_db:)
+  #     DarkBlueMetrics.new if use_db?
+  #   end
+  # end
 end
