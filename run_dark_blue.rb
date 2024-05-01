@@ -7,12 +7,13 @@ DB = config.database && S.dbconnect
 
 require_relative "lib/archivematica"
 require_relative "lib/bag_repository"
+require_relative "lib/bag_validator"
 require_relative "lib/data_transfer"
 require_relative "lib/dispatcher"
+require_relative "lib/jobs"
 require_relative "lib/remote_client"
 require_relative "lib/repository_package_repository"
 require_relative "lib/status_event_repository"
-require_relative "lib/bag_validator"
 
 class DarkBlueError < StandardError
 end
@@ -188,8 +189,15 @@ end
 dark_blue_job = DarkBlueJob.new(config)
 
 options = DarkBlueParser.parse ARGV
+
+start_time = Time.now.to_i
 if options.packages.length > 0
   dark_blue_job.redeliver_packages(options.packages)
 else
   dark_blue_job.process
 end
+end_time = Time.now.to_i
+metrics = Jobs::DarkBlueMetrics.new
+metrics.get_overall_metrics_current_run(start_time)
+metrics.push_processing_duration(start_time,end_time)
+metrics.push_last_successful_run

@@ -10,6 +10,7 @@ gem "mysql2", "~> 0.5.6"
 gem "rexml", "~> 3.2.6"
 gem "semantic_logger", "~> 4.15"
 gem "sequel", "~> 5.77"
+gem "prometheus-client"
 
 gem "sftp",
   git: "https://github.com/mlibrary/sftp",
