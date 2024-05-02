@@ -27,40 +27,19 @@ class DarkBlueMetricTest < Minitest::Test
   end
 
   def test_push_last_successful_run
-    time_now = (Time.now.to_i) * 1000 # milli sec
-    @gauge.expect(:set, nil, [time_now])
-    @registry.expect(:register, nil, [@gauge])
-    @gateway.expect(:add, nil, [@registry])
-
-    Prometheus::Client::Gauge.stub(:new, @gauge) do
-      @metrics.stub(:registry, @registry) do
-        @metrics.stub(:gateway, @gateway) do
-          @metrics.push_last_successful_run
-
-        end
-      end
+    time_now = (Time.now.to_i)
+    Time.stub :now, time_now do
+      @metrics.push_last_successful_run
     end
-    assert_mock @gauge
-    assert_mock @registry
-    assert_mock @gateway
+    expected_value = time_now * 1000 #millisec
+    assert_equal expected_value,@metrics.send(:registry).get(:dark_blue_last_successful_run).get
   end
 
   def test_push_processing_duration
     expected_duration = 5
-    @gauge.expect(:set, nil, [expected_duration])
-    @registry.expect(:register, nil, [@gauge])
-    @gateway.expect(:add, nil, [@registry])
-
-    Prometheus::Client::Gauge.stub(:new, @gauge) do
-      @metrics.stub(:registry, @registry) do
-        @metrics.stub(:gateway, @gateway) do
-          @metrics.push_processing_duration(Time.now,(Time.now + expected_duration))
-        end
-      end
-    end
-    assert_mock @gauge
-    assert_mock @registry
-    assert_mock @gateway
+    time_now = Time.now
+    @metrics.push_processing_duration(time_now,(time_now + expected_duration))
+    assert_equal expected_duration, @metrics.send(:registry).get(:dark_blue_processing_duration).get
   end
   # TBD:
 
