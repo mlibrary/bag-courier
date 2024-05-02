@@ -27,19 +27,33 @@ class DarkBlueMetricTest < Minitest::Test
   end
 
   def test_push_last_successful_run
-    time_now = (Time.now.to_i)
-    Time.stub :now, time_now do
-      @metrics.push_last_successful_run
-    end
-    expected_value = time_now * 1000 #millisec
-    assert_equal expected_value,@metrics.send(:registry).get(:dark_blue_last_successful_run).get
+    @gauge.expect(:set, nil,[Numeric])
+    @registry.expect(:gauge, @gauge,[:dark_blue_last_successful_run,
+        {docstring: "Timestamp of the last successful run of the cron job"}
+     ])
+    @gateway.expect(:add, nil, [@registry])
+
+    @metrics.instance_variable_set(:@registry, @registry)
+    @metrics.instance_variable_set(:@gateway, @gateway)
+    @metrics.push_last_successful_run
+    @registry.verify
+    @gauge.verify
+    @gateway.verify
   end
 
   def test_push_processing_duration
     expected_duration = 5
     time_now = Time.now
+    @gauge.expect(:set, nil,[Numeric])
+    @registry.expect(:gauge, @gauge,[:dark_blue_processing_duration,{docstring: "Duration of processing in seconds for the cron job"} ])
+    @gateway.expect(:add, nil, [@registry])
+
+    @metrics.instance_variable_set(:@registry, @registry)
+    @metrics.instance_variable_set(:@gateway, @gateway)
     @metrics.push_processing_duration(time_now,(time_now + expected_duration))
-    assert_equal expected_duration, @metrics.send(:registry).get(:dark_blue_processing_duration).get
+    @registry.verify
+    @gauge.verify
+    @gateway.verify
   end
   # TBD:
 

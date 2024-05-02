@@ -84,8 +84,8 @@ module Jobs
     def push_last_successful_run
       dark_blue_last_successful_run = registry.gauge(
         :dark_blue_last_successful_run,
-        docstring: "Timestamp of the last successful run of the cron job"
-      )
+        {docstring: "Timestamp of the last successful run of the cron job"}
+    )
       time_in_milli_sec = (Time.now.to_i) * 1000
       dark_blue_last_successful_run.set(time_in_milli_sec)
       gateway.add(registry)
@@ -94,7 +94,7 @@ module Jobs
     def push_processing_duration(start_time, end_time)
       dark_blue_processing_duration = registry.gauge(
         :dark_blue_processing_duration,
-        docstring: "Duration of processing in seconds for the cron job"
+        {docstring: "Duration of processing in seconds for the cron job"}
       )
       dark_blue_processing_duration.set(end_time - start_time)
       gateway.add(registry)
