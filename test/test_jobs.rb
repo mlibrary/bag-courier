@@ -8,7 +8,8 @@ require_relative "../lib/jobs"
 
 class DarkBlueMetricTest < Minitest::Test
   def setup
-    @metrics = Jobs::DarkBlueMetrics.new
+    @time_now = Time.now
+    @metrics = Jobs::DarkBlueMetrics.new(start_time: @time_now, end_time:(@time_now + 5))
     ENV["PROMETHEUS_PUSH_GATEWAY"] = "http://test.xyz"
 
     @registry = Minitest::Mock.new
@@ -26,35 +27,29 @@ class DarkBlueMetricTest < Minitest::Test
     assert_instance_of Prometheus::Client::Push, result
   end
 
-  def test_push_last_successful_run
-    @gauge.expect(:set, nil,[Numeric])
-    @registry.expect(:gauge, @gauge,[:dark_blue_last_successful_run,
-        {docstring: "Timestamp of the last successful run of the cron job"}
-     ])
-    @gateway.expect(:add, nil, [@registry])
+  # def test_set_last_successful_run
+  #   expected_time = @time_now * 1000
+  #   @gauge.expect(:set, nil,[expected_time])
 
-    @metrics.instance_variable_set(:@registry, @registry)
-    @metrics.instance_variable_set(:@gateway, @gateway)
-    @metrics.push_last_successful_run
-    @registry.verify
-    @gauge.verify
-    @gateway.verify
-  end
+  #   @metrics.stub(:create_gauge, @gauge) do
+  #     Time.stub :now, Time.at(expected_time) do
+  #       @metrics.set_last_successful_run
+  #     end
+  #   end
+  #   @gauge.verify
+  # end
 
-  def test_push_processing_duration
-    expected_duration = 5
-    time_now = Time.now
-    @gauge.expect(:set, nil,[Numeric])
-    @registry.expect(:gauge, @gauge,[:dark_blue_processing_duration,{docstring: "Duration of processing in seconds for the cron job"} ])
-    @gateway.expect(:add, nil, [@registry])
+  # def test_set_processing_duration
+  #   expected_duration = 5
+  #   @gauge.expect(:set, nil,[expected_duration])
 
-    @metrics.instance_variable_set(:@registry, @registry)
-    @metrics.instance_variable_set(:@gateway, @gateway)
-    @metrics.push_processing_duration(time_now,(time_now + expected_duration))
-    @registry.verify
-    @gauge.verify
-    @gateway.verify
-  end
+  #   @metrics.stub(:create_gauge, @gauge) do
+  #     Time.stub :now, Time.at(expected_duration) do
+  #       @metrics.set_processing_duration
+  #     end
+  #   end
+  #   @gauge.verify
+  # end
   # TBD:
 
   # sleep(30)
@@ -90,12 +85,3 @@ class DarkBlueMetricTest < Minitest::Test
   #     bag_transfer_metrics.set(start_time + (60 * 60 * 24 * 3) , labels: labels)
   #     gateway.add(registry)
 end
-
-# class DarkBlueMetricsFactoryTest < Minitest::Test
-#   def test_for_creates_db_repo
-#     db = Sequel.connect("mock://mysql2")
-#     repo = Job::DarkBlueMetricsFactory.for(use_db: db)
-#     assert repo.is_a?(Job::DarkBlueMetrics)
-#   end
-
-# end

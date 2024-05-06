@@ -197,7 +197,5 @@ else
   dark_blue_job.process
 end
 end_time = Time.now.to_i
-metrics = Jobs::DarkBlueMetrics.new
-metrics.get_overall_metrics_current_run(start_time)
-metrics.push_processing_duration(start_time,end_time)
-metrics.push_last_successful_run
+metrics = Jobs::DarkBlueMetrics.new(start_time: start_time, end_time: end_time)
+metrics.set_all_metrics
