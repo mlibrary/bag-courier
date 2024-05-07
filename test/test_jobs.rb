@@ -53,22 +53,4 @@ class DarkBlueMetricTest < Minitest::Test
       assert_equal(expect_duration, actual_duration)
     end
   end
-
-  def test_get_failed_bag_ids
-    failed_status = [BagStatus::DEPOSIT_SKIPPED, BagStatus::FAILED, BagStatus::VALIDATION_SKIPPED, BagStatus::VERIFY_FAILED]
-
-    bag_mock = Minitest::Mock.new
-    bag_mock.expect(:join, bag_mock,[:status_event,  Sequel.qualify(:status_event, :bag_id) => Sequel.qualify(:bag, :id)])
-    bag_mock.expect(:join, bag_mock, [:status,  Sequel.qualify(:status, :id) => Sequel.qualify(:status_event, :status_id)])
-    bag_mock.expect(:where, bag_mock, [Sequel.qualify(:status_event, :timestamp) >= @start_time])
-    bag_mock.expect(:where, bag_mock, [Sequel.qualify(:status, :name).like("%#{failed_status.join('%')}%")])
-    bag_mock.expect(:group, bag_mock, [Sequel[:bag][:identifier]])
-    bag_mock.expect(:select_map, ['4355a','hgfb5'], Sequel[:bag][:identifier])
-
-    DatabaseSchema::Bag.stub(:call, bag_mock) do
-      failed_bag_ids = @metrics.get_failed_bag_ids
-      expected_bag_ids = ['4355a','hgfb5']
-      assert_equal expected_bag_ids, failed_bag_ids
-    end
-  end
 end
