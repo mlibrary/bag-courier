@@ -77,17 +77,17 @@ module Jobs
     end
 
     def set_last_successful_run
-      dark_blue_last_successful_run = registry.gauge(
-        :dark_blue_last_successful_run,
-        docstring: "Timestamp of the last successful run of the cron job")
-      time_in_milli_sec = @start_time * 1000
+      dark_blue_last_successful_run = registry.gauge(:dark_blue_last_successful_run,
+      docstring: "Timestamp of the last successful run of the cron job")
+      return unless dark_blue_last_successful_run
+      time_in_milli_sec = (@start_time * 1000)
       dark_blue_last_successful_run.set(time_in_milli_sec)
     end
 
     def set_processing_duration
-      dark_blue_processing_duration = registry.gauge(
-        :dark_blue_processing_duration,
-        docstring: "Duration of processing in seconds for the cron job")
+      dark_blue_processing_duration = registry.gauge(:dark_blue_processing_duration,
+      docstring: "Duration of processing in seconds for the cron job")
+      return unless dark_blue_processing_duration
       dark_blue_processing_duration.set(@end_time - @start_time)
     end
 
