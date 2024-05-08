@@ -148,13 +148,15 @@ class DarkBlueJob
     )
 
     max_updated_at = @package_repo.get_max_updated_at_for_repository(arch_config.repository_name)
+    object_size_limit = @settings_config.object_size_limit
+    num_objects_per_repo = @settings_config.num_objects_per_repo
     package_data_objs = arch_service.get_package_data_objects(
       stored_date: max_updated_at,
-      **(@object_size_limit ? {package_filter: Archivematica::SizePackageFilter.new(@object_size_limit)} : {})
+      **(object_size_limit ? {package_filter: Archivematica::SizePackageFilter.new(object_size_limit)} : {})
     )
 
-    if @settings.num_objects_per_repo && package_data_objs.length > @settings.num_objects_per_repo
-      package_data_objs = package_data_objs.take(@settings.num_objects_per_repo)
+    if num_objects_per_repo && package_data_objs.length > num_objects_per_repo
+      package_data_objs = package_data_objs.take(num_objects_per_repo)
     end
 
     package_data_objs.each do |package_data|
