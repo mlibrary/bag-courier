@@ -35,7 +35,7 @@ class RestoreJob
     logger.info("Retrieving bag files with these identifiers from #{@base_path}: #{bag_identifiers}")
     bag_identifiers.each do |bag_identifier|
       @aptrust_client.retrieve_file(
-        remote_path: [@base_path, bag_identifier, ".tar"].join(""),
+        remote_file_path: [@base_path, bag_identifier, ".tar"].join(""),
         local_dir_path: @restore_dir
       )
     end
@@ -71,7 +71,7 @@ restore_job = RestoreJob.new(config: S.config)
 
 options = RestoreParser.parse ARGV
 if options.bags.length > 0
-  restore_job.restore_bags(bag_identifiers)
+  restore_job.restore_bags(options.bags)
 else
   restore_job.restore_all
 end
