@@ -28,8 +28,9 @@ class DarkBlueJob
 
   def initialize(config)
     @package_repo = RepositoryPackageRepository::RepositoryPackageRepositoryFactory.for(use_db: DB)
+    @settings = config.settings
     @dispatcher = Dispatcher::APTrustDispatcher.new(
-      settings: config.settings,
+      settings: @settings,
       repository: config.repository,
       target_client: RemoteClient::RemoteClientFactory.from_config(
         type: config.aptrust.remote.type,
@@ -73,11 +74,14 @@ class DarkBlueJob
       validator: InnerBagValidator.new(package_data.dir_name),
       extra_bag_info_data: extra_bag_info_data
     )
-    courier.deliver
+    logger.measure_info("Delivered package #{package_data.metadata.id}.") do
+      courier.deliver
+    end
   end
   private :deliver_package
 
   def redeliver_package(identifier)
+    logger.info("Re-delivering Archivematica package #{identifier}")
     package = @package_repo.get_by_identifier(identifier)
     unless package
       message = "No repository package was found with identifier #{identifier}"
@@ -92,7 +96,7 @@ class DarkBlueJob
     end
 
     extra_bag_info_data = create_extra_bag_info_data(
-      content_type: arch_config.name, location_uuid: api_config.location_uuid
+      content_type: arch_config.name, location_uuid: arch_config.api.location_uuid
     )
     arch_service = prepare_arch_service(name: arch_config.name, api_config: arch_config.api)
     package_data = arch_service.get_package_data_object(package.identifier)
@@ -120,6 +124,10 @@ class DarkBlueJob
   end
 
   def process_arch_instance(arch_config)
+    logger.info(
+      "Starting search and delivery process for new packages " \
+      "in Archivematica instance #{arch_config.name}"
+    )
     extra_bag_info_data = create_extra_bag_info_data(
       content_type: arch_config.name, location_uuid: arch_config.api.location_uuid
     )
@@ -134,6 +142,11 @@ class DarkBlueJob
       stored_date: max_updated_at,
       **(@object_size_limit ? {package_filter: Archivematica::SizePackageFilter.new(@object_size_limit)} : {})
     )
+
+    if @settings.num_objects_per_repo && package_data_objs.length > @settings.num_objects_per_repo
+      package_data_objs = package_data_objs.take(@settings.num_objects_per_repo)
+    end
+
     package_data_objs.each do |package_data|
       logger.debug(package_data)
       created = @package_repo.create(

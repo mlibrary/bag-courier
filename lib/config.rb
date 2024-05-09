@@ -106,8 +106,11 @@ module Config
     :log_level,
     :working_dir,
     :export_dir,
+    :restore_dir,
+    :remove_export,
     :dry_run,
     :object_size_limit,
+    :num_objects_per_repo,
     keyword_init: true
   )
 
@@ -133,6 +136,7 @@ module Config
     :region,
     :receiving_bucket,
     :restore_bucket,
+    :restore_path,
     :access_key_id,
     :secret_access_key,
     keyword_init: true
@@ -209,7 +213,7 @@ module Config
   )
 
   class ConfigService
-    ARCHIVEMATICA_INSTANCES = ["ARCHIVEMATICA_DEV", "ARCHIVEMATICA_LAB", "ARCHIVEMATICA_AMI", "ARCHIVEMATICA_VGA"]
+    ARCHIVEMATICA_INSTANCES = ["ARCHIVEMATICA_DEV", "ARCHIVEMATICA_LAB", "ARCHIVEMATICA_AMI", "ARCHIVEMATICA_CVGA"]
 
     def self.create_database_config(data)
       DatabaseConfig.new(
@@ -233,6 +237,7 @@ module Config
               region: settings.get_value(key: "BUCKET_REGION"),
               receiving_bucket: settings.get_value(key: "RECEIVING_BUCKET"),
               restore_bucket: settings.get_value(key: "RESTORE_BUCKET"),
+              restore_path: settings.get_value(key: "RESTORE_PATH"),
               access_key_id: settings.get_value(key: "AWS_ACCESS_KEY_ID"),
               secret_access_key: settings.get_value(key: "AWS_SECRET_ACCESS_KEY")
             )
@@ -282,9 +287,14 @@ module Config
           log_level: data.get_value(key: "SETTINGS_LOG_LEVEL", checks: [LOG_LEVEL_CHECK]).to_sym,
           working_dir: data.get_value(key: "SETTINGS_WORKING_DIR"),
           export_dir: data.get_value(key: "SETTINGS_EXPORT_DIR"),
+          restore_dir: data.get_value(key: "SETTINGS_RESTORE_DIR"),
           dry_run: data.get_value(key: "SETTINGS_DRY_RUN", checks: [BOOLEAN_CHECK]) == "true",
+          remove_export: data.get_value(key: "SETTINGS_REMOVE_EXPORT", checks: [BOOLEAN_CHECK]) == "true",
           object_size_limit: data.get_value(
             key: "SETTINGS_OBJECT_SIZE_LIMIT", checks: [IntegerCheck.new], optional: true
+          )&.to_i,
+          num_objects_per_repo: data.get_value(
+            key: "SETTINGS_NUM_OBJECTS_PER_REPOSITORY", checks: [IntegerCheck.new], optional: true
           )&.to_i
         ),
         repository: RepositoryConfig.new(

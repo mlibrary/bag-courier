@@ -1,8 +1,7 @@
-require "minitar"
-
 require_relative "bag_adapter"
 require_relative "bag_status"
 require_relative "remote_client"
+require_relative "tar_file_creator"
 require_relative "../services"
 
 module BagCourier
@@ -37,6 +36,7 @@ module BagCourier
       target_client:,
       working_dir:,
       export_dir:,
+      remove_export:,
       dry_run:,
       status_event_repo:,
       validator:
@@ -51,6 +51,7 @@ module BagCourier
 
       @working_dir = working_dir
       @export_dir = export_dir
+      @remove_export = remove_export
       @dry_run = dry_run
       @validator = validator
     end
@@ -64,33 +65,26 @@ module BagCourier
       )
     end
 
-    def tar(target_path)
-      logger.debug(["target_path=#{target_path}", "bag_id=#{@bag_id}"])
-
-      parent = File.dirname target_path
-      Dir.chdir(parent) do
-        tar_src = File.basename target_path
-        tar_file = File.basename(target_path) + EXT_TAR
-        logger.debug([
-          "target_path=#{target_path}",
-          "parent=#{parent}",
-          "tar_src=#{tar_src}",
-          "tar_file=#{tar_file}"
-        ])
-        track!(status: BagStatus::PACKING)
-        Minitar.pack(tar_src, File.open(tar_file, "wb"))
-        track!(status: BagStatus::PACKED)
-      end
-      new_path = target_path + EXT_TAR
+    def create_tar(target_path:, output_dir_path:)
       logger.debug([
         "target_path=#{target_path}",
-        "bag_id=#{@bag_id}",
-        "new_path=#{new_path}"
+        "output_dir_path=#{output_dir_path}",
+        "bag_id=#{@bag_id}"
       ])
+
+      tar_src = File.basename(target_path)
+      tar_file = tar_src + EXT_TAR
+      new_path = File.join(output_dir_path, tar_file)
+
+      track!(status: BagStatus::PACKING)
+      TarFileCreator::TarFileCreator.setup.create(src_dir_path: target_path, dest_file_path: new_path)
+      track!(status: BagStatus::PACKED)
+      logger.info("Created tar file for bag #{@bag_id} at #{new_path}.")
+      logger.info("Tar file size in MB: #{File.size(new_path).to_f / (10**6)}")
       new_path
     end
 
-    def deposit(file_path:)
+    def deposit(file_path)
       logger.debug(["file_path=#{file_path}", "bag_id=#{@bag_id}"])
 
       logger.debug("dry_run=#{@dry_run}")
@@ -99,23 +93,25 @@ module BagCourier
         return
       end
 
-      logger.info("Sending bag to #{@target_client.remote_text}")
-      # add timing
+      logger.info("Depositing bag #{@bag_id} at #{@target_client.remote_text}")
       track!(status: BagStatus::DEPOSITING)
-      @target_client.send_file(local_file_path: file_path)
+      logger.measure_info("Deposited bag #{@bag_id}.") do
+        @target_client.send_file(local_file_path: file_path)
+      end
       track!(status: BagStatus::DEPOSITED)
     end
 
     def deliver
-      logger.debug("bag_id=#{@bag_id}")
-
+      logger.info("Assembling bag #{@bag_id}")
       begin
         track!(status: BagStatus::BAGGING)
         bag_path = File.join(@working_dir, @bag_id.to_s)
         bag = BagAdapter::BagAdapter.new(bag_path)
 
         track!(status: BagStatus::COPYING)
-        @data_transfer.transfer(bag.data_dir)
+        logger.measure_info("Copied data for bag #{@bag_id} in #{@working_dir}.") do
+          @data_transfer.transfer(bag.data_dir)
+        end
         track!(status: BagStatus::COPIED)
 
         if @validator
@@ -135,19 +131,16 @@ module BagCourier
         bag.add_bag_info(@bag_info.data)
         bag.add_manifests
         track!(status: BagStatus::BAGGED, note: "bag_path: #{bag_path}")
+        logger.info("Assembled bag #{@bag_id}.")
 
-        tar_file_path = tar(bag.bag_dir)
-        export_tar_file_path = File.join(@export_dir, File.basename(tar_file_path))
-        logger.debug([
-          "export_dir=#{@export_dir}",
-          "tar_file_path=#{tar_file_path}",
-          "export_tar_file_path=#{export_tar_file_path}"
-        ])
-        FileUtils.mv(tar_file_path, export_tar_file_path)
+        export_tar_file_path = create_tar(
+          target_path: bag.bag_dir, output_dir_path: @export_dir
+        )
         FileUtils.rm_r(bag.bag_dir)
 
-        deposit(file_path: export_tar_file_path)
-      rescue => e
+        deposit(export_tar_file_path)
+        FileUtils.rm(export_tar_file_path) if @remove_export
+      rescue RemoteClient::RemoteClientError, TarFileCreator::TarFileCreatorError, BagValidationError => e
         note = "failed with error #{e.class}: #{e.full_message}"
         track!(status: BagStatus::FAILED, note: note)
         logger.error("BagCourier.deliver #{note}")

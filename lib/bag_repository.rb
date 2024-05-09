@@ -48,7 +48,7 @@ module BagRepository
     def create(identifier:, group_part:, repository_package_identifier:)
       matching_bag = @bags.find { |b| b.identifier == identifier }
       if matching_bag
-        logger.info("Bag with identifier #{identifier} already exists; creation skipped")
+        logger.debug("Bag with identifier #{identifier} already exists; creation skipped")
         return
       end
 
@@ -86,7 +86,7 @@ module BagRepository
           repository_package: package
         )
       rescue Sequel::UniqueConstraintViolation
-        logger.info("Bag with identifier #{identifier} already exists; creation skipped")
+        logger.debug("Bag with identifier #{identifier} already exists; creation skipped")
       end
     end
 

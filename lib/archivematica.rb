@@ -181,10 +181,12 @@ module Archivematica
     end
 
     def get_package_data_objects(stored_date:, package_filter: AllPackageFilter.new)
-      logger.info("Archivematica instance: #{@name}")
+      logger.debug("Archivematica instance: #{@name}")
       packages = @api.get_packages(location_uuid: @location_uuid, stored_date: stored_date)
       filtered_packages = package_filter.filter(packages)
-      filtered_packages.map { |package| create_package_data_object(package) }
+      filtered_packages
+        .map { |package| create_package_data_object(package) }
+        .sort_by(&:stored_time)
     end
   end
 end

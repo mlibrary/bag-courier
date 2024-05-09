@@ -56,7 +56,7 @@ module RepositoryPackageRepository
     def create(identifier:, repository_name:, updated_at:)
       matching_package = @repository_packages.find { |package| package.identifier == identifier }
       if matching_package
-        logger.info("RepositoryPackage with identifier #{identifier} already exists; creation skipped")
+        logger.debug("RepositoryPackage with identifier #{identifier} already exists; creation skipped")
         return false
       end
 
@@ -108,7 +108,7 @@ module RepositoryPackageRepository
       package.save
       true
     rescue Sequel::UniqueConstraintViolation
-      logger.info(
+      logger.debug(
         "RepositoryPackage with identifier #{identifier} already exists; creation skipped."
       )
       false

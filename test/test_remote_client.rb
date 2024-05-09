@@ -1,5 +1,3 @@
-require "logger"
-
 require "bundler/setup"
 
 require "aws-sdk-s3"
@@ -229,6 +227,26 @@ class AwsS3RemoteClientTest < Minitest::Test
           remote_file_path: remote_file_path,
           local_dir_path: local_dir_path
         )
+      end
+    end
+  end
+
+  def test_send_file_with_multipart_upload_error
+    raise_error = proc do
+      raise Aws::S3::MultipartUploadError.new(
+        "some context", "Your multi-part upload failed, oh no!"
+      )
+    end
+
+    fake_object = Object.new
+    fake_object.define_singleton_method(:upload_file) do |path|
+      "faking it!"
+    end
+
+    @mock_bucket.expect(:object, fake_object, ["file.txt"])
+    fake_object.stub :upload_file, raise_error do
+      assert_raises RemoteClient::RemoteClientError do
+        @client_with_mock.send_file(local_file_path: "/export/file.txt")
       end
     end
   end

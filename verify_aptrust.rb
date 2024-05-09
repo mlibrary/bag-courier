@@ -28,6 +28,7 @@ class APTrustVerificationJob
   end
 
   def process
+    logger.info("Searching for bags with pending deposit verification")
     @bag_repo.get_all.each do |bag|
       logger.debug(bag)
       latest_event = @status_event_repo.get_latest_event_for_bag(bag_identifier: bag.identifier)

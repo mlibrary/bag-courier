@@ -102,7 +102,7 @@ class BagInMemoryRepositioryTest < Minitest::Test
     assert_equal 1, messages.size
     assert_semantic_logger_event(
       messages[0],
-      level: :info,
+      level: :debug,
       message: "Bag with identifier repository.context-001 already exists; creation skipped"
     )
   end
@@ -186,7 +186,7 @@ class BagDatabaseRepositoryTest < SequelTestCase
     assert_equal 1, messages.size
     assert_semantic_logger_event(
       messages[0],
-      level: :info,
+      level: :debug,
       message: "Bag with identifier repository.context-001 already exists; creation skipped"
     )
   end

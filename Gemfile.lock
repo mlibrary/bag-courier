@@ -41,18 +41,22 @@ GEM
     faraday-retry (2.2.0)
       faraday (~> 2.0)
     jmespath (1.6.2)
-    minitar (0.9)
     minitest (5.22.2)
     mysql2 (0.5.6)
     net-http (0.4.1)
       uri
     prometheus-client (4.2.2)
+    pastel (0.8.0)
+      tty-color (~> 0.5)
     rake (13.1.0)
     rexml (3.2.6)
     semantic_logger (4.15.0)
       concurrent-ruby (~> 1.0)
     sequel (5.77.0)
       bigdecimal
+    tty-color (0.6.0)
+    tty-command (0.10.1)
+      pastel (~> 0.8)
     uri (0.13.0)
     validatable (1.6.7)
 
@@ -68,7 +72,6 @@ DEPENDENCIES
   dotenv (~> 3.1.0)
   faraday (~> 2.9)
   faraday-retry (~> 2.2)
-  minitar (~> 0.9)
   minitest (~> 5.20)
   mysql2 (~> 0.5.6)
   prometheus-client
@@ -77,6 +80,7 @@ DEPENDENCIES
   semantic_logger (~> 4.15)
   sequel (~> 5.77)
   sftp!
+  tty-command (~> 0.10.1)
 
 BUNDLED WITH
    2.5.6
