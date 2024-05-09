@@ -287,6 +287,7 @@ module Config
 
     def self.create_config(data)
       data = CheckableData.new(data)
+      settings_workflow_data = data.get_subset_by_key_stem("SETTINGS_WORKFLOW_")
       db_data = data.get_subset_by_key_stem("DATABASE_")
 
       arch_configs = []
@@ -306,10 +307,10 @@ module Config
           )&.to_i,
           restore_dir: data.get_value(key: "SETTINGS_RESTORE_DIR"),
           workflow: WorkflowConfig.new(
-            working_dir: data.get_value(key: "SETTINGS_WORKING_DIR"),
-            export_dir: data.get_value(key: "SETTINGS_EXPORT_DIR"),
-            dry_run: data.get_value(key: "SETTINGS_DRY_RUN", checks: [BOOLEAN_CHECK]) == "true",
-            remove_export: data.get_value(key: "SETTINGS_REMOVE_EXPORT", checks: [BOOLEAN_CHECK]) == "true"
+            working_dir: settings_workflow_data.get_value(key: "WORKING_DIR"),
+            export_dir: settings_workflow_data.get_value(key: "EXPORT_DIR"),
+            dry_run: settings_workflow_data.get_value(key: "DRY_RUN", checks: [BOOLEAN_CHECK]) == "true",
+            remove_export: settings_workflow_data.get_value(key: "REMOVE_EXPORT", checks: [BOOLEAN_CHECK]) == "true"
           )
         ),
         repository: RepositoryConfig.new(
