@@ -41,7 +41,7 @@ class DarkBlueJob
 
   def create_dispatcher(context:, extra_bag_info_data:)
     Dispatcher::APTrustDispatcher.new(
-      settings: @settings_config,
+      settings: @settings_config.workflow,
       repository: @repository_config,
       target_client: RemoteClient::RemoteClientFactory.from_config(
         type: @aptrust_config.remote.type,

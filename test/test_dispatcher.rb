@@ -16,15 +16,11 @@ require_relative "../lib/status_event_repository"
 
 class APTrustDispatcherTest < SequelTestCase
   def setup
-    settings = Config::SettingsConfig.new(
+    workflow_settings = Config::WorkflowConfig.new(
       working_dir: "/prep",
       export_dir: "/export",
       remove_export: true,
-      dry_run: false,
-
-      # not used by Dispatchers
-      log_level: :debug,
-      object_size_limit: nil
+      dry_run: false
     )
     repository = Config::RepositoryConfig.new(
       name: "some-repo",
@@ -49,7 +45,7 @@ class APTrustDispatcherTest < SequelTestCase
     )
 
     @dispatcher = Dispatcher::APTrustDispatcher.new(
-      settings: settings,
+      settings: workflow_settings,
       repository: repository,
       context: "some-context",
       extra_bag_info_data: {"something_extra" => true},

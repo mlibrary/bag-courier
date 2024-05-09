@@ -101,16 +101,22 @@ module Config
     end
   end
 
+  WorkflowConfig = Struct.new(
+    "WorkflowConfig",
+    :working_dir,
+    :export_dir,
+    :remove_export,
+    :dry_run,
+    keyword_init: true
+  )
+
   SettingsConfig = Struct.new(
     "SettingsConfig",
     :log_level,
-    :working_dir,
-    :export_dir,
-    :restore_dir,
-    :remove_export,
-    :dry_run,
     :object_size_limit,
     :num_objects_per_repo,
+    :restore_dir,
+    :workflow,
     keyword_init: true
   )
 
@@ -292,17 +298,19 @@ module Config
       Config.new(
         settings: SettingsConfig.new(
           log_level: data.get_value(key: "SETTINGS_LOG_LEVEL", checks: [LOG_LEVEL_CHECK]).to_sym,
-          working_dir: data.get_value(key: "SETTINGS_WORKING_DIR"),
-          export_dir: data.get_value(key: "SETTINGS_EXPORT_DIR"),
-          restore_dir: data.get_value(key: "SETTINGS_RESTORE_DIR"),
-          dry_run: data.get_value(key: "SETTINGS_DRY_RUN", checks: [BOOLEAN_CHECK]) == "true",
-          remove_export: data.get_value(key: "SETTINGS_REMOVE_EXPORT", checks: [BOOLEAN_CHECK]) == "true",
           object_size_limit: data.get_value(
             key: "SETTINGS_OBJECT_SIZE_LIMIT", checks: [IntegerCheck.new], optional: true
           )&.to_i,
           num_objects_per_repo: data.get_value(
             key: "SETTINGS_NUM_OBJECTS_PER_REPOSITORY", checks: [IntegerCheck.new], optional: true
-          )&.to_i
+          )&.to_i,
+          restore_dir: data.get_value(key: "SETTINGS_RESTORE_DIR"),
+          workflow: WorkflowConfig.new(
+            working_dir: data.get_value(key: "SETTINGS_WORKING_DIR"),
+            export_dir: data.get_value(key: "SETTINGS_EXPORT_DIR"),
+            dry_run: data.get_value(key: "SETTINGS_DRY_RUN", checks: [BOOLEAN_CHECK]) == "true",
+            remove_export: data.get_value(key: "SETTINGS_REMOVE_EXPORT", checks: [BOOLEAN_CHECK]) == "true"
+          )
         ),
         repository: RepositoryConfig.new(
           name: data.get_value(key: "REPOSITORY_NAME"),
