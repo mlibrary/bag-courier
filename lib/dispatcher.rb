@@ -72,14 +72,14 @@ module Dispatcher
         bag_id: bag_id,
         bag_info: bag_info,
         tags: tags,
-        target_client: @target_client,
         data_transfer: data_transfer,
+        validator: validator,
+        target_client: @target_client,
         status_event_repo: @status_event_repo,
         working_dir: @settings.working_dir,
         export_dir: @settings.export_dir,
-        remove_export: @settings.remove_export,
         dry_run: @settings.dry_run,
-        validator: validator
+        remove_export: @settings.remove_export
       )
     end
   end
