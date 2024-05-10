@@ -99,6 +99,64 @@ module StatusEventRepositorySharedTest
     event = mixin_repo.get_latest_event_for_bag(bag_identifier: mixin_bag_identifier)
     refute event
   end
+
+  def test_get_latest_no_event_for_bags
+    start_time = Time.utc(2024, 3, 4, 12, 0, 0, 0)
+    bag_events = mixin_repo.get_latest_event_for_bags(start_time: start_time)
+
+    bag_events.each do |bag_event|
+      assert bag_event.is_a?(StatusEventRepository::StatusEvent)
+    end
+    assert_equal 0, bag_events.length
+
+  end
+  def test_get_latest_event_for_bags
+    second_package_identifier = "000002"
+    zero_package_identifier = "000000"
+    three_package_identifier = "000003"
+    mixin_package_repo.create(identifier: zero_package_identifier, repository_name: "repository", updated_at: Time.now.utc)
+    mixin_package_repo.create(identifier: mixin_package_identifier, repository_name: "repository", updated_at: Time.now.utc)
+    mixin_package_repo.create(identifier: second_package_identifier, repository_name: "repository", updated_at: Time.now.utc)
+    mixin_package_repo.create(identifier: three_package_identifier, repository_name: "repository", updated_at: Time.now.utc)
+
+    bag_identifier_zero = "repository.context-000000"
+    bag_identifier_one = mixin_bag_identifier
+    bag_identifier_two = "repository.context-000002"
+    bag_identifier_three = "repository.context-000003"
+    start_time = Time.utc(2024, 3, 4, 12, 0, 0, 0)
+    mixin_bag_repo.create(identifier: bag_identifier_zero, group_part: 1, repository_package_identifier: zero_package_identifier)
+    mixin_bag_repo.create(identifier: bag_identifier_one, group_part: 1, repository_package_identifier: mixin_package_identifier)
+    mixin_bag_repo.create(identifier: bag_identifier_two, group_part: 1, repository_package_identifier: second_package_identifier)
+    mixin_bag_repo.create(identifier: bag_identifier_three, group_part: 1, repository_package_identifier: three_package_identifier)
+    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_zero, timestamp: start_time - 30)
+    mixin_repo.create(status: BagStatus::COPIED, bag_identifier: bag_identifier_zero, timestamp: start_time - 60)
+    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_one, timestamp: start_time)
+    mixin_repo.create(status: BagStatus::COPIED, bag_identifier: bag_identifier_one, timestamp: start_time + 30)
+    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_one, timestamp: start_time + 60)
+    mixin_repo.create(status: BagStatus::COPIED, bag_identifier: bag_identifier_one, timestamp: start_time + 90)
+    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_two, timestamp: start_time + 100)
+    mixin_repo.create(status: BagStatus::COPIED, bag_identifier: bag_identifier_two, timestamp: start_time + 120)
+    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_three, timestamp: start_time + 140)
+    mixin_repo.create(status: BagStatus::FAILED, bag_identifier: bag_identifier_three, timestamp: start_time + 160)
+    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_two, timestamp: start_time + 180)
+    mixin_repo.create(status: BagStatus::FAILED, bag_identifier: bag_identifier_two, timestamp: start_time + 200)
+
+    bag_events = mixin_repo.get_latest_event_for_bags(start_time: start_time)
+
+    bag_events.each do |bag_event|
+      assert bag_event.is_a?(StatusEventRepository::StatusEvent)
+    end
+    events_before_start = bag_events.filter { |e| e.timestamp < start_time }
+    assert_equal 0, events_before_start.length
+
+    events_bag_id_one = bag_events.filter { |e| e.bag_identifier == bag_identifier_one }
+    assert_equal 1, events_bag_id_one.length
+    assert_equal BagStatus::COPIED, events_bag_id_one[0].status
+
+    events_bag_id_two = bag_events.filter { |e| e.bag_identifier == bag_identifier_two }
+    assert_equal 1, events_bag_id_two.length
+    assert_equal BagStatus::FAILED, events_bag_id_two[0].status
+  end
 end
 
 class StatusEventInMemoryRepositoryTest < Minitest::Test

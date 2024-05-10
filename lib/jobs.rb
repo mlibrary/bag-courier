@@ -1,78 +1,70 @@
 require "time"
+
 require "prometheus/client"
 require "prometheus/client/push"
 require "prometheus/client/registry"
 
-require_relative "../db/database_schema" if DB
+require_relative "config"
 require_relative "bag_status"
-module Jobs
-  class DarkBlueMetrics
-    class PushGatewayClientError < StandardError; end
 
-    def initialize(start_time:, end_time:)
+
+module DarkBlueMetrics
+  class PushGatewayClientError < StandardError; end
+  class Timer
+    def self.time_processing
+      start_time = Time.now.to_i
+      yield
+      end_time = Time.now.to_i
+      [start_time, end_time]
+    end
+  end
+  class MetricsProvider
+    def initialize(start_time:, end_time:,status_event:)
       @start_time = start_time
       @end_time = end_time
+      @status_event = status_event
+    end
+    def get_latest_bag_events_by_time
+      k = @status_event.get_latest_event_for_bags(start_time: @start_time)
+      p k
+      return @status_event.get_latest_event_for_bags(start_time: @start_time)
+    end
+    def get_success_count(events_by_time)
+      successful_status = [BagStatus::DEPOSITED]
+      events_by_time.select {|e| successful_status.include?(e.status) }.count
     end
 
-    def get_success_count
-      successful_status = [
-      BagStatus::BAGGING, BagStatus::COPYING, BagStatus::COPIED, BagStatus::VALIDATING,BagStatus::VALIDATED,
-      BagStatus::BAGGED, BagStatus::PACKING,BagStatus::PACKED, BagStatus::DEPOSITING, BagStatus::DEPOSITED]
-      success_count = DatabaseSchema::StatusEvent
-      .join(:status,  Sequel.qualify(:status, :id) => Sequel.qualify(:status_event, :status_id))
-      .where { Sequel.qualify(:status_event,:timestamp) >= @start_time }
-      .select( :bag_id, Sequel.qualify(:status, :name))
-      .group(:bag_id)
-      .having{count(Sequel.qualify(:status, :name)) == successful_status.length}
-      .count
-      success_count
+    def get_failure_count(events_by_time)
+      failed_status = [BagStatus::FAILED, BagStatus::VERIFY_FAILED]
+      events_by_time.select {|e| failed_status.include?(e.status) }.count
     end
 
-    def get_failure_count
-      failed_status = [BagStatus::DEPOSIT_SKIPPED, BagStatus::FAILED, BagStatus::VALIDATION_SKIPPED, BagStatus::VERIFY_FAILED]
-      failure_count = DatabaseSchema::StatusEvent
-      .join(:status,  Sequel.qualify(:status, :id) => Sequel.qualify(:status_event, :status_id))
-      .where { Sequel.qualify(:status_event,:timestamp) >= @start_time }
-      .select( :bag_id, Sequel.qualify(:status, :name))
-      .group(:bag_id)
-      .having(~Sequel.|(*failed_status.map {|status| Sequel.qualify(:status, :name) => status}))
-      .count
-      failure_count
+    def get_failed_bag_ids(events_by_time)
+      failed_status = [ BagStatus::FAILED,BagStatus::VERIFY_FAILED]
+      events_by_time.select {|e| failed_status.include?(e.status) }.select(bag_identifier, id)
     end
 
-    def get_failed_bag_ids
-      failed_status = [BagStatus::DEPOSIT_SKIPPED, BagStatus::FAILED, BagStatus::VALIDATION_SKIPPED, BagStatus::VERIFY_FAILED]
-      failure_bag_ids = DatabaseSchema::Bag
-      .join(:status_event,  Sequel.qualify(:status_event, :bag_id) => Sequel.qualify(:bag, :id))
-      .join(:status,  Sequel.qualify(:status, :id) => Sequel.qualify(:status_event, :status_id))
-      .where(Sequel.qualify(:status_event, :timestamp) >= @start_time)
-      .where(Sequel.qualify(:status, :name).like("%#{failed_status.join('%')}%"))
-      .group(Sequel[:bag][:identifier])
-      .select_map(Sequel[:bag][:identifier])
-
-      failure_bag_ids
-    end
-
-    def set_success_count
+    def set_success_count(events_by_time)
       dark_blue_success_count = registry.gauge(
         :dark_blue_success_count,
         docstring: "Successful number of bag transfer")
-      dark_blue_success_count.set(get_success_count)
+      dark_blue_success_count.set(get_success_count(events_by_time))
     end
 
-    def set_failed_count
+    def set_failed_count(events_by_time)
       dark_blue_failed_count = registry.gauge(
         :dark_blue_failed_count,
         docstring: "Failed number of bag transfer")
-      dark_blue_failed_count.set(get_failure_count)
+      dark_blue_failed_count.set(get_failure_count(events_by_time))
     end
 
-    def set_failed_bag_id
-      dark_blue_failed_bag_ids = registry.gauge(
+    def set_failed_bag_id(events_by_time)
+      dark_blue_failed_bag_ids = registry.counter(
         :dark_blue_failed_bag_ids,
         docstring: "Failed bag transfer")
-      if !get_failed_bag_ids.empty?
-        dark_blue_failed_bag_ids.set(get_failed_bag_ids)
+      get_failed_ids = get_failed_bag_ids(events_by_time)
+      get_failed_ids.each do |e|
+        dark_blue_failed_bag_ids.increment({failed_id: e})
       end
     end
 
@@ -94,9 +86,10 @@ module Jobs
     def set_all_metrics
       set_last_successful_run
       set_processing_duration
-      set_success_count
-      set_failed_count
-      set_failed_bag_id
+      latest_events = get_latest_bag_events_by_time
+      set_success_count(latest_events)
+      set_failed_count(latest_events)
+      #set_failed_bag_id(latest_events)
       push_metrics
     end
 
@@ -108,8 +101,7 @@ module Jobs
     def gateway
       @gateway ||= Prometheus::Client::Push.new(
         job: "DarkBlueMetric",
-        gateway: ENV.fetch("PROMETHEUS_PUSH_GATEWAY")
-      )
+        gateway: Config::ConfigService.push_gateway_from_env)
     end
 
     def push_metrics
