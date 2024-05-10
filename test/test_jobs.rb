@@ -1,19 +1,20 @@
 require "minitest/autorun"
 require "minitest/pride"
 require "minitest/mock"
-require "sequel"
 
 require_relative "setup_db"
 require_relative "../db/database_schema"
 require_relative "../lib/bag_status"
 require_relative "../lib/jobs"
+require_relative "../lib/status_event_repository"
+
 
 class DarkBlueMetricTest < Minitest::Test
   def setup
     @start_time = Time.now.to_i
     @end_time = @start_time + 5
-    @metrics = Jobs::DarkBlueMetrics.new(start_time: @start_time, end_time: @end_time)
-    ENV["PROMETHEUS_PUSH_GATEWAY"] = "http://test.xyz"
+    @status_event_repo = StatusEventRepository::StatusEventDatabaseRepository.new
+    @metrics = DarkBlueMetrics::MetricsProvider.new(start_time: @start_time, end_time: @end_time, status_event:@status_event_repo)
 
     @registry_mock = Prometheus::Client::Registry.new
     @gateway_mock = Minitest::Mock.new
@@ -24,16 +25,6 @@ class DarkBlueMetricTest < Minitest::Test
   def test_initialize
     assert_equal @start_time, @metrics.instance_variable_get(:@start_time)
     assert_equal @end_time, @metrics.instance_variable_get(:@end_time)
-  end
-
-  def test_registry
-    result = @metrics.send(:registry)
-    assert_instance_of Prometheus::Client::Registry, result
-  end
-
-  def test_gateway
-    result = @metrics.send(:gateway)
-    assert_instance_of Prometheus::Client::Push, result
   end
 
   def test_set_last_successful_run
