@@ -25,7 +25,8 @@ module DarkBlueMetrics
       @status_event = status_event
     end
     def get_latest_bag_events_by_time
-      return @status_event.get_latest_event_for_bags(start_time: @start_time)
+      st_time = Time.at(@start_time)
+      return @status_event.get_latest_event_for_bags(start_time: st_time)
     end
     def get_success_count(events_by_time)
       successful_status = [BagStatus::DEPOSITED]

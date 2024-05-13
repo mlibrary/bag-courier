@@ -10,34 +10,46 @@ require_relative "../lib/jobs"
 require_relative "../lib/repository_package_repository"
 require_relative "../lib/status_event_repository"
 
-
-
 class DarkBlueMetricTest < Minitest::Test
   def setup
-    @time_stamp =Time.utc(2024, 2, 4, 12, 0, 0, 0)
+    @time_stamp =Time.utc(2024, 3, 4, 12, 0, 0, 0)
     @start_time = @time_stamp.to_i
     @end_time = @start_time + 5
     @status_event_repo = StatusEventRepository::StatusEventDatabaseRepository.new
     @bag_repo = BagRepository::BagDatabaseRepository.new
-    @bag_identifier = "repository.context-004"
-
+    @bag_identifier = "repository.context-001"
     @package_repo = RepositoryPackageRepository::RepositoryPackageDatabaseRepository.new
-    @package_identifier = "000004"
+    @package_identifier = "000001"
 
-    fifth_package_identifier = "000005"
-    mixin_package_repo.create(identifier: mixin_package_identifier, repository_name: "repository-1", updated_at: Time.now.utc)
-    mixin_package_repo.create(identifier: fifth_package_identifier, repository_name: "repository-1", updated_at: Time.now.utc)
+    second_package_identifier = "000002"
+    zero_package_identifier = "000000"
+    three_package_identifier = "000003"
+    mixin_package_repo.create(identifier: zero_package_identifier, repository_name: "repository", updated_at: Time.now.utc)
+    mixin_package_repo.create(identifier: mixin_package_identifier, repository_name: "repository", updated_at: Time.now.utc)
+    mixin_package_repo.create(identifier: second_package_identifier, repository_name: "repository", updated_at: Time.now.utc)
+    mixin_package_repo.create(identifier: three_package_identifier, repository_name: "repository", updated_at: Time.now.utc)
 
-    bag_identifier_four = mixin_bag_identifier
-    bag_identifier_five = "repository.context-005"
+    bag_identifier_zero = "repository.context-000000"
+    bag_identifier_one = mixin_bag_identifier
+    bag_identifier_two = "repository.context-000002"
+    bag_identifier_three = "repository.context-000003"
 
-    mixin_bag_repo.create(identifier: bag_identifier_four, group_part: 1, repository_package_identifier: mixin_package_identifier)
-    mixin_bag_repo.create(identifier: bag_identifier_five, group_part: 1, repository_package_identifier: fifth_package_identifier)
-    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_four, timestamp: @time_stamp)
-    mixin_repo.create(status: BagStatus::DEPOSITED, bag_identifier: bag_identifier_four, timestamp: @time_stamp + 95 )
-    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_five, timestamp: @time_stamp + 100)
-    mixin_repo.create(status: BagStatus::FAILED, bag_identifier: bag_identifier_five, timestamp: @time_stamp + 120)
-
+    mixin_bag_repo.create(identifier: bag_identifier_zero, group_part: 1, repository_package_identifier: zero_package_identifier)
+    mixin_bag_repo.create(identifier: bag_identifier_one, group_part: 1, repository_package_identifier: mixin_package_identifier)
+    mixin_bag_repo.create(identifier: bag_identifier_two, group_part: 1, repository_package_identifier: second_package_identifier)
+    mixin_bag_repo.create(identifier: bag_identifier_three, group_part: 1, repository_package_identifier: three_package_identifier)
+    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_zero, timestamp: @time_stamp - 30)
+    mixin_repo.create(status: BagStatus::COPIED, bag_identifier: bag_identifier_zero, timestamp: @time_stamp - 60)
+    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_one, timestamp: @time_stamp)
+    mixin_repo.create(status: BagStatus::COPIED, bag_identifier: bag_identifier_one, timestamp: @time_stamp + 30)
+    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_one, timestamp: @time_stamp + 60)
+    mixin_repo.create(status: BagStatus::DEPOSITED, bag_identifier: bag_identifier_one, timestamp: @time_stamp + 90)
+    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_two, timestamp: @time_stamp + 100)
+    mixin_repo.create(status: BagStatus::COPIED, bag_identifier: bag_identifier_two, timestamp: @time_stamp + 120)
+    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_three, timestamp: @time_stamp + 140)
+    mixin_repo.create(status: BagStatus::FAILED, bag_identifier: bag_identifier_three, timestamp: @time_stamp + 160)
+    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_two, timestamp: @time_stamp + 180)
+    mixin_repo.create(status: BagStatus::FAILED, bag_identifier: bag_identifier_two, timestamp: @time_stamp + 200)
     @metrics = DarkBlueMetrics::MetricsProvider.new(start_time: @start_time, end_time: @end_time, status_event:@status_event_repo)
 
     @registry_mock = Prometheus::Client::Registry.new
@@ -98,7 +110,7 @@ class DarkBlueMetricTest < Minitest::Test
   end
 
   def test_set_failed_count
-    expected = 1
+    expected = 2
     @registry_mock.stub(:gauge, @gauge_mock) do
       events_by_time = @metrics.get_latest_bag_events_by_time
       actual = @metrics.set_failed_count(events_by_time)
@@ -109,7 +121,7 @@ class DarkBlueMetricTest < Minitest::Test
 
   def test_get_latest_bag_events_by_time
     actual_result = @metrics.get_latest_bag_events_by_time
-    assert_equal 2, actual_result.length
+    assert_equal 3, actual_result.length
   end
 
   def test_get_success_count
@@ -121,12 +133,12 @@ class DarkBlueMetricTest < Minitest::Test
   def test_get_failure_count
     events_by_time = @metrics.get_latest_bag_events_by_time
     actual_result = @metrics.get_failure_count(events_by_time)
-    assert_equal 1, actual_result
+    assert_equal 2, actual_result
   end
 
   def test_get_failed_bag_ids
     events_by_time = @metrics.get_latest_bag_events_by_time
     actual_result = @metrics.get_failed_bag_ids(events_by_time)
-    assert_equal "repository.context-005", actual_result[0].bag_identifier
+    assert_equal "repository.context-000002", actual_result[0].bag_identifier
   end
 end
