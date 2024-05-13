@@ -4,7 +4,7 @@ require "prometheus/client"
 require "prometheus/client/push"
 require "prometheus/client/registry"
 
-require_relative "config"
+require_relative "../services"
 require_relative "bag_status"
 
 module DarkBlueMetrics
@@ -105,7 +105,7 @@ module DarkBlueMetrics
     def gateway
       @gateway ||= Prometheus::Client::Push.new(
         job: "DarkBlueMetric",
-        gateway: Config::ConfigService.push_gateway_from_env
+        gateway: S.config.metrics.push_gateway_url
       )
     end
 
