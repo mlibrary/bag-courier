@@ -202,6 +202,11 @@ module Config
     keyword_init: true
   )
 
+  Metrics = Struct.new(
+    "MetricsConfig",
+    :push_gateway_url,
+    keyword_init: true
+  )
   Config = Struct.new(
     "Config",
     :settings,
@@ -209,6 +214,7 @@ module Config
     :repository,
     :dark_blue,
     :aptrust,
+    :metrics,
     keyword_init: true
   )
 
@@ -310,7 +316,8 @@ module Config
             base_url: data.get_value(key: "APTRUST_API_BASE_URL")
           ),
           remote: create_remote_config(data.get_subset_by_key_stem("APTRUST_REMOTE_"))
-        )
+        ),
+        metrics: Metrics.new(push_gateway_url: data.get_value(key: "PROMETHEUS_PUSH_GATEWAY"))
       )
     end
 

@@ -107,8 +107,8 @@ module StatusEventRepositorySharedTest
       assert bag_event.is_a?(StatusEventRepository::StatusEvent)
     end
     assert_equal 0, bag_events.length
-
   end
+
   def test_get_latest_event_for_bags
     second_package_identifier = "000002"
     zero_package_identifier = "000000"

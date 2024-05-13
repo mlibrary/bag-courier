@@ -12,7 +12,7 @@ require_relative "../lib/status_event_repository"
 
 class DarkBlueMetricTest < Minitest::Test
   def setup
-    @time_stamp =Time.utc(2024, 3, 4, 12, 0, 0, 0)
+    @time_stamp = Time.utc(2024, 3, 4, 12, 0, 0, 0)
     @start_time = @time_stamp.to_i
     @end_time = @start_time + 5
     @status_event_repo = StatusEventRepository::StatusEventDatabaseRepository.new
@@ -50,9 +50,9 @@ class DarkBlueMetricTest < Minitest::Test
     mixin_repo.create(status: BagStatus::FAILED, bag_identifier: bag_identifier_three, timestamp: @time_stamp + 160)
     mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_two, timestamp: @time_stamp + 180)
     mixin_repo.create(status: BagStatus::FAILED, bag_identifier: bag_identifier_two, timestamp: @time_stamp + 200)
-    @metrics = DarkBlueMetrics::MetricsProvider.new(start_time: @start_time, end_time: @end_time, status_event:@status_event_repo)
+    @metrics = DarkBlueMetrics::MetricsProvider.new(start_time: @start_time, end_time: @end_time, status_event_repo: @status_event_repo)
 
-    @registry_mock = Prometheus::Client::Registry.new
+    @registry = Prometheus::Client::Registry.new
     @gauge_mock = Minitest::Mock.new
   end
 
@@ -83,7 +83,7 @@ class DarkBlueMetricTest < Minitest::Test
 
   def test_set_last_successful_run
     expected_time = (@start_time.to_i * 1000)
-    @registry_mock.stub(:gauge, @gauge_mock) do
+    @registry.stub(:gauge, @gauge_mock) do
       actual_time = @metrics.set_last_successful_run
       @gauge_mock.verify
       assert_equal(expected_time, actual_time)
@@ -92,7 +92,7 @@ class DarkBlueMetricTest < Minitest::Test
 
   def test_set_processing_duration
     expect_duration = @end_time - @start_time
-    @registry_mock.stub(:gauge, @gauge_mock) do
+    @registry.stub(:gauge, @gauge_mock) do
       actual_duration = @metrics.set_processing_duration
       @gauge_mock.verify
       assert_equal(expect_duration, actual_duration)
@@ -101,7 +101,7 @@ class DarkBlueMetricTest < Minitest::Test
 
   def test_set_success_count
     expected = 1
-    @registry_mock.stub(:gauge, @gauge_mock) do
+    @registry.stub(:gauge, @gauge_mock) do
       events_by_time = @metrics.get_latest_bag_events_by_time
       actual = @metrics.set_success_count(events_by_time)
       @gauge_mock.verify
@@ -111,7 +111,7 @@ class DarkBlueMetricTest < Minitest::Test
 
   def test_set_failed_count
     expected = 2
-    @registry_mock.stub(:gauge, @gauge_mock) do
+    @registry.stub(:gauge, @gauge_mock) do
       events_by_time = @metrics.get_latest_bag_events_by_time
       actual = @metrics.set_failed_count(events_by_time)
       @gauge_mock.verify

@@ -87,13 +87,13 @@ module StatusEventRepository
         .sort_by(&:timestamp).reverse
       (events.length > 0) ? events[0] : nil
     end
+
     def get_latest_event_for_bags(start_time:)
       events_by_id = @status_events.group_by(&:bag_identifier)
-      latest_events = events_by_id.map do |id, events_for_id|
+      events_by_id.map do |id, events_for_id|
         event_by_time = events_for_id.select { |e| e.timestamp >= start_time }
         event_by_time.max_by(&:timestamp) unless event_by_time.empty?
       end.compact
-      latest_events
     end
   end
 

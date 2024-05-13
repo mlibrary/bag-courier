@@ -203,14 +203,13 @@ dark_blue_job = DarkBlueJob.new(config)
 
 options = DarkBlueParser.parse ARGV
 
-
-start_time, end_time = DarkBlueMetrics::Timer.time_processing{
-if options.packages.length > 0
-  dark_blue_job.redeliver_packages(options.packages)
-else
-  dark_blue_job.process
-end
+start_time, end_time = DarkBlueMetrics::Timer.time_processing {
+  if options.packages.length > 0
+    dark_blue_job.redeliver_packages(options.packages)
+  else
+    dark_blue_job.process
+  end
 }
 @status_event_repo = StatusEventRepository::StatusEventRepositoryFactory.for(use_db: DB)
-metrics = DarkBlueMetrics::MetricsProvider.new(start_time: start_time, end_time: end_time, status_event: @status_event_repo)
+metrics = DarkBlueMetrics::MetricsProvider.new(start_time: start_time, end_time: end_time, status_event_repo: @status_event_repo)
 metrics.set_all_metrics

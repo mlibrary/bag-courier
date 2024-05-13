@@ -7,9 +7,9 @@ require "prometheus/client/registry"
 require_relative "config"
 require_relative "bag_status"
 
-
 module DarkBlueMetrics
   class PushGatewayClientError < StandardError; end
+
   class Timer
     def self.time_processing
       start_time = Time.now.to_i
@@ -18,42 +18,46 @@ module DarkBlueMetrics
       [start_time, end_time]
     end
   end
+
   class MetricsProvider
-    def initialize(start_time:, end_time:,status_event:)
+    def initialize(start_time:, end_time:, status_event_repo:)
       @start_time = start_time
       @end_time = end_time
-      @status_event = status_event
+      @status_event_repo = status_event_repo
     end
+
     def get_latest_bag_events_by_time
       st_time = Time.at(@start_time)
-      return @status_event.get_latest_event_for_bags(start_time: st_time)
+      @status_event_repo.get_latest_event_for_bags(start_time: st_time)
     end
+
     def get_success_count(events_by_time)
-      successful_status = [BagStatus::DEPOSITED]
-      events_by_time.select {|e| successful_status.include?(e.status) }.count
+      success_count = events_by_time.select { |e| e.status == BagStatus::DEPOSITED }
+      success_count.count
     end
 
     def get_failure_count(events_by_time)
-      failed_status = [BagStatus::FAILED, BagStatus::VERIFY_FAILED]
-      events_by_time.select {|e| failed_status.include?(e.status) }.count
+      failure_count = events_by_time.select { |e| e.status == BagStatus::FAILED }
+      failure_count.count
     end
 
     def get_failed_bag_ids(events_by_time)
-      failed_status = [ BagStatus::FAILED,BagStatus::VERIFY_FAILED]
-      events_by_time.select {|e| failed_status.include?(e.status) }
+      events_by_time.select { |e| e.status == BagStatus::FAILED }
     end
 
     def set_success_count(events_by_time)
       dark_blue_success_count = registry.gauge(
         :dark_blue_success_count,
-        docstring: "Successful number of bag transfer")
+        docstring: "Successful number of bag transfer"
+      )
       dark_blue_success_count.set(get_success_count(events_by_time))
     end
 
     def set_failed_count(events_by_time)
       dark_blue_failed_count = registry.gauge(
         :dark_blue_failed_count,
-        docstring: "Failed number of bag transfer")
+        docstring: "Failed number of bag transfer"
+      )
       dark_blue_failed_count.set(get_failure_count(events_by_time))
     end
 
@@ -69,7 +73,7 @@ module DarkBlueMetrics
 
     def set_last_successful_run
       dark_blue_last_successful_run = registry.gauge(:dark_blue_last_successful_run,
-      docstring: "Timestamp of the last successful run of the cron job")
+        docstring: "Timestamp of the last successful run of the cron job")
       return unless dark_blue_last_successful_run
       time_in_milli_sec = (@start_time * 1000)
       dark_blue_last_successful_run.set(time_in_milli_sec)
@@ -77,7 +81,7 @@ module DarkBlueMetrics
 
     def set_processing_duration
       dark_blue_processing_duration = registry.gauge(:dark_blue_processing_duration,
-      docstring: "Duration of processing in seconds for the cron job")
+        docstring: "Duration of processing in seconds for the cron job")
       return unless dark_blue_processing_duration
       dark_blue_processing_duration.set(@end_time - @start_time)
     end
@@ -88,11 +92,12 @@ module DarkBlueMetrics
       latest_events = get_latest_bag_events_by_time
       set_success_count(latest_events)
       set_failed_count(latest_events)
-      #set_failed_bag_id(latest_events)
+      # set_failed_bag_id(latest_events)
       push_metrics
     end
 
     private
+
     def registry
       @registry ||= Prometheus::Client::Registry.new
     end
@@ -100,7 +105,8 @@ module DarkBlueMetrics
     def gateway
       @gateway ||= Prometheus::Client::Push.new(
         job: "DarkBlueMetric",
-        gateway: Config::ConfigService.push_gateway_from_env)
+        gateway: Config::ConfigService.push_gateway_from_env
+      )
     end
 
     def push_metrics
