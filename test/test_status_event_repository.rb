@@ -85,18 +85,18 @@ module StatusEventRepositorySharedTest
     mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_one, timestamp: start_time)
     mixin_repo.create(status: BagStatus::COPIED, bag_identifier: bag_identifier_one, timestamp: start_time + 30)
     mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_one, timestamp: start_time + 60)
-    mixin_repo.create(status: BagStatus::COPIED, bag_identifier: bag_identifier_one, timestamp: start_time + 90)
+    mixin_repo.create(status: BagStatus::DEPOSITED, bag_identifier: bag_identifier_one, timestamp: start_time + 90)
     mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_two, timestamp: start_time + 100)
     mixin_repo.create(status: BagStatus::COPIED, bag_identifier: bag_identifier_two, timestamp: start_time + 120)
     event = mixin_repo.get_latest_event_for_bag(bag_identifier: bag_identifier_one)
     assert event.is_a?(StatusEventRepository::StatusEvent)
     assert_equal bag_identifier_one, event.bag_identifier
-    assert_equal BagStatus::COPIED, event.status
+    assert_equal BagStatus::DEPOSITED, event.status
     assert_equal start_time + 90, event.timestamp
   end
 
   def test_get_latest_event_for_bag_when_nil
-    event = mixin_repo.get_latest_event_for_bag(bag_identifier: mixin_bag_identifier)
+    event = mixin_repo.get_latest_event_for_bag(bag_identifier: "repository.context-100")
     refute event
   end
 
