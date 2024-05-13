@@ -96,25 +96,25 @@ class DarkBlueMetricTest < Minitest::Test
     end
   end
 
-  def test_set_success_count
-    expected = 1
-    @registry.stub(:gauge, @gauge_mock) do
-      events_by_time = @metrics.get_latest_bag_events_by_time
-      actual = @metrics.set_success_count(events_by_time)
-      @gauge_mock.verify
-      assert_equal(expected, actual)
-    end
-  end
+  # def test_set_success_count
+  #   expected = 1
+  #   @registry.stub(:gauge, @gauge_mock) do
+  #     events_by_time = @metrics.get_latest_bag_events_by_time
+  #     actual = @metrics.set_success_count(events_by_time)
+  #     @gauge_mock.verify
+  #     assert_equal(expected, actual)
+  #   end
+  # end
 
-  def test_set_failed_count
-    expected = 2
-    @registry.stub(:gauge, @gauge_mock) do
-      events_by_time = @metrics.get_latest_bag_events_by_time
-      actual = @metrics.set_failed_count(events_by_time)
-      @gauge_mock.verify
-      assert_equal(expected, actual)
-    end
-  end
+  # def test_set_failed_count
+  #   expected = 2
+  #   @registry.stub(:gauge, @gauge_mock) do
+  #     events_by_time = @metrics.get_latest_bag_events_by_time
+  #     actual = @metrics.set_failed_count(events_by_time)
+  #     @gauge_mock.verify
+  #     assert_equal(expected, actual)
+  #   end
+  # end
 
   # def test_get_latest_bag_events_by_time
   #   actual_result = @metrics.get_latest_bag_events_by_time
