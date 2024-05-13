@@ -15,39 +15,43 @@ class DarkBlueMetricTest < Minitest::Test
     @time_stamp = Time.utc(2024, 3, 4, 12, 0, 0, 0)
     @start_time = @time_stamp.to_i
     @end_time = @start_time + 5
+    @package_repo = RepositoryPackageRepository::RepositoryPackageDatabaseRepository.new
+    @bag_repo = BagRepository::BagDatabaseRepository.new
     @status_event_repo = StatusEventRepository::StatusEventDatabaseRepository.new
+    @object_id = "000001"
+    @repository_name = "fake-repository"
+    @bag_identifier_one = "repository.context-000001"
+    @bag_identifier_two = "repository.context-000002"
+    @package_repo.create(
+      identifier: @object_id,
+      repository_name: @repository_name,
+      updated_at: Time.now.utc
+    )
+    @bag_repo.create(
+      identifier: @bag_identifier_one,
+      group_part: 1,
+      repository_package_identifier: @object_id
+    )
+    @status_event_repo.create(
+      status: BagStatus::DEPOSITED,
+      bag_identifier: @bag_identifier_one,
+      timestamp: @time_stamp,
+      note: "something happening here"
+    )
 
-    # @bag_repo = BagRepository::BagDatabaseRepository.new
-    # @bag_identifier = "repository.context-001"
-    # @package_repo = RepositoryPackageRepository::RepositoryPackageDatabaseRepository.new
-    # @package_identifier = "000001"
+    @bag_repo.create(
+      identifier: @bag_identifier_two,
+      group_part: 3,
+      repository_package_identifier: @object_id
+    )
+    @status_event_repo.create(
+      status: BagStatus::FAILED,
+      bag_identifier: @bag_identifier_two,
+      timestamp: @time_stamp,
+      note: "something happening here"
+    )
 
-    # second_package_identifier = "000002"
-    # three_package_identifier = "000003"
-
-    # mixin_package_repo.create(identifier: mixin_package_identifier, repository_name: "repository", updated_at: Time.now.utc)
-    # mixin_package_repo.create(identifier: second_package_identifier, repository_name: "repository", updated_at: Time.now.utc)
-    # mixin_package_repo.create(identifier: three_package_identifier, repository_name: "repository", updated_at: Time.now.utc)
-
-    # bag_identifier_one = mixin_bag_identifier
-    # bag_identifier_two = "repository.context-000002"
-    # bag_identifier_three = "repository.context-000003"
-
-    # mixin_bag_repo.create(identifier: bag_identifier_one, group_part: 1, repository_package_identifier: mixin_package_identifier)
-    # mixin_bag_repo.create(identifier: bag_identifier_two, group_part: 1, repository_package_identifier: second_package_identifier)
-    # mixin_bag_repo.create(identifier: bag_identifier_three, group_part: 1, repository_package_identifier: three_package_identifier)
-
-    # mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_one, timestamp: @time_stamp)
-    # mixin_repo.create(status: BagStatus::COPIED, bag_identifier: bag_identifier_one, timestamp: @time_stamp + 30)
-    # mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_one, timestamp: @time_stamp + 60)
-    # mixin_repo.create(status: BagStatus::DEPOSITED, bag_identifier: bag_identifier_one, timestamp: @time_stamp + 90)
-    # mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_two, timestamp: @time_stamp + 100)
-    # mixin_repo.create(status: BagStatus::COPIED, bag_identifier: bag_identifier_two, timestamp: @time_stamp + 120)
-    # mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_three, timestamp: @time_stamp + 140)
-    # mixin_repo.create(status: BagStatus::FAILED, bag_identifier: bag_identifier_three, timestamp: @time_stamp + 160)
-    # mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_two, timestamp: @time_stamp + 180)
-    # mixin_repo.create(status: BagStatus::FAILED, bag_identifier: bag_identifier_two, timestamp: @time_stamp + 200)
-    @metrics = DarkBlueMetrics::MetricsProvider.new(start_time: @start_time, end_time: @end_time, status_event_repo: mixin_repo)
+    @metrics = DarkBlueMetrics::MetricsProvider.new(start_time: @start_time, end_time: @end_time, status_event_repo: @status_event_repo)
 
     @registry = Prometheus::Client::Registry.new
     @gauge_mock = Minitest::Mock.new
@@ -96,46 +100,46 @@ class DarkBlueMetricTest < Minitest::Test
     end
   end
 
-  # def test_set_success_count
-  #   expected = 1
-  #   @registry.stub(:gauge, @gauge_mock) do
-  #     events_by_time = @metrics.get_latest_bag_events_by_time
-  #     actual = @metrics.set_success_count(events_by_time)
-  #     @gauge_mock.verify
-  #     assert_equal(expected, actual)
-  #   end
-  # end
+  def test_set_success_count
+    expected = 1
+    @registry.stub(:gauge, @gauge_mock) do
+      events_by_time = @metrics.get_latest_bag_events_by_time
+      actual = @metrics.set_success_count(events_by_time)
+      @gauge_mock.verify
+      assert_equal(expected, actual)
+    end
+  end
 
-  # def test_set_failed_count
-  #   expected = 2
-  #   @registry.stub(:gauge, @gauge_mock) do
-  #     events_by_time = @metrics.get_latest_bag_events_by_time
-  #     actual = @metrics.set_failed_count(events_by_time)
-  #     @gauge_mock.verify
-  #     assert_equal(expected, actual)
-  #   end
-  # end
+  def test_set_failed_count
+    expected = 1
+    @registry.stub(:gauge, @gauge_mock) do
+      events_by_time = @metrics.get_latest_bag_events_by_time
+      actual = @metrics.set_failed_count(events_by_time)
+      @gauge_mock.verify
+      assert_equal(expected, actual)
+    end
+  end
 
-  # def test_get_latest_bag_events_by_time
-  #   actual_result = @metrics.get_latest_bag_events_by_time
-  #   assert_equal 3, actual_result.length
-  # end
+  def test_get_latest_bag_events_by_time
+    actual_result = @metrics.get_latest_bag_events_by_time
+    assert_equal 2, actual_result.length
+  end
 
-  # def test_get_success_count
-  #   events_by_time = @metrics.get_latest_bag_events_by_time
-  #   actual_result = @metrics.get_success_count(events_by_time)
-  #   assert_equal 1, actual_result
-  # end
+  def test_get_success_count
+    events_by_time = @metrics.get_latest_bag_events_by_time
+    actual_result = @metrics.get_success_count(events_by_time)
+    assert_equal 1, actual_result
+  end
 
-  # def test_get_failure_count
-  #   events_by_time = @metrics.get_latest_bag_events_by_time
-  #   actual_result = @metrics.get_failure_count(events_by_time)
-  #   assert_equal 2, actual_result
-  # end
+  def test_get_failure_count
+    events_by_time = @metrics.get_latest_bag_events_by_time
+    actual_result = @metrics.get_failure_count(events_by_time)
+    assert_equal 1, actual_result
+  end
 
-  # def test_get_failed_bag_ids
-  #   events_by_time = @metrics.get_latest_bag_events_by_time
-  #   actual_result = @metrics.get_failed_bag_ids(events_by_time)
-  #   assert_equal "repository.context-000002", actual_result[0].bag_identifier
-  # end
+  def test_get_failed_bag_ids
+    events_by_time = @metrics.get_latest_bag_events_by_time
+    actual_result = @metrics.get_failed_bag_ids(events_by_time)
+    assert_equal "repository.context-000002", actual_result[0].bag_identifier
+  end
 end
