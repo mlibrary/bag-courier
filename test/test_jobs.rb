@@ -22,24 +22,20 @@ class DarkBlueMetricTest < Minitest::Test
     @package_identifier = "000001"
 
     second_package_identifier = "000002"
-    zero_package_identifier = "000000"
     three_package_identifier = "000003"
-    mixin_package_repo.create(identifier: zero_package_identifier, repository_name: "repository", updated_at: Time.now.utc)
+
     mixin_package_repo.create(identifier: mixin_package_identifier, repository_name: "repository", updated_at: Time.now.utc)
     mixin_package_repo.create(identifier: second_package_identifier, repository_name: "repository", updated_at: Time.now.utc)
     mixin_package_repo.create(identifier: three_package_identifier, repository_name: "repository", updated_at: Time.now.utc)
 
-    bag_identifier_zero = "repository.context-000000"
     bag_identifier_one = mixin_bag_identifier
     bag_identifier_two = "repository.context-000002"
     bag_identifier_three = "repository.context-000003"
 
-    mixin_bag_repo.create(identifier: bag_identifier_zero, group_part: 1, repository_package_identifier: zero_package_identifier)
     mixin_bag_repo.create(identifier: bag_identifier_one, group_part: 1, repository_package_identifier: mixin_package_identifier)
     mixin_bag_repo.create(identifier: bag_identifier_two, group_part: 1, repository_package_identifier: second_package_identifier)
     mixin_bag_repo.create(identifier: bag_identifier_three, group_part: 1, repository_package_identifier: three_package_identifier)
-    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_zero, timestamp: @time_stamp - 30)
-    mixin_repo.create(status: BagStatus::COPIED, bag_identifier: bag_identifier_zero, timestamp: @time_stamp - 60)
+
     mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_one, timestamp: @time_stamp)
     mixin_repo.create(status: BagStatus::COPIED, bag_identifier: bag_identifier_one, timestamp: @time_stamp + 30)
     mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_one, timestamp: @time_stamp + 60)
