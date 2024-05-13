@@ -101,9 +101,8 @@ module StatusEventRepositorySharedTest
   end
 
   def test_get_latest_no_event_for_bags
-    start_time = Time.utc(2024, 3, 4, 12, 0, 0, 0)
+    start_time = Time.utc(2024, 5, 4, 12, 0, 0, 0)
     bag_events = mixin_repo.get_latest_event_for_bags(start_time: start_time)
-
     bag_events.each do |bag_event|
       assert bag_event.is_a?(StatusEventRepository::StatusEvent)
     end
@@ -133,7 +132,7 @@ module StatusEventRepositorySharedTest
     mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_one, timestamp: start_time)
     mixin_repo.create(status: BagStatus::COPIED, bag_identifier: bag_identifier_one, timestamp: start_time + 30)
     mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_one, timestamp: start_time + 60)
-    mixin_repo.create(status: BagStatus::COPIED, bag_identifier: bag_identifier_one, timestamp: start_time + 90)
+    mixin_repo.create(status: BagStatus::DEPOSITED, bag_identifier: bag_identifier_one, timestamp: start_time + 90)
     mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_two, timestamp: start_time + 100)
     mixin_repo.create(status: BagStatus::COPIED, bag_identifier: bag_identifier_two, timestamp: start_time + 120)
     mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_three, timestamp: start_time + 140)
@@ -151,7 +150,7 @@ module StatusEventRepositorySharedTest
 
     events_bag_id_one = bag_events.filter { |e| e.bag_identifier == bag_identifier_one }
     assert_equal 1, events_bag_id_one.length
-    assert_equal BagStatus::COPIED, events_bag_id_one[0].status
+    assert_equal BagStatus::DEPOSITED, events_bag_id_one[0].status
 
     events_bag_id_two = bag_events.filter { |e| e.bag_identifier == bag_identifier_two }
     assert_equal 1, events_bag_id_two.length
