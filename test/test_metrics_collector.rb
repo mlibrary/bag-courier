@@ -6,7 +6,7 @@ require_relative "setup_db"
 require_relative "../db/database_schema"
 require_relative "../lib/bag_status"
 require_relative "../lib/bag_repository"
-require_relative "../lib/jobs"
+require_relative "../lib/metrics_collector"
 require_relative "../lib/repository_package_repository"
 require_relative "../lib/status_event_repository"
 
