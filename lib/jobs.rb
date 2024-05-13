@@ -56,21 +56,21 @@ module DarkBlueMetrics
       dark_blue_failed_count.set(get_failure_count(events_by_time))
     end
 
-    def set_failed_bag_id(events_by_time)
-      dark_blue_failed_bag_ids = registry.counter(
-        :dark_blue_failed_bag_ids,
-        docstring: "Failed bag transfer")
-      get_failed_ids = get_failed_bag_ids(events_by_time)
-      get_failed_ids.each do |e|
-        dark_blue_failed_bag_ids.increment({failed_id: e.bag_identifier},0)
-      end
-    end
+    # def set_failed_bag_id(events_by_time)
+    #   dark_blue_failed_bag_ids = registry.counter(
+    #     :dark_blue_failed_bag_ids,
+    #     docstring: "Failed bag transfer")
+    #   get_failed_ids = get_failed_bag_ids(events_by_time)
+    #   get_failed_ids.each do |e|
+    #     dark_blue_failed_bag_ids.increment({failed_id: e.bag_identifier},0)
+    #   end
+    # end
 
     def set_last_successful_run
       dark_blue_last_successful_run = registry.gauge(:dark_blue_last_successful_run,
       docstring: "Timestamp of the last successful run of the cron job")
       return unless dark_blue_last_successful_run
-      time_in_milli_sec = (@start_time.to_i * 1000)
+      time_in_milli_sec = (@start_time * 1000)
       dark_blue_last_successful_run.set(time_in_milli_sec)
     end
 
@@ -78,7 +78,7 @@ module DarkBlueMetrics
       dark_blue_processing_duration = registry.gauge(:dark_blue_processing_duration,
       docstring: "Duration of processing in seconds for the cron job")
       return unless dark_blue_processing_duration
-      dark_blue_processing_duration.set(@end_time.to_i - @start_time.to_i)
+      dark_blue_processing_duration.set(@end_time - @start_time)
     end
 
     def set_all_metrics

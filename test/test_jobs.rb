@@ -14,7 +14,8 @@ require_relative "../lib/status_event_repository"
 
 class DarkBlueMetricTest < Minitest::Test
   def setup
-    @start_time = Time.utc(2024, 2, 4, 12, 0, 0, 0)
+    @time_stamp =Time.utc(2024, 2, 4, 12, 0, 0, 0)
+    @start_time = @time_stamp.to_i
     @end_time = @start_time + 5
     @status_event_repo = StatusEventRepository::StatusEventDatabaseRepository.new
     @bag_repo = BagRepository::BagDatabaseRepository.new
@@ -32,15 +33,14 @@ class DarkBlueMetricTest < Minitest::Test
 
     mixin_bag_repo.create(identifier: bag_identifier_four, group_part: 1, repository_package_identifier: mixin_package_identifier)
     mixin_bag_repo.create(identifier: bag_identifier_five, group_part: 1, repository_package_identifier: fifth_package_identifier)
-    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_four, timestamp: @start_time)
-    mixin_repo.create(status: BagStatus::DEPOSITED, bag_identifier: bag_identifier_four, timestamp: @start_time + 95 )
-    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_five, timestamp: @start_time + 100)
-    mixin_repo.create(status: BagStatus::FAILED, bag_identifier: bag_identifier_five, timestamp: @start_time + 120)
+    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_four, timestamp: @time_stamp)
+    mixin_repo.create(status: BagStatus::DEPOSITED, bag_identifier: bag_identifier_four, timestamp: @time_stamp + 95 )
+    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_five, timestamp: @time_stamp + 100)
+    mixin_repo.create(status: BagStatus::FAILED, bag_identifier: bag_identifier_five, timestamp: @time_stamp + 120)
 
     @metrics = DarkBlueMetrics::MetricsProvider.new(start_time: @start_time, end_time: @end_time, status_event:@status_event_repo)
 
     @registry_mock = Prometheus::Client::Registry.new
-    @gateway_mock = Minitest::Mock.new
     @gauge_mock = Minitest::Mock.new
   end
 
@@ -63,8 +63,6 @@ class DarkBlueMetricTest < Minitest::Test
   def mixin_package_identifier
     @package_identifier
   end
-
-
 
   def test_initialize
     assert_equal @start_time, @metrics.instance_variable_get(:@start_time)
@@ -89,9 +87,27 @@ class DarkBlueMetricTest < Minitest::Test
     end
   end
 
+  def test_set_success_count
+    expected = 1
+    @registry_mock.stub(:gauge, @gauge_mock) do
+      events_by_time = @metrics.get_latest_bag_events_by_time
+      actual = @metrics.set_success_count(events_by_time)
+      @gauge_mock.verify
+      assert_equal(expected, actual)
+    end
+  end
+
+  def test_set_failed_count
+    expected = 1
+    @registry_mock.stub(:gauge, @gauge_mock) do
+      events_by_time = @metrics.get_latest_bag_events_by_time
+      actual = @metrics.set_failed_count(events_by_time)
+      @gauge_mock.verify
+      assert_equal(expected, actual)
+    end
+  end
+
   def test_get_latest_bag_events_by_time
-    status_events = mixin_repo.get_all
-    p status_events
     actual_result = @metrics.get_latest_bag_events_by_time
     assert_equal 2, actual_result.length
   end
@@ -106,5 +122,11 @@ class DarkBlueMetricTest < Minitest::Test
     events_by_time = @metrics.get_latest_bag_events_by_time
     actual_result = @metrics.get_failure_count(events_by_time)
     assert_equal 1, actual_result
+  end
+
+  def test_get_failed_bag_ids
+    events_by_time = @metrics.get_latest_bag_events_by_time
+    actual_result = @metrics.get_failed_bag_ids(events_by_time)
+    assert_equal "repository.context-005", actual_result[0].bag_identifier
   end
 end
