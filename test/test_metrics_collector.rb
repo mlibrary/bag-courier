@@ -12,47 +12,31 @@ require_relative "../lib/status_event_repository"
 
 class DarkBlueMetricTest < Minitest::Test
   def setup
-    @time_stamp = Time.utc(2024, 3, 4, 12, 0, 0, 0)
+    @time_stamp = Time.utc(2024, 1, 4, 12, 0, 0, 0)
     @start_time = @time_stamp.to_i
     @end_time = @start_time + 5
-    @package_repo = RepositoryPackageRepository::RepositoryPackageDatabaseRepository.new
-    @bag_repo = BagRepository::BagDatabaseRepository.new
-    @status_event_repo = StatusEventRepository::StatusEventDatabaseRepository.new
-    @object_id = "000001"
-    @repository_name = "fake-repository"
-    @bag_identifier_one = "repository.context-000001"
-    @bag_identifier_two = "repository.context-000002"
-    @package_repo.create(
-      identifier: @object_id,
-      repository_name: @repository_name,
-      updated_at: Time.now.utc
-    )
-    @bag_repo.create(
-      identifier: @bag_identifier_one,
-      group_part: 1,
-      repository_package_identifier: @object_id
-    )
+    @status_event_repo = StatusEventRepository::StatusEventInMemoryRepository.new
+
+    @bag_identifier_one = "repository.context-0001"
+    @bag_identifier_two = "repository.context-0002"
+    @deposited_at = Time.utc(2024, 3, 18)
+
     @status_event_repo.create(
-      status: BagStatus::DEPOSITED,
       bag_identifier: @bag_identifier_one,
-      timestamp: @time_stamp,
-      note: "something happening here"
+      status: BagStatus::DEPOSITED,
+      timestamp: @deposited_at
     )
 
-    @bag_repo.create(
-      identifier: @bag_identifier_two,
-      group_part: 3,
-      repository_package_identifier: @object_id
-    )
     @status_event_repo.create(
-      status: BagStatus::FAILED,
       bag_identifier: @bag_identifier_two,
-      timestamp: @time_stamp,
-      note: "something happening here"
+      status: BagStatus::FAILED,
+      timestamp: @deposited_at
     )
 
     @metrics = DarkBlueMetrics::MetricsProvider.new(start_time: @start_time, end_time: @end_time, status_event_repo: @status_event_repo)
 
+    t = @metrics.get_latest_bag_events_by_time
+    p t
     @registry = Prometheus::Client::Registry.new
     @gauge_mock = Minitest::Mock.new
   end
@@ -140,6 +124,6 @@ class DarkBlueMetricTest < Minitest::Test
   def test_get_failed_bag_ids
     events_by_time = @metrics.get_latest_bag_events_by_time
     actual_result = @metrics.get_failed_bag_ids(events_by_time)
-    assert_equal "repository.context-000002", actual_result[0].bag_identifier
+    assert_equal "repository.context-0002", actual_result[0].bag_identifier
   end
 end
