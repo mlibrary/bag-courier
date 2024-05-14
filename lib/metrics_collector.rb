@@ -20,10 +20,11 @@ module DarkBlueMetrics
   end
 
   class MetricsProvider
-    def initialize(start_time:, end_time:, status_event_repo:)
+    def initialize(start_time:, end_time:, status_event_repo:, push_gateway_url:)
       @start_time = start_time
       @end_time = end_time
       @status_event_repo = status_event_repo
+      @push_gateway_url = push_gateway_url
     end
 
     def get_latest_bag_events_by_time
@@ -61,20 +62,24 @@ module DarkBlueMetrics
       dark_blue_failed_count.set(get_failure_count(events_by_time))
     end
 
-    # def set_failed_bag_id(events_by_time)
-    #   dark_blue_failed_bag_ids = registry.counter(
-    #     :dark_blue_failed_bag_ids,
-    #     docstring: "Failed bag transfer")
-    #   get_failed_ids = get_failed_bag_ids(events_by_time)
-    #   get_failed_ids.each do |e|
-    #     dark_blue_failed_bag_ids.increment({failed_id: e.bag_identifier},0)
-    #   end
-    # end
+    def set_failed_bag_id(events_by_time)
+      dark_blue_failed_bag_ids = registry.counter(
+        :dark_blue_failed_bag_ids,
+        docstring: "Failed bag transfer",
+        labels: [:failed_id]
+      )
+      get_failed_ids = get_failed_bag_ids(events_by_time)
+      get_failed_ids.each do |e|
+        dark_blue_failed_bag_ids.increment(labels: {failed_id: e.bag_identifier})
+      end
+    end
 
     def set_last_successful_run
       dark_blue_last_successful_run = registry.gauge(:dark_blue_last_successful_run,
         docstring: "Timestamp of the last successful run of the cron job")
       return unless dark_blue_last_successful_run
+      # converting starttime to milliseconds to support converting epoch time to datetime
+      # https://github.com/grafana/grafana/issues/6297
       time_in_milli_sec = (@start_time * 1000)
       dark_blue_last_successful_run.set(time_in_milli_sec)
     end
@@ -92,7 +97,7 @@ module DarkBlueMetrics
       latest_events = get_latest_bag_events_by_time
       set_success_count(latest_events)
       set_failed_count(latest_events)
-      # set_failed_bag_id(latest_events)
+      set_failed_bag_id(latest_events)
       push_metrics
     end
 
@@ -105,7 +110,7 @@ module DarkBlueMetrics
     def gateway
       @gateway ||= Prometheus::Client::Push.new(
         job: "DarkBlueMetric",
-        gateway: S.config.metrics.push_gateway_url
+        gateway: @push_gateway_url
       )
     end
 

@@ -150,8 +150,11 @@ module StatusEventRepository
         .map { |se| convert_to_struct(se) }
     end
 
+    # https://sequel.jeremyevans.net/rdoc/classes/Sequel/SQL/Window.html
     def get_latest_event_for_bags(start_time:)
-      latest_events = base_query.where { timestamp >= start_time }.select_append { row_number.function.over(partition: :bag_id, order: Sequel.desc(:timestamp)).as(:rn) }.from_self.where(rn: 1)
+      latest_events = base_query.where { timestamp >= start_time }
+        .select_append { row_number.function.over(partition: :bag_id, order: Sequel.desc(:timestamp)).as(:rn) }
+        .from_self.where(rn: 1)
       latest_events.all.map { |se| convert_to_struct(se) }
     end
 

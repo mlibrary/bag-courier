@@ -207,6 +207,7 @@ module Config
     :push_gateway_url,
     keyword_init: true
   )
+
   Config = Struct.new(
     "Config",
     :settings,
@@ -332,10 +333,6 @@ module Config
 
     def self.log_level_from_env
       CheckableData.new(ENV.to_hash).get_value(key: "SETTINGS_LOG_LEVEL", checks: [LOG_LEVEL_CHECK]).to_sym
-    end
-
-    def self.push_gateway_from_env
-      CheckableData.new(ENV.to_hash).get_value(key: "PROMETHEUS_PUSH_GATEWAY")
     end
   end
 end

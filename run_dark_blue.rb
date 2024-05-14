@@ -36,7 +36,7 @@ class DarkBlueJob
         type: config.aptrust.remote.type,
         settings: config.aptrust.remote.settings
       ),
-      status_event_repo: StatusEventRepository::StatusEventRepositoryFactory.for(use_db: DB),
+      status_event_repo: S.status_event_repo,
       bag_repo: BagRepository::BagRepositoryFactory.for(use_db: DB)
     )
     @arch_configs = config.dark_blue.archivematicas
@@ -210,6 +210,6 @@ start_time, end_time = DarkBlueMetrics::Timer.time_processing {
     dark_blue_job.process
   end
 }
-@status_event_repo = StatusEventRepository::StatusEventRepositoryFactory.for(use_db: DB)
-metrics = DarkBlueMetrics::MetricsProvider.new(start_time: start_time, end_time: end_time, status_event_repo: @status_event_repo)
+metrics = DarkBlueMetrics::MetricsProvider.new(start_time: start_time, end_time: end_time,
+  status_event_repo: S.status_event_repo, push_gateway_url: config.metrics.push_gateway_url)
 metrics.set_all_metrics
