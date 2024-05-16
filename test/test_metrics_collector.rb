@@ -17,7 +17,7 @@ class DarkBlueMetricTest < Minitest::Test
     @status_event_repo = StatusEventRepository::StatusEventInMemoryRepository.new
     @push_gateway_url = "http://fake.pushgateway"
 
-    @registry = Minitest::Mock.new
+    @registry_mock = Minitest::Mock.new
     @gauge_mock = Minitest::Mock.new
 
     @metrics = DarkBlueMetrics::MetricsProvider.new(
@@ -25,13 +25,13 @@ class DarkBlueMetricTest < Minitest::Test
       end_time: @end_time,
       status_event_repo: @status_event_repo,
       push_gateway_url: @push_gateway_url,
-      registry: @registry
+      registry: @registry_mock
     )
   end
 
   def test_set_last_successful_run
     expected_time = (@start_time.to_i * 1000)
-    @registry.expect(
+    @registry_mock.expect(
       :gauge,
       @gauge_mock,
       [:dark_blue_last_successful_run],
@@ -39,12 +39,13 @@ class DarkBlueMetricTest < Minitest::Test
     )
     @gauge_mock.expect(:set, nil, [expected_time])
     @metrics.set_last_successful_run
+    @registry_mock.verify
     @gauge_mock.verify
   end
 
   def test_set_processing_duration
     expected_duration = 5
-    @registry.expect(
+    @registry_mock.expect(
       :gauge,
       @gauge_mock,
       [:dark_blue_processing_duration],
@@ -52,6 +53,7 @@ class DarkBlueMetricTest < Minitest::Test
     )
     @gauge_mock.expect(:set, nil, [expected_duration])
     @metrics.set_processing_duration
+    @registry_mock.verify
     @gauge_mock.verify
   end
 
@@ -72,7 +74,7 @@ class DarkBlueMetricTest < Minitest::Test
       timestamp: @deposited_at
     )
 
-    @registry.expect(
+    @registry_mock.expect(
       :gauge,
       @gauge_mock,
       [:dark_blue_success_count],
@@ -82,6 +84,7 @@ class DarkBlueMetricTest < Minitest::Test
     events_by_time = @metrics.get_latest_bag_events_by_time
     @gauge_mock.expect(:set, nil, [expected])
     @metrics.set_success_count(events_by_time)
+    @registry_mock.verify
     @gauge_mock.verify
   end
 
@@ -102,7 +105,7 @@ class DarkBlueMetricTest < Minitest::Test
       timestamp: @deposited_at
     )
     expected = 1
-    @registry.expect(
+    @registry_mock.expect(
       :gauge,
       @gauge_mock,
       [:dark_blue_failed_count],
@@ -111,6 +114,7 @@ class DarkBlueMetricTest < Minitest::Test
     events_by_time = @metrics.get_latest_bag_events_by_time
     @gauge_mock.expect(:set, nil, [expected])
     @metrics.set_failed_count(events_by_time)
+    @registry_mock.verify
     @gauge_mock.verify
   end
 
