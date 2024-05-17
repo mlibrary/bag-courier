@@ -1,5 +1,3 @@
-require "time"
-
 require "prometheus/client"
 require "prometheus/client/push"
 require "prometheus/client/registry"
