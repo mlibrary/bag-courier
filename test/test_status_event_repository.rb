@@ -96,7 +96,7 @@ module StatusEventRepositorySharedTest
   end
 
   def test_get_latest_event_for_bag_when_nil
-    event = mixin_repo.get_latest_event_for_bag(bag_identifier: "repository.context-100")
+    event = mixin_repo.get_latest_event_for_bag(bag_identifier: mixin_bag_identifier)
     refute event
   end
 
