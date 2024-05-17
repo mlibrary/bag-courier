@@ -45,6 +45,7 @@ GEM
     mysql2 (0.5.6)
     net-http (0.4.1)
       uri
+    prometheus-client (4.2.2)
     pastel (0.8.0)
       tty-color (~> 0.5)
     rake (13.1.0)
@@ -73,6 +74,7 @@ DEPENDENCIES
   faraday-retry (~> 2.2)
   minitest (~> 5.20)
   mysql2 (~> 0.5.6)
+  prometheus-client (~> 4.2.2)
   rake (~> 13.1)
   rexml (~> 3.2.6)
   semantic_logger (~> 4.15)

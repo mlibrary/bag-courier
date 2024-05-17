@@ -21,7 +21,7 @@ class APTrustVerificationJob
       api_key: config.aptrust.api.api_key
     )
     @bag_repo = BagRepository::BagRepositoryFactory.for(use_db: DB)
-    @status_event_repo = StatusEventRepository::StatusEventRepositoryFactory.for(use_db: DB)
+    @status_event_repo = S.status_event_repo
     @verifier = APTrust::APTrustVerifier.new(
       aptrust_api: aptrust_api, status_event_repo: @status_event_repo
     )

@@ -7,12 +7,13 @@ DB = config.database && S.dbconnect
 
 require_relative "lib/archivematica"
 require_relative "lib/bag_repository"
+require_relative "lib/bag_validator"
 require_relative "lib/data_transfer"
 require_relative "lib/dispatcher"
+require_relative "lib/metrics"
 require_relative "lib/remote_client"
 require_relative "lib/repository_package_repository"
 require_relative "lib/status_event_repository"
-require_relative "lib/bag_validator"
 
 class DarkBlueError < StandardError
 end
@@ -35,7 +36,7 @@ class DarkBlueJob
         type: config.aptrust.remote.type,
         settings: config.aptrust.remote.settings
       ),
-      status_event_repo: StatusEventRepository::StatusEventRepositoryFactory.for(use_db: DB),
+      status_event_repo: S.status_event_repo,
       bag_repo: BagRepository::BagRepositoryFactory.for(use_db: DB)
     )
     @arch_configs = config.dark_blue.archivematicas
@@ -201,8 +202,18 @@ end
 dark_blue_job = DarkBlueJob.new(config)
 
 options = DarkBlueParser.parse ARGV
-if options.packages.length > 0
-  dark_blue_job.redeliver_packages(options.packages)
-else
-  dark_blue_job.process
-end
+
+start_time, end_time = Metrics::Timer.time_processing {
+  if options.packages.length > 0
+    dark_blue_job.redeliver_packages(options.packages)
+  else
+    dark_blue_job.process
+  end
+}
+metrics = Metrics::MetricsProvider.new(
+  start_time: start_time,
+  end_time: end_time,
+  status_event_repo: S.status_event_repo,
+  push_gateway_url: config.metrics.push_gateway_url
+)
+metrics.set_all_metrics

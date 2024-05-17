@@ -44,3 +44,8 @@ S.register(:dbconnect) do
     password: db_config.password,
     fractional_seconds: true)
 end
+
+S.register(:status_event_repo) do
+  db = S.config.database && S.dbconnect
+  StatusEventRepository::StatusEventRepositoryFactory.for(use_db: db)
+end
