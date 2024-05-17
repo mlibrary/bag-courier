@@ -38,6 +38,10 @@ module StatusEventRepository
     def get_latest_event_for_bag(bag_identifier:)
       raise NotImplementedError
     end
+
+    def get_latest_event_for_bags(start_time:)
+      raise NotImplementedError
+    end
   end
 
   class StatusEventInMemoryRepository < StatusEventRepositoryBase
@@ -69,10 +73,6 @@ module StatusEventRepository
       @status_events << event
     end
 
-    def get_by_id(id)
-      @status_events.find { |e| e.id == id }
-    end
-
     def get_all
       @status_events
     end
@@ -89,11 +89,11 @@ module StatusEventRepository
     end
 
     def get_latest_event_for_bags(start_time:)
-      events_by_id = @status_events.group_by(&:bag_identifier)
-      events_by_id.map do |id, events_for_id|
-        event_by_time = events_for_id.select { |e| e.timestamp >= start_time }
-        event_by_time.max_by(&:timestamp) unless event_by_time.empty?
-      end.compact
+      @status_events.select { |e| e.timestamp >= start_time }
+        .group_by(&:bag_identifier)
+        .transform_values { |bag_identifier| bag_identifier.max_by(&:timestamp) }
+        .values
+        .compact
     end
   end
 
@@ -152,10 +152,10 @@ module StatusEventRepository
 
     # https://sequel.jeremyevans.net/rdoc/classes/Sequel/SQL/Window.html
     def get_latest_event_for_bags(start_time:)
-      latest_events = base_query.where { timestamp >= start_time }
+      base_query.where { timestamp >= start_time }
         .select_append { row_number.function.over(partition: :bag_id, order: Sequel.desc(:timestamp)).as(:rn) }
         .from_self.where(rn: 1)
-      latest_events.all.map { |se| convert_to_struct(se) }
+        .all.map { |se| convert_to_struct(se) }
     end
 
     def get_latest_event_for_bag(bag_identifier:)

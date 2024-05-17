@@ -7,7 +7,7 @@ require "prometheus/client/registry"
 require_relative "../services"
 require_relative "bag_status"
 
-module DarkBlueMetrics
+module Metrics
   class PushGatewayClientError < StandardError; end
 
   class Timer
@@ -54,10 +54,6 @@ module DarkBlueMetrics
       failure_count.count
     end
 
-    def get_failed_bag_ids(events_by_time)
-      events_by_time.select { |e| e.status == BagStatus::FAILED }
-    end
-
     def set_success_count(events_by_time)
       dark_blue_success_count = registry.gauge(
         :dark_blue_success_count,
@@ -72,18 +68,6 @@ module DarkBlueMetrics
         docstring: "Number of failed bag transfers"
       )
       dark_blue_failed_count.set(get_failure_count(events_by_time))
-    end
-
-    def set_failed_bag_id(events_by_time)
-      dark_blue_failed_bag_ids = registry.counter(
-        :dark_blue_failed_bag_ids,
-        docstring: "Failed bag transfer",
-        labels: [:failed_id]
-      )
-      get_failed_ids = get_failed_bag_ids(events_by_time)
-      get_failed_ids.each do |e|
-        dark_blue_failed_bag_ids.increment(labels: {failed_id: e.bag_identifier})
-      end
     end
 
     def set_last_successful_run
@@ -124,7 +108,6 @@ module DarkBlueMetrics
       latest_events = get_latest_bag_events_by_time
       set_success_count(latest_events)
       set_failed_count(latest_events)
-      set_failed_bag_id(latest_events)
       push_metrics
     end
   end

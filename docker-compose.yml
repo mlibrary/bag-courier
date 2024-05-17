@@ -45,10 +45,9 @@ services:
       - 9090:9090
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
-
   pushgateway:
     image: prom/pushgateway
     ports:
-      - 9091:9091   
+      - 9091:9091  
 volumes:
   database:

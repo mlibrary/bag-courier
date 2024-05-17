@@ -150,3 +150,4 @@ docker compose run dark-blue rake test
 - [aws-sdk-s3](https://docs.aws.amazon.com/sdk-for-ruby/v3/api/Aws/S3.html)
 - [mlibrary/sftp](https://github.com/mlibrary/sftp)
 - [Sequel](http://sequel.jeremyevans.net/)
+- [Prometheus Client](https://github.com/prometheus/client_ruby/blob/main/README.md)
