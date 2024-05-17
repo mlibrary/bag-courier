@@ -2,7 +2,6 @@ require "prometheus/client"
 require "prometheus/client/push"
 require "prometheus/client/registry"
 
-require_relative "../services"
 require_relative "bag_status"
 
 module Metrics
