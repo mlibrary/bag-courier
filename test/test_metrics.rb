@@ -27,6 +27,24 @@ class MetricsTest < Minitest::Test
     )
   end
 
+  def create_test_data
+    bag_identifier_one = "repository.context-0001"
+    bag_identifier_two = "repository.context-0002"
+    deposited_at = Time.utc(2024, 3, 18)
+
+    @status_event_repo.create(
+      bag_identifier: bag_identifier_one,
+      status: BagStatus::DEPOSITED,
+      timestamp: deposited_at
+    )
+
+    @status_event_repo.create(
+      bag_identifier: bag_identifier_two,
+      status: BagStatus::FAILED,
+      timestamp: deposited_at
+    )
+  end
+
   def test_set_last_successful_run
     expected_time = (@start_time.to_i * 1000)
     @registry_mock.expect(
@@ -56,22 +74,7 @@ class MetricsTest < Minitest::Test
   end
 
   def test_set_success_count
-    @bag_identifier_one = "repository.context-0001"
-    @bag_identifier_two = "repository.context-0002"
-    @deposited_at = Time.utc(2024, 3, 18)
-
-    @status_event_repo.create(
-      bag_identifier: @bag_identifier_one,
-      status: BagStatus::DEPOSITED,
-      timestamp: @deposited_at
-    )
-
-    @status_event_repo.create(
-      bag_identifier: @bag_identifier_two,
-      status: BagStatus::FAILED,
-      timestamp: @deposited_at
-    )
-
+    create_test_data
     @registry_mock.expect(
       :gauge,
       @gauge_mock,
@@ -87,21 +90,7 @@ class MetricsTest < Minitest::Test
   end
 
   def test_set_failed_count
-    @bag_identifier_one = "repository.context-0001"
-    @bag_identifier_two = "repository.context-0002"
-    @deposited_at = Time.utc(2024, 3, 18)
-
-    @status_event_repo.create(
-      bag_identifier: @bag_identifier_one,
-      status: BagStatus::DEPOSITED,
-      timestamp: @deposited_at
-    )
-
-    @status_event_repo.create(
-      bag_identifier: @bag_identifier_two,
-      status: BagStatus::FAILED,
-      timestamp: @deposited_at
-    )
+    create_test_data
     expected = 1
     @registry_mock.expect(
       :gauge,
@@ -117,62 +106,20 @@ class MetricsTest < Minitest::Test
   end
 
   def test_get_latest_bag_events_by_time
-    @bag_identifier_one = "repository.context-0001"
-    @bag_identifier_two = "repository.context-0002"
-    @deposited_at = Time.utc(2024, 3, 18)
-
-    @status_event_repo.create(
-      bag_identifier: @bag_identifier_one,
-      status: BagStatus::DEPOSITED,
-      timestamp: @deposited_at
-    )
-
-    @status_event_repo.create(
-      bag_identifier: @bag_identifier_two,
-      status: BagStatus::FAILED,
-      timestamp: @deposited_at
-    )
+    create_test_data
     actual_result = @metrics.get_latest_bag_events_by_time
     assert_equal 2, actual_result.length
   end
 
   def test_get_success_count
-    @bag_identifier_one = "repository.context-0001"
-    @bag_identifier_two = "repository.context-0002"
-    @deposited_at = Time.utc(2024, 3, 18)
-
-    @status_event_repo.create(
-      bag_identifier: @bag_identifier_one,
-      status: BagStatus::DEPOSITED,
-      timestamp: @deposited_at
-    )
-
-    @status_event_repo.create(
-      bag_identifier: @bag_identifier_two,
-      status: BagStatus::FAILED,
-      timestamp: @deposited_at
-    )
+    create_test_data
     events_by_time = @metrics.get_latest_bag_events_by_time
     actual_result = @metrics.get_success_count(events_by_time)
     assert_equal 1, actual_result
   end
 
   def test_get_failure_count
-    @bag_identifier_one = "repository.context-0001"
-    @bag_identifier_two = "repository.context-0002"
-    @deposited_at = Time.utc(2024, 3, 18)
-
-    @status_event_repo.create(
-      bag_identifier: @bag_identifier_one,
-      status: BagStatus::DEPOSITED,
-      timestamp: @deposited_at
-    )
-
-    @status_event_repo.create(
-      bag_identifier: @bag_identifier_two,
-      status: BagStatus::FAILED,
-      timestamp: @deposited_at
-    )
+    create_test_data
     events_by_time = @metrics.get_latest_bag_events_by_time
     actual_result = @metrics.get_failure_count(events_by_time)
     assert_equal 1, actual_result
