@@ -100,55 +100,53 @@ module StatusEventRepositorySharedTest
     refute event
   end
 
-  def create_test_data
-    second_package_identifier = "000002"
-    third_package_identifier = "000003"
-    fourth_package_identifier = "000004"
+  def start_time
+    Time.utc(2024, 3, 4, 12, 0, 0, 0)
+  end
 
-    [mixin_package_identifier, second_package_identifier, third_package_identifier, fourth_package_identifier].each do |id|
-      mixin_package_repo.create(identifier: id, repository_name: "repository", updated_at: Time.now.utc)
+  def create_test_data
+    bag_id_one, bag_id_two, bag_id_three, bag_id_four = 1.upto(4).map do |num|
+      package_identifier = "00000#{num}"
+      mixin_package_repo.create(
+        identifier: package_identifier, repository_name: "repository", updated_at: Time.now.utc
+      )
+      bag_identifier = "repository.context-#{package_identifier}"
+      mixin_bag_repo.create(
+        identifier: bag_identifier, group_part: 1, repository_package_identifier: package_identifier
+      )
+      bag_identifier
     end
 
-    stem = "repository.context-00000"
-    bag_identifier_one = mixin_bag_identifier
-    bag_identifier_two = "#{stem}2"
-    bag_identifier_three = "#{stem}3"
-    bag_identifier_four = "#{stem}4"
-    start_time = Time.utc(2024, 3, 4, 12, 0, 0, 0)
+    start = start_time
 
-    mixin_bag_repo.create(identifier: bag_identifier_one, group_part: 1, repository_package_identifier: mixin_package_identifier)
-    mixin_bag_repo.create(identifier: bag_identifier_two, group_part: 1, repository_package_identifier: second_package_identifier)
-    mixin_bag_repo.create(identifier: bag_identifier_three, group_part: 1, repository_package_identifier: third_package_identifier)
-    mixin_bag_repo.create(identifier: bag_identifier_four, group_part: 1, repository_package_identifier: fourth_package_identifier)
-    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_four, timestamp: start_time - 60)
-    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_one, timestamp: start_time - 60)
-    mixin_repo.create(status: BagStatus::COPIED, bag_identifier: bag_identifier_one, timestamp: start_time - 30)
-    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_one, timestamp: start_time)
-    mixin_repo.create(status: BagStatus::COPIED, bag_identifier: bag_identifier_one, timestamp: start_time + 30)
-    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_one, timestamp: start_time + 60)
-    mixin_repo.create(status: BagStatus::DEPOSITED, bag_identifier: bag_identifier_one, timestamp: start_time + 90)
-    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_two, timestamp: start_time + 100)
-    mixin_repo.create(status: BagStatus::COPIED, bag_identifier: bag_identifier_two, timestamp: start_time + 120)
-    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_three, timestamp: start_time + 140)
-    mixin_repo.create(status: BagStatus::FAILED, bag_identifier: bag_identifier_three, timestamp: start_time + 160)
-    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_two, timestamp: start_time + 180)
-    mixin_repo.create(status: BagStatus::FAILED, bag_identifier: bag_identifier_two, timestamp: start_time + 200)
+    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_id_four, timestamp: start - 60)
+    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_id_one, timestamp: start - 60)
+    mixin_repo.create(status: BagStatus::COPIED, bag_identifier: bag_id_one, timestamp: start - 30)
+    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_id_one, timestamp: start)
+    mixin_repo.create(status: BagStatus::COPIED, bag_identifier: bag_id_one, timestamp: start + 30)
+    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_id_one, timestamp: start + 60)
+    mixin_repo.create(status: BagStatus::DEPOSITED, bag_identifier: bag_id_one, timestamp: start + 90)
+    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_id_two, timestamp: start + 100)
+    mixin_repo.create(status: BagStatus::COPIED, bag_identifier: bag_id_two, timestamp: start + 120)
+    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_id_three, timestamp: start + 140)
+    mixin_repo.create(status: BagStatus::FAILED, bag_identifier: bag_id_three, timestamp: start + 160)
+    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_id_two, timestamp: start + 180)
+    mixin_repo.create(status: BagStatus::FAILED, bag_identifier: bag_id_two, timestamp: start + 200)
+
+    [bag_id_one, bag_id_two, bag_id_three, bag_id_four]
   end
 
   def test_get_latest_event_for_bags_when_no_events
-    start_time = Time.utc(2024, 5, 4, 12, 0, 0, 0)
-    bag_events = mixin_repo.get_latest_event_for_bags(start_time: start_time)
+    start = Time.utc(2024, 5, 4, 12, 0, 0, 0)
+    bag_events = mixin_repo.get_latest_event_for_bags(start_time: start)
     assert_equal 0, bag_events.length
   end
 
   def test_get_latest_event_for_bags
-    create_test_data
-
-    start_time = Time.utc(2024, 3, 4, 12, 0, 0, 0)
+    bag_id_one, bag_id_two = create_test_data
     bag_events = mixin_repo.get_latest_event_for_bags(start_time: start_time)
 
     assert_equal 3, bag_events.length
-
     bag_events.each do |bag_event|
       assert bag_event.is_a?(StatusEventRepository::StatusEvent)
     end
@@ -156,11 +154,11 @@ module StatusEventRepositorySharedTest
     events_before_start = bag_events.filter { |e| e.timestamp < start_time }
     assert_equal 0, events_before_start.length
 
-    events_bag_id_one = bag_events.filter { |e| e.bag_identifier == "repository.context-000001" }
+    events_bag_id_one = bag_events.filter { |e| e.bag_identifier == bag_id_one }
     assert_equal 1, events_bag_id_one.length
     assert_equal BagStatus::DEPOSITED, events_bag_id_one[0].status
 
-    events_bag_id_two = bag_events.filter { |e| e.bag_identifier == "repository.context-000002" }
+    events_bag_id_two = bag_events.filter { |e| e.bag_identifier == bag_id_two }
     assert_equal 1, events_bag_id_two.length
     assert_equal BagStatus::FAILED, events_bag_id_two[0].status
   end
