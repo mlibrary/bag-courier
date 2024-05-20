@@ -39,7 +39,7 @@ module StatusEventRepository
       raise NotImplementedError
     end
 
-    def get_latest_event_for_bags(start_time:)
+    def get_latest_event_for_bags(start_time: nil)
       raise NotImplementedError
     end
   end
@@ -88,8 +88,9 @@ module StatusEventRepository
       (events.length > 0) ? events[0] : nil
     end
 
-    def get_latest_event_for_bags(start_time:)
-      @status_events.select { |e| e.timestamp >= start_time }
+    def get_latest_event_for_bags(start_time: nil)
+      events = start_time ? @status_events.select { |e| e.timestamp >= start_time } : @status_events
+      events
         .group_by(&:bag_identifier)
         .transform_values { |bag_identifier| bag_identifier.max_by(&:timestamp) }
         .values
@@ -151,8 +152,9 @@ module StatusEventRepository
     end
 
     # https://sequel.jeremyevans.net/rdoc/classes/Sequel/SQL/Window.html
-    def get_latest_event_for_bags(start_time:)
-      base_query.where { timestamp >= start_time }
+    def get_latest_event_for_bags(start_time: nil)
+      query = start_time ? base_query.where { timestamp >= start_time } : base_query
+      query
         .select_append { row_number.function.over(partition: :bag_id, order: Sequel.desc(:timestamp)).as(:rn) }
         .from_self.where(rn: 1)
         .all.map { |se| convert_to_struct(se) }

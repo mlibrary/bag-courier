@@ -100,30 +100,29 @@ module StatusEventRepositorySharedTest
     refute event
   end
 
-  def test_get_latest_event_for_bags_when_no_events
-    start_time = Time.utc(2024, 5, 4, 12, 0, 0, 0)
-    bag_events = mixin_repo.get_latest_event_for_bags(start_time: start_time)
-    assert_equal 0, bag_events.length
-  end
-
-  def test_get_latest_event_for_bags
+  def create_test_data
     second_package_identifier = "000002"
-    three_package_identifier = "000003"
+    third_package_identifier = "000003"
+    fourth_package_identifier = "000004"
 
-    mixin_package_repo.create(identifier: mixin_package_identifier, repository_name: "repository", updated_at: Time.now.utc)
-    mixin_package_repo.create(identifier: second_package_identifier, repository_name: "repository", updated_at: Time.now.utc)
-    mixin_package_repo.create(identifier: three_package_identifier, repository_name: "repository", updated_at: Time.now.utc)
+    [mixin_package_identifier, second_package_identifier, third_package_identifier, fourth_package_identifier].each do |id|
+      mixin_package_repo.create(identifier: id, repository_name: "repository", updated_at: Time.now.utc)
+    end
 
+    stem = "repository.context-00000"
     bag_identifier_one = mixin_bag_identifier
-    bag_identifier_two = "repository.context-000002"
-    bag_identifier_three = "repository.context-000003"
+    bag_identifier_two = "#{stem}2"
+    bag_identifier_three = "#{stem}3"
+    bag_identifier_four = "#{stem}4"
     start_time = Time.utc(2024, 3, 4, 12, 0, 0, 0)
 
     mixin_bag_repo.create(identifier: bag_identifier_one, group_part: 1, repository_package_identifier: mixin_package_identifier)
     mixin_bag_repo.create(identifier: bag_identifier_two, group_part: 1, repository_package_identifier: second_package_identifier)
-    mixin_bag_repo.create(identifier: bag_identifier_three, group_part: 1, repository_package_identifier: three_package_identifier)
-    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_one, timestamp: start_time - 30)
-    mixin_repo.create(status: BagStatus::COPIED, bag_identifier: bag_identifier_one, timestamp: start_time - 60)
+    mixin_bag_repo.create(identifier: bag_identifier_three, group_part: 1, repository_package_identifier: third_package_identifier)
+    mixin_bag_repo.create(identifier: bag_identifier_four, group_part: 1, repository_package_identifier: fourth_package_identifier)
+    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_four, timestamp: start_time - 60)
+    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_one, timestamp: start_time - 60)
+    mixin_repo.create(status: BagStatus::COPIED, bag_identifier: bag_identifier_one, timestamp: start_time - 30)
     mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_one, timestamp: start_time)
     mixin_repo.create(status: BagStatus::COPIED, bag_identifier: bag_identifier_one, timestamp: start_time + 30)
     mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_one, timestamp: start_time + 60)
@@ -134,22 +133,46 @@ module StatusEventRepositorySharedTest
     mixin_repo.create(status: BagStatus::FAILED, bag_identifier: bag_identifier_three, timestamp: start_time + 160)
     mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_identifier_two, timestamp: start_time + 180)
     mixin_repo.create(status: BagStatus::FAILED, bag_identifier: bag_identifier_two, timestamp: start_time + 200)
+  end
 
+  def test_get_latest_event_for_bags_when_no_events
+    start_time = Time.utc(2024, 5, 4, 12, 0, 0, 0)
     bag_events = mixin_repo.get_latest_event_for_bags(start_time: start_time)
+    assert_equal 0, bag_events.length
+  end
+
+  def test_get_latest_event_for_bags
+    create_test_data
+
+    start_time = Time.utc(2024, 3, 4, 12, 0, 0, 0)
+    bag_events = mixin_repo.get_latest_event_for_bags(start_time: start_time)
+
+    assert_equal 3, bag_events.length
 
     bag_events.each do |bag_event|
       assert bag_event.is_a?(StatusEventRepository::StatusEvent)
     end
+
     events_before_start = bag_events.filter { |e| e.timestamp < start_time }
     assert_equal 0, events_before_start.length
 
-    events_bag_id_one = bag_events.filter { |e| e.bag_identifier == bag_identifier_one }
+    events_bag_id_one = bag_events.filter { |e| e.bag_identifier == "repository.context-000001" }
     assert_equal 1, events_bag_id_one.length
     assert_equal BagStatus::DEPOSITED, events_bag_id_one[0].status
 
-    events_bag_id_two = bag_events.filter { |e| e.bag_identifier == bag_identifier_two }
+    events_bag_id_two = bag_events.filter { |e| e.bag_identifier == "repository.context-000002" }
     assert_equal 1, events_bag_id_two.length
     assert_equal BagStatus::FAILED, events_bag_id_two[0].status
+  end
+
+  def test_get_latest_event_for_bags_with_no_start_time
+    create_test_data
+
+    events = mixin_repo.get_latest_event_for_bags
+
+    assert_equal 4, events.length
+    unique_bag_identifiers = events.map { |e| e.bag_identifier }.uniq
+    assert_equal 4, unique_bag_identifiers.length
   end
 end
 
@@ -161,7 +184,7 @@ class StatusEventInMemoryRepositoryTest < Minitest::Test
     @repo = StatusEventRepository::StatusEventInMemoryRepository.new
 
     @bag_repo = BagRepository::BagInMemoryRepository.new
-    @bag_identifier = "repository.context-001"
+    @bag_identifier = "repository.context-000001"
 
     @package_repo = RepositoryPackageRepository::RepositoryPackageInMemoryRepository.new
     @package_identifier = "000001"
@@ -215,7 +238,7 @@ class StatusEventDatabaseRepositoryTest < SequelTestCase
     @repo = StatusEventRepository::StatusEventDatabaseRepository.new
 
     @bag_repo = BagRepository::BagDatabaseRepository.new
-    @bag_identifier = "repository.context-001"
+    @bag_identifier = "repository.context-000001"
 
     @package_repo = RepositoryPackageRepository::RepositoryPackageDatabaseRepository.new
     @package_identifier = "000001"
