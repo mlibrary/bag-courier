@@ -23,7 +23,7 @@ class DarkBlueJob
 
   module ExtraBagInfoData
     CONTENT_TYPE_KEY = "Dark-Blue-Content-Type"
-    LOCATION_UUID_KEY = "Archivematica-Location-UUID"
+    LOCATION_UUID_KEY = "AIP-Storage-Location-UUID"
   end
 
   def initialize(config)
