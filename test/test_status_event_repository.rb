@@ -119,19 +119,19 @@ module StatusEventRepositorySharedTest
 
     start = start_time
 
-    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_id_four, timestamp: start - 60)
     mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_id_one, timestamp: start - 60)
-    mixin_repo.create(status: BagStatus::COPIED, bag_identifier: bag_id_one, timestamp: start - 30)
-    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_id_one, timestamp: start)
-    mixin_repo.create(status: BagStatus::COPIED, bag_identifier: bag_id_one, timestamp: start + 30)
-    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_id_one, timestamp: start + 60)
-    mixin_repo.create(status: BagStatus::DEPOSITED, bag_identifier: bag_id_one, timestamp: start + 90)
-    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_id_two, timestamp: start + 100)
-    mixin_repo.create(status: BagStatus::COPIED, bag_identifier: bag_id_two, timestamp: start + 120)
-    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_id_three, timestamp: start + 140)
-    mixin_repo.create(status: BagStatus::FAILED, bag_identifier: bag_id_three, timestamp: start + 160)
-    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_id_two, timestamp: start + 180)
-    mixin_repo.create(status: BagStatus::FAILED, bag_identifier: bag_id_two, timestamp: start + 200)
+    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_id_two, timestamp: start - 60)
+    mixin_repo.create(status: BagStatus::COPIED, bag_identifier: bag_id_two, timestamp: start - 30)
+    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_id_two, timestamp: start)
+    mixin_repo.create(status: BagStatus::COPIED, bag_identifier: bag_id_two, timestamp: start + 30)
+    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_id_two, timestamp: start + 60)
+    mixin_repo.create(status: BagStatus::DEPOSITED, bag_identifier: bag_id_two, timestamp: start + 90)
+    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_id_three, timestamp: start + 100)
+    mixin_repo.create(status: BagStatus::COPIED, bag_identifier: bag_id_three, timestamp: start + 120)
+    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_id_four, timestamp: start + 140)
+    mixin_repo.create(status: BagStatus::FAILED, bag_identifier: bag_id_four, timestamp: start + 160)
+    mixin_repo.create(status: BagStatus::COPYING, bag_identifier: bag_id_three, timestamp: start + 180)
+    mixin_repo.create(status: BagStatus::FAILED, bag_identifier: bag_id_three, timestamp: start + 200)
 
     [bag_id_one, bag_id_two, bag_id_three, bag_id_four]
   end
@@ -143,7 +143,7 @@ module StatusEventRepositorySharedTest
   end
 
   def test_get_latest_event_for_bags
-    bag_id_one, bag_id_two = create_test_data
+    bag_id_one, bag_id_two, bag_id_three = create_test_data
     bag_events = mixin_repo.get_latest_event_for_bags(start_time: start_time)
 
     assert_equal 3, bag_events.length
@@ -154,13 +154,13 @@ module StatusEventRepositorySharedTest
     events_before_start = bag_events.filter { |e| e.timestamp < start_time }
     assert_equal 0, events_before_start.length
 
-    events_bag_id_one = bag_events.filter { |e| e.bag_identifier == bag_id_one }
-    assert_equal 1, events_bag_id_one.length
-    assert_equal BagStatus::DEPOSITED, events_bag_id_one[0].status
-
     events_bag_id_two = bag_events.filter { |e| e.bag_identifier == bag_id_two }
     assert_equal 1, events_bag_id_two.length
-    assert_equal BagStatus::FAILED, events_bag_id_two[0].status
+    assert_equal BagStatus::DEPOSITED, events_bag_id_two[0].status
+
+    events_bag_id_three = bag_events.filter { |e| e.bag_identifier == bag_id_three }
+    assert_equal 1, events_bag_id_three.length
+    assert_equal BagStatus::FAILED, events_bag_id_three[0].status
   end
 
   def test_get_latest_event_for_bags_with_no_start_time
