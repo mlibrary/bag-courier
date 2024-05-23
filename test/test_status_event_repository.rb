@@ -143,7 +143,7 @@ module StatusEventRepositorySharedTest
   end
 
   def test_get_latest_event_for_bags
-    bag_id_one, bag_id_two, bag_id_three = create_test_data
+    bag_id_one, bag_id_two, bag_id_three, bag_id_four = create_test_data
     bag_events = mixin_repo.get_latest_event_for_bags(start_time: start_time)
 
     assert_equal 3, bag_events.length
@@ -161,6 +161,10 @@ module StatusEventRepositorySharedTest
     events_bag_id_three = bag_events.filter { |e| e.bag_identifier == bag_id_three }
     assert_equal 1, events_bag_id_three.length
     assert_equal BagStatus::FAILED, events_bag_id_three[0].status
+
+    events_bag_id_four = bag_events.filter { |e| e.bag_identifier == bag_id_four }
+    assert_equal 1, events_bag_id_four.length
+    assert_equal BagStatus::FAILED, events_bag_id_four[0].status
   end
 
   def test_get_latest_event_for_bags_with_no_start_time
