@@ -45,15 +45,17 @@ GEM
     mysql2 (0.5.6)
     net-http (0.4.1)
       uri
-    prometheus-client (4.2.2)
     pastel (0.8.0)
       tty-color (~> 0.5)
+    prometheus-client (4.2.2)
     rake (13.1.0)
-    rexml (3.2.6)
+    rexml (3.2.7)
+      strscan (>= 3.0.9)
     semantic_logger (4.15.0)
       concurrent-ruby (~> 1.0)
     sequel (5.77.0)
       bigdecimal
+    strscan (3.1.0)
     tty-color (0.6.0)
     tty-command (0.10.1)
       pastel (~> 0.8)
@@ -76,7 +78,7 @@ DEPENDENCIES
   mysql2 (~> 0.5.6)
   prometheus-client (~> 4.2.2)
   rake (~> 13.1)
-  rexml (~> 3.2.6)
+  rexml (~> 3.2.7)
   semantic_logger (~> 4.15)
   sequel (~> 5.77)
   sftp!
