@@ -330,7 +330,7 @@ module Config
         ),
         metrics: Metrics.new(
           push_gateway_url: data.get_value(key: "PROMETHEUS_PUSH_GATEWAY"),
-          cluster_namespace: data.get_value(key: "CLUSTER_NAMESPACE")
+          cluster_namespace: data.get_value(key: "PROMETHEUS_CLUSTER_NAMESPACE")
         )
       )
     end

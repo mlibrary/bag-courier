@@ -226,4 +226,4 @@ metrics = Metrics::MetricsProvider.new(
   push_gateway_url: config.metrics.push_gateway_url,
   cluster_namespace: config.metrics.cluster_namespace
 )
-metrics.set_all_metrics
+metrics.collect
