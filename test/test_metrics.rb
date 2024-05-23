@@ -162,8 +162,7 @@ class MetricsTest < Minitest::Test
       @metrics.collect
     end
 
-    @gateway_mock.expect(:add, nil, [@registry_mock])
-    @gateway_mock.add(@registry_mock)
+    @gateway_class_mock.verify
     @gateway_mock.verify
   end
 end
