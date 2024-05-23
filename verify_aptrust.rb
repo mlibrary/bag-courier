@@ -29,14 +29,11 @@ class APTrustVerificationJob
 
   def process
     logger.info("Searching for bags with pending deposit verification")
-    @bag_repo.get_all.each do |bag|
-      logger.debug(bag)
-      latest_event = @status_event_repo.get_latest_event_for_bag(bag_identifier: bag.identifier)
-      logger.debug(latest_event)
-      next if latest_event&.status != BagStatus::DEPOSITED
-
-      logger.info("Deposit with pending verification found for bag #{bag.identifier}.")
-      @verifier.verify(bag_identifier: bag.identifier, deposited_at: latest_event.timestamp)
+    latest_events = @status_event_repo.get_latest_event_for_bags
+    latest_deposited_events = latest_events.filter { |e| e.status == BagStatus::DEPOSITED }
+    logger.info("Found #{latest_deposited_events.length} deposit(s) with pending verification")
+    latest_deposited_events.each do |e|
+      @verifier.verify(bag_identifier: e.bag_identifier, deposited_at: e.timestamp)
     end
   end
 end
