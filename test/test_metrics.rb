@@ -14,6 +14,7 @@ class MetricsTest < Minitest::Test
     @end_time = @start_time + 5
     @status_event_repo = StatusEventRepository::StatusEventInMemoryRepository.new
     @push_gateway_url = "http://fake.pushgateway"
+    @cluster_namespace = "test-ns"
 
     @registry_mock = Minitest::Mock.new
     @gauge_mock = Minitest::Mock.new
@@ -23,6 +24,7 @@ class MetricsTest < Minitest::Test
       end_time: @end_time,
       status_event_repo: @status_event_repo,
       push_gateway_url: @push_gateway_url,
+      cluster_namespace: @cluster_namespace,
       registry: @registry_mock
     )
   end

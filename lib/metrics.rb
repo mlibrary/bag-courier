@@ -20,6 +20,7 @@ module Metrics
     def initialize(
       status_event_repo:,
       push_gateway_url:,
+      cluster_namespace:,
       start_time:,
       end_time:,
       registry: nil
@@ -28,6 +29,7 @@ module Metrics
       @end_time = end_time
       @status_event_repo = status_event_repo
       @push_gateway_url = push_gateway_url
+      @cluster_namespace = cluster_namespace
       @registry = registry
     end
 
@@ -88,7 +90,7 @@ module Metrics
 
     def gateway
       @gateway ||= Prometheus::Client::Push.new(
-        job: "DarkBlueMetric",
+        job: @cluster_namespace,
         gateway: @push_gateway_url
       )
     end
