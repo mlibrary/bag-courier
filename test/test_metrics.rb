@@ -21,8 +21,6 @@ class MetricsTest < Minitest::Test
     @gateway_mock = Minitest::Mock.new
     @gauge_mock = Minitest::Mock.new
 
-    @gauge_mock = Minitest::Mock.new
-
     @metrics = Metrics::MetricsProvider.new(
       start_time: @start_time,
       end_time: @end_time,
