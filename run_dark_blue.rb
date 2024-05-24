@@ -223,6 +223,7 @@ metrics = Metrics::MetricsProvider.new(
   start_time: start_time,
   end_time: end_time,
   status_event_repo: S.status_event_repo,
-  push_gateway_url: config.metrics.push_gateway_url
+  push_gateway_url: config.metrics.push_gateway_url,
+  cluster_namespace: config.metrics.cluster_namespace
 )
-metrics.set_all_metrics
+metrics.collect

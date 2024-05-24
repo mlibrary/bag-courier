@@ -20,15 +20,19 @@ module Metrics
     def initialize(
       status_event_repo:,
       push_gateway_url:,
+      cluster_namespace:,
       start_time:,
       end_time:,
-      registry: nil
+      registry: nil,
+      gateway_cls: nil
     )
       @start_time = start_time
       @end_time = end_time
       @status_event_repo = status_event_repo
       @push_gateway_url = push_gateway_url
+      @cluster_namespace = cluster_namespace
       @registry = registry
+      @gateway_cls = gateway_cls
     end
 
     def registry
@@ -87,9 +91,11 @@ module Metrics
     end
 
     def gateway
-      @gateway ||= Prometheus::Client::Push.new(
-        job: "DarkBlueMetric",
-        gateway: @push_gateway_url
+      @gateway_cls ||= Prometheus::Client::Push
+      @gateway ||= @gateway_cls.new(
+        job: "DarkBlueMetrics",
+        gateway: @push_gateway_url,
+        grouping_key: {cluster: @cluster_namespace}
       )
     end
     private :gateway
@@ -105,6 +111,10 @@ module Metrics
       latest_events = get_latest_bag_events_by_time
       set_success_count(latest_events)
       set_failed_count(latest_events)
+    end
+
+    def collect
+      set_all_metrics
       push_metrics
     end
   end

@@ -14,8 +14,11 @@ class MetricsTest < Minitest::Test
     @end_time = @start_time + 5
     @status_event_repo = StatusEventRepository::StatusEventInMemoryRepository.new
     @push_gateway_url = "http://fake.pushgateway"
+    @cluster_namespace = "test-ns"
 
     @registry_mock = Minitest::Mock.new
+    @gateway_class_mock = Minitest::Mock.new
+    @gateway_mock = Minitest::Mock.new
     @gauge_mock = Minitest::Mock.new
 
     @metrics = Metrics::MetricsProvider.new(
@@ -23,7 +26,9 @@ class MetricsTest < Minitest::Test
       end_time: @end_time,
       status_event_repo: @status_event_repo,
       push_gateway_url: @push_gateway_url,
-      registry: @registry_mock
+      cluster_namespace: @cluster_namespace,
+      registry: @registry_mock,
+      gateway_cls: @gateway_class_mock
     )
   end
 
@@ -140,5 +145,22 @@ class MetricsTest < Minitest::Test
     events_by_time = @metrics.get_latest_bag_events_by_time
     actual_result = @metrics.get_failure_count(events_by_time)
     assert_equal 0, actual_result
+  end
+
+  def test_collect
+    @gateway_class_mock.expect(
+      :new,
+      @gateway_mock,
+      job: "DarkBlueMetrics",
+      gateway: @push_gateway_url,
+      grouping_key: {cluster: @cluster_namespace}
+    )
+    @gateway_mock.expect(:add, nil, [@registry_mock])
+    @metrics.stub(:set_all_metrics, nil) do
+      @metrics.collect
+    end
+
+    @gateway_class_mock.verify
+    @gateway_mock.verify
   end
 end

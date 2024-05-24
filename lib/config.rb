@@ -211,6 +211,7 @@ module Config
   Metrics = Struct.new(
     "MetricsConfig",
     :push_gateway_url,
+    :cluster_namespace,
     keyword_init: true
   )
 
@@ -327,7 +328,10 @@ module Config
           ),
           remote: create_remote_config(data.get_subset_by_key_stem("APTRUST_REMOTE_"))
         ),
-        metrics: Metrics.new(push_gateway_url: data.get_value(key: "PROMETHEUS_PUSH_GATEWAY"))
+        metrics: Metrics.new(
+          push_gateway_url: data.get_value(key: "PROMETHEUS_PUSH_GATEWAY"),
+          cluster_namespace: data.get_value(key: "PROMETHEUS_CLUSTER_NAMESPACE")
+        )
       )
     end
 
