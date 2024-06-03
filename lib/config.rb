@@ -208,7 +208,7 @@ module Config
     keyword_init: true
   )
 
-  Metrics = Struct.new(
+  MetricsConfig = Struct.new(
     "MetricsConfig",
     :push_gateway_url,
     :cluster_namespace,
@@ -236,6 +236,13 @@ module Config
         port: data.get_value(key: "PORT", checks: [IntegerCheck.new]).to_i,
         user: data.get_value(key: "USER"),
         password: data.get_value(key: "PASSWORD")
+      )
+    end
+
+    def self.create_metrics_config(data)
+      MetricsConfig.new(
+        push_gateway_url: data.get_value(key: "PUSH_GATEWAY"),
+        cluster_namespace: data.get_value(key: "CLUSTER_NAMESPACE")
       )
     end
 
@@ -290,6 +297,7 @@ module Config
       data = CheckableData.new(data)
       settings_workflow_data = data.get_subset_by_key_stem("SETTINGS_WORKFLOW_")
       db_data = data.get_subset_by_key_stem("DATABASE_")
+      metrics_data = data.get_subset_by_key_stem("PROMETHEUS_")
 
       arch_configs = []
       ARCHIVEMATICA_INSTANCES.each do |instance_name|
@@ -328,10 +336,7 @@ module Config
           ),
           remote: create_remote_config(data.get_subset_by_key_stem("APTRUST_REMOTE_"))
         ),
-        metrics: Metrics.new(
-          push_gateway_url: data.get_value(key: "PROMETHEUS_PUSH_GATEWAY"),
-          cluster_namespace: data.get_value(key: "PROMETHEUS_CLUSTER_NAMESPACE")
-        )
+        metrics: (metrics_data.keys.length > 0) ? create_metrics_config(metrics_data) : nil
       )
     end
 
