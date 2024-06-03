@@ -167,10 +167,10 @@ module StatusEventRepositorySharedTest
 
   def test_get_latest_event_for_bags_with_no_start_time
     bag_id_one, bag_id_two, bag_id_three, bag_id_four = create_latest_event_for_bags_test_data
-    events = mixin_repo.get_latest_event_for_bags
+    bag_events = mixin_repo.get_latest_event_for_bags
 
-    assert_equal 4, events.length
-    id_status_pairs = events.sort_by { |e| e.timestamp }.map { |e| [e.bag_identifier, e.status] }
+    assert_equal 4, bag_events.length
+    id_status_pairs = bag_events.sort_by { |e| e.timestamp }.map { |e| [e.bag_identifier, e.status] }
     assert_equal(
       [
         [bag_id_one, BagStatus::COPYING],
