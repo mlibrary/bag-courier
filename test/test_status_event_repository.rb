@@ -104,7 +104,7 @@ module StatusEventRepositorySharedTest
     Time.utc(2024, 3, 4, 12, 0, 0, 0)
   end
 
-  def create_test_data
+  def create_latest_event_for_bags_test_data
     bag_id_one, bag_id_two, bag_id_three, bag_id_four = 1.upto(4).map do |num|
       package_identifier = "00000#{num}"
       mixin_package_repo.create(
@@ -143,10 +143,9 @@ module StatusEventRepositorySharedTest
   end
 
   def test_get_latest_event_for_bags
-    bag_id_one, bag_id_two, bag_id_three, bag_id_four = create_test_data
+    bag_id_one, bag_id_two, bag_id_three, bag_id_four = create_latest_event_for_bags_test_data
     bag_events = mixin_repo.get_latest_event_for_bags(start_time: start_time)
 
-    assert_equal 3, bag_events.length
     bag_events.each do |bag_event|
       assert bag_event.is_a?(StatusEventRepository::StatusEvent)
     end
@@ -154,27 +153,33 @@ module StatusEventRepositorySharedTest
     events_before_start = bag_events.filter { |e| e.timestamp < start_time }
     assert_equal 0, events_before_start.length
 
-    events_bag_id_two = bag_events.filter { |e| e.bag_identifier == bag_id_two }
-    assert_equal 1, events_bag_id_two.length
-    assert_equal BagStatus::DEPOSITED, events_bag_id_two[0].status
-
-    events_bag_id_three = bag_events.filter { |e| e.bag_identifier == bag_id_three }
-    assert_equal 1, events_bag_id_three.length
-    assert_equal BagStatus::FAILED, events_bag_id_three[0].status
-
-    events_bag_id_four = bag_events.filter { |e| e.bag_identifier == bag_id_four }
-    assert_equal 1, events_bag_id_four.length
-    assert_equal BagStatus::FAILED, events_bag_id_four[0].status
+    assert_equal 3, bag_events.length
+    id_status_pairs = bag_events.sort_by { |e| e.timestamp }.map { |e| [e.bag_identifier, e.status] }
+    assert_equal(
+      [
+        [bag_id_two, BagStatus::DEPOSITED],
+        [bag_id_four, BagStatus::FAILED],
+        [bag_id_three, BagStatus::FAILED]
+      ],
+      id_status_pairs
+    )
   end
 
   def test_get_latest_event_for_bags_with_no_start_time
-    create_test_data
-
+    bag_id_one, bag_id_two, bag_id_three, bag_id_four = create_latest_event_for_bags_test_data
     events = mixin_repo.get_latest_event_for_bags
 
     assert_equal 4, events.length
-    unique_bag_identifiers = events.map { |e| e.bag_identifier }.uniq
-    assert_equal 4, unique_bag_identifiers.length
+    id_status_pairs = events.sort_by { |e| e.timestamp }.map { |e| [e.bag_identifier, e.status] }
+    assert_equal(
+      [
+        [bag_id_one, BagStatus::COPYING],
+        [bag_id_two, BagStatus::DEPOSITED],
+        [bag_id_four, BagStatus::FAILED],
+        [bag_id_three, BagStatus::FAILED]
+      ],
+      id_status_pairs
+    )
   end
 end
 
