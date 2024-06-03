@@ -143,7 +143,7 @@ module StatusEventRepositorySharedTest
   end
 
   def test_get_latest_event_for_bags
-    bag_id_one, bag_id_two, bag_id_three, bag_id_four = create_latest_event_for_bags_test_data
+    bag_id_two, bag_id_three, bag_id_four = create_latest_event_for_bags_test_data[1, 3]
     bag_events = mixin_repo.get_latest_event_for_bags(start_time: start_time)
 
     bag_events.each do |bag_event|
