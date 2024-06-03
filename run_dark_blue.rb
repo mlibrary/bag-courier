@@ -219,11 +219,13 @@ start_time, end_time = Metrics::Timer.time_processing {
     dark_blue_job.process
   end
 }
-metrics = Metrics::MetricsProvider.new(
-  start_time: start_time,
-  end_time: end_time,
-  status_event_repo: S.status_event_repo,
-  push_gateway_url: config.metrics.push_gateway_url,
-  cluster_namespace: config.metrics.cluster_namespace
-)
-metrics.collect
+if config.metrics
+  metrics = Metrics::MetricsProvider.new(
+    start_time: start_time,
+    end_time: end_time,
+    status_event_repo: S.status_event_repo,
+    push_gateway_url: config.metrics.push_gateway_url,
+    cluster_namespace: config.metrics.cluster_namespace
+  )
+  metrics.collect
+end

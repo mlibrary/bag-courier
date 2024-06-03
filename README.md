@@ -47,7 +47,14 @@ The recommended approach is to use the `database` service
 (defined in [`docker-compose.yml`](/docker-compose.yml) with the Docker approach described below.
 However, it is possible -- though not explicitly supported -- to use a MariaDB or MySQL
 database from a server running on your local machine or elsewhere.
-The following sections will assume you are not using a database with Ruby outside a container.
+
+Deployed versions of this application also use [Prometheus](https://prometheus.io/),
+and an associated Push Gateway, to publish and collect metrics about runs.
+During local development, you can use the `prometheus` and `pushgateway` Docker services
+to experiment with this functionality.
+
+The following sections will assume you are not using a database -- or Prometheus --
+with Ruby outside a container.
 
 ### Ruby
 
@@ -93,9 +100,9 @@ docker compose build dark-blue
 
 #### Usage
 
-Start up the database service by itself.
+Start up the `database`, `prometheus`, and/or `pushgateway` services.
 ```sh
-docker compose up database
+docker compose up database prometheus pushgateway
 ```
 
 Run the migrations, if you configured the application to use a database:
