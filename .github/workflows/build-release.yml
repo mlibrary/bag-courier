@@ -1,0 +1,16 @@
+---
+name: Build release
+
+on:
+  release:
+    types: [ released ]
+
+jobs:
+  build-production:
+    name: Build production ${{ github.event.release.tag_name }}
+    uses: mlibrary/platform-engineering-workflows/.github/workflows/build-production.yml@v1
+    with:
+      image_name: ${{ vars.IMAGE_NAME }}
+      tag: ${{ github.event.release.tag_name }}
+      dockerfile: Dockerfile
+    secrets: inherit
