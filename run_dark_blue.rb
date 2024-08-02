@@ -37,6 +37,7 @@ class DarkBlueJob
 
     @arch_configs = config.dark_blue.archivematicas
     @object_size_limit = config.settings.object_size_limit
+    @detect_hidden = config.settings.detect_hidden
   end
 
   def create_dispatcher(context:, extra_bag_info_data:)
@@ -50,7 +51,8 @@ class DarkBlueJob
       status_event_repo: @status_event_repo,
       bag_repo: @bag_repo,
       context: context,
-      extra_bag_info_data: extra_bag_info_data
+      extra_bag_info_data: extra_bag_info_data,
+      detect_hidden: @detect_hidden
     )
   end
 
@@ -81,7 +83,7 @@ class DarkBlueJob
         remote_client: remote_client,
         remote_path: package_data.remote_path
       ),
-      validator: InnerBagValidator.new(package_data.dir_name)
+      validator: InnerBagValidator.new(package_data.dir_name, @detect_hidden)
     )
     logger.measure_info("Delivered package #{package_data.metadata.id}.") do
       courier.deliver

@@ -8,8 +8,9 @@ module BagAdapter
 
     attr_reader :additional_tag_files
 
-    def initialize(target_dir)
-      @bag = BagIt::Bag.new(target_dir)
+    def initialize(target_dir, detect_hidden)
+      @detect_hidden = detect_hidden
+      @bag = BagIt::Bag.new(target_dir, {}, false, @detect_hidden)
       @additional_tag_files = []
     end
 

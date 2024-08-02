@@ -27,7 +27,8 @@ module Dispatcher
       context: nil,
       extra_bag_info_data: nil,
       status_event_repo: StatusEventRepository::StatusEventInMemoryRepository.new,
-      bag_repo: BagRepository::BagInMemoryRepository.new
+      bag_repo: BagRepository::BagInMemoryRepository.new,
+      detect_hidden:
     )
       @settings = settings
       @repository = repository
@@ -36,6 +37,7 @@ module Dispatcher
       @target_client = target_client
       @status_event_repo = status_event_repo
       @bag_repo = bag_repo
+      @detect_hidden = detect_hidden
     end
 
     def dispatch(
@@ -79,7 +81,8 @@ module Dispatcher
         working_dir: @settings.working_dir,
         export_dir: @settings.export_dir,
         dry_run: @settings.dry_run,
-        remove_export: @settings.remove_export
+        remove_export: @settings.remove_export,
+        detect_hidden: @detect_hidden
       )
     end
   end

@@ -39,7 +39,8 @@ module BagCourier
       working_dir:,
       export_dir:,
       dry_run:,
-      remove_export:
+      remove_export:,
+      detect_hidden:
     )
       @bag_id = bag_id
       @bag_info = bag_info
@@ -54,6 +55,7 @@ module BagCourier
       @remove_export = remove_export
       @dry_run = dry_run
       @validator = validator
+      @detect_hidden = detect_hidden
     end
 
     def track!(status:, note: nil)
@@ -106,7 +108,7 @@ module BagCourier
       begin
         track!(status: BagStatus::BAGGING)
         bag_path = File.join(@working_dir, @bag_id.to_s)
-        bag = BagAdapter::BagAdapter.new(bag_path)
+        bag = BagAdapter::BagAdapter.new(bag_path, @detect_hidden)
 
         track!(status: BagStatus::COPYING)
         logger.measure_info("Copied data for bag #{@bag_id} in #{@working_dir}.") do

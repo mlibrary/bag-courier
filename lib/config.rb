@@ -117,6 +117,7 @@ module Config
     :num_objects_per_repo,
     :restore_dir,
     :workflow,
+    :detect_hidden,
     keyword_init: true
   )
 
@@ -320,7 +321,8 @@ module Config
             export_dir: settings_workflow_data.get_value(key: "EXPORT_DIR"),
             dry_run: settings_workflow_data.get_value(key: "DRY_RUN", checks: [BOOLEAN_CHECK]) == "true",
             remove_export: settings_workflow_data.get_value(key: "REMOVE_EXPORT", checks: [BOOLEAN_CHECK]) == "true"
-          )
+          ),
+          detect_hidden: data.get_value(key: "SETTINGS_DETECT_HIDDEN", checks:[BOOLEAN_CHECK]) == "true"
         ),
         repository: RepositoryConfig.new(
           name: data.get_value(key: "REPOSITORY_NAME"),

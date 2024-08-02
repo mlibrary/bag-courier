@@ -14,6 +14,8 @@ class BagAdapterTest < Minitest::Test
     # Reset test directory
     FileUtils.rm_r(@test_dir_path) if File.exist?(@test_dir_path)
     Dir.mkdir @test_dir_path
+    @detect_hidden_yes = true
+    @detect_hidden_no = false
   end
 
   def add_data_file
@@ -25,14 +27,14 @@ class BagAdapterTest < Minitest::Test
 
   def test_bag_dir
     assert_equal(
-      BagAdapter::BagAdapter.new(@test_dir_path).bag_dir,
+      BagAdapter::BagAdapter.new(@test_dir_path, @detect_hidden_no).bag_dir,
       @test_dir_path
     )
   end
 
   def test_data_dir
     assert_equal(
-      BagAdapter::BagAdapter.new(@test_dir_path).data_dir,
+      BagAdapter::BagAdapter.new(@test_dir_path, @detect_hidden_no).data_dir,
       @data_dir_path
     )
   end
@@ -46,7 +48,7 @@ class BagAdapterTest < Minitest::Test
     TEXT
 
     Date.stub :today, Date.new(2023, 12, 22) do
-      bag = BagAdapter::BagAdapter.new(@test_dir_path)
+      bag = BagAdapter::BagAdapter.new(@test_dir_path, @detect_hidden_no)
       add_data_file
       bag.add_bag_info(@test_bag_info_data)
     end
@@ -56,7 +58,7 @@ class BagAdapterTest < Minitest::Test
   end
 
   def test_add_tag_file
-    bag = BagAdapter::BagAdapter.new(@test_dir_path)
+    bag = BagAdapter::BagAdapter.new(@test_dir_path, @detect_hidden_no)
     bag.add_tag_file!(tag_file_text: @test_tag_file_text, file_name: @test_tag_file_name)
 
     expected_file_path = File.join(@test_dir_path, @test_tag_file_name)
@@ -68,7 +70,7 @@ class BagAdapterTest < Minitest::Test
   end
 
   def test_add_manifests
-    bag = BagAdapter::BagAdapter.new(@test_dir_path)
+    bag = BagAdapter::BagAdapter.new(@test_dir_path, @detect_hidden_no)
     add_data_file
     bag.add_tag_file!(tag_file_text: @test_tag_file_text, file_name: @test_tag_file_name)
     bag.add_manifests
