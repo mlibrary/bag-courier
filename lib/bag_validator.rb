@@ -7,8 +7,9 @@ class BagValidator
 end
 
 class InnerBagValidator < BagValidator
-  def initialize(inner_bag_name)
+  def initialize(inner_bag_name, detect_hidden)
     @inner_bag_name = inner_bag_name
+    @detect_hidden = detect_hidden
   end
 
   def validate(data_path)
@@ -17,7 +18,7 @@ class InnerBagValidator < BagValidator
       raise BagValidationError, "Inner bag path does not exist: #{path}"
     end
 
-    @bag = BagIt::Bag.new(path)
+    @bag = BagIt::Bag.new(path, {}, false, @detect_hidden)
     validity = @bag.valid?
 
     if !validity
