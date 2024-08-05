@@ -27,10 +27,13 @@ describe InnerBagValidator do
         file.puts "Some sample text for testing inner bag"
       end
       @detect_hidden_no = false
-      @innerbag = BagAdapter::BagAdapter.new(@data_dir_path, @detect_hidden_no)
+      @innerbag = BagAdapter::BagAdapter.new(
+        target_dir: @data_dir_path, detect_hidden: @detect_hidden_no)
       @innerbag.add_manifests
 
-      @bag = BagAdapter::BagAdapter.new(@test_dir_path, @detect_hidden_no)
+      @bag = BagAdapter::BagAdapter.new(
+        target_dir: @test_dir_path, detect_hidden: @detect_hidden_no
+      )
       @test_data_dir = @bag.data_dir
       @bag.add_manifests
     end
@@ -80,15 +83,18 @@ describe InnerBagValidator do
         file.puts "Some sample text for testing inner bag"
       end
       @detect_hidden_yes = true
-      @innerbag = BagAdapter::BagAdapter.new(@data_dir_path, @detect_hidden_yes)
+      @innerbag = BagAdapter::BagAdapter.new(
+        target_dir: @data_dir_path, detect_hidden: @detect_hidden_yes
+      )
       @innerbag.add_manifests
 
-      @bag = BagAdapter::BagAdapter.new(@test_dir_path, @detect_hidden_yes)
+      @bag = BagAdapter::BagAdapter.new(
+        target_dir: @test_dir_path, detect_hidden: @detect_hidden_yes)
       @test_data_dir = @bag.data_dir
       @bag.add_manifests
     end
 
-     it "returns true if the bag is valid" do
+    it "returns true if the bag is valid" do
       result = InnerBagValidator.new(@inner_bag_path, @detect_hidden_yes).validate(@test_data_dir)
       assert(result)
     end
@@ -157,10 +163,14 @@ describe InnerBagValidator do
         file.write(@txt_file_content)
       end
 
-      @innerbag = BagAdapter::BagAdapter.new(@data_dir_path, @detect_hidden_yes)
+      @innerbag = BagAdapter::BagAdapter.new(
+        target_dir: @data_dir_path, detect_hidden: @detect_hidden_yes
+      )
       @innerbag.add_manifests
 
-      @bag = BagAdapter::BagAdapter.new(@test_dir_path, @detect_hidden_yes)
+      @bag = BagAdapter::BagAdapter.new(
+        target_dir: @test_dir_path, detect_hidden: @detect_hidden_yes
+      )
       @test_data_dir = @bag.data_dir
       @bag.add_manifests
     end
@@ -234,10 +244,14 @@ describe InnerBagValidator do
         file.write(@txt_file_content)
       end
 
-      @innerbag = BagAdapter::BagAdapter.new(@data_dir_path, @detect_hidden_no)
+      @innerbag = BagAdapter::BagAdapter.new(
+        target_dir: @data_dir_path, detect_hidden: @detect_hidden_no
+      )
       @innerbag.add_manifests
 
-      @bag = BagAdapter::BagAdapter.new(@test_dir_path, @detect_hidden_no)
+      @bag = BagAdapter::BagAdapter.new(
+        target_dir: @test_dir_path, detect_hidden: @detect_hidden_no
+      )
       @test_data_dir = @bag.data_dir
       @bag.add_manifests
     end

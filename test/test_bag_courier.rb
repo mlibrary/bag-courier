@@ -58,7 +58,9 @@ class BagCourierTest < SequelTestCase
     FileUtils.rm_r(@test_dir_path) if File.exist?(@test_dir_path)
     FileUtils.mkdir_p([@test_dir_path, @prep_path, @export_path, @package_path])
     @detect_hidden = true
-    innerbag = BagAdapter::BagAdapter.new(@package_path, @detect_hidden)
+    innerbag = BagAdapter::BagAdapter.new(
+      target_dir: @package_path, detect_hidden: @detect_hidden
+    )
 
     File.write(
       File.join(@package_path, "data", "something.txt"),
