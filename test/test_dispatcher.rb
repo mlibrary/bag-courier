@@ -16,6 +16,7 @@ require_relative "../lib/status_event_repository"
 
 class APTrustDispatcherTest < SequelTestCase
   def setup
+    @detect_hidden = true
     workflow_settings = Config::WorkflowConfig.new(
       working_dir: "/prep",
       export_dir: "/export",
@@ -51,7 +52,8 @@ class APTrustDispatcherTest < SequelTestCase
       extra_bag_info_data: {"something_extra" => true},
       target_client: target_client,
       bag_repo: BagRepository::BagDatabaseRepository.new,
-      status_event_repo: StatusEventRepository::StatusEventDatabaseRepository.new
+      status_event_repo: StatusEventRepository::StatusEventDatabaseRepository.new,
+      detect_hidden: @detect_hidden
     )
 
     @bag_identifier = "some-repo.some-context-00001"
@@ -69,7 +71,7 @@ class APTrustDispatcherTest < SequelTestCase
         remote_client: RemoteClient::FileSystemRemoteClient.new("/some/path"),
         remote_path: "some_subdir"
       ),
-      validator: InnerBagValidator.new("some-inner-bag-name")
+      validator: InnerBagValidator.new("some-inner-bag-name", @detect_hidden)
     )
   end
 
