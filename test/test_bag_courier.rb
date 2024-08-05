@@ -57,7 +57,8 @@ class BagCourierTest < SequelTestCase
     @package_path = File.join(@test_dir_path, "package")
     FileUtils.rm_r(@test_dir_path) if File.exist?(@test_dir_path)
     FileUtils.mkdir_p([@test_dir_path, @prep_path, @export_path, @package_path])
-    innerbag = BagAdapter::BagAdapter.new(@package_path)
+    @detect_hidden = true
+    innerbag = BagAdapter::BagAdapter.new(@package_path, @detect_hidden)
 
     File.write(
       File.join(@package_path, "data", "something.txt"),
@@ -65,7 +66,7 @@ class BagCourierTest < SequelTestCase
     )
     innerbag.add_bag_info({})
     innerbag.add_manifests
-    @validator = InnerBagValidator.new("package")
+    @validator = InnerBagValidator.new("package", @detect_hidden)
     # Set up remote-related objects
     @data_transfer = DataTransfer::RemoteClientDataTransfer.new(
       remote_client: RemoteClient::FileSystemRemoteClient.new(
