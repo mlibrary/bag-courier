@@ -1,4 +1,4 @@
-require "bagit"
+require_relative "bag_adapter"
 
 class BagValidator
   def validate(path)
@@ -7,7 +7,7 @@ class BagValidator
 end
 
 class InnerBagValidator < BagValidator
-  def initialize(inner_bag_name, detect_hidden)
+  def initialize(inner_bag_name:, detect_hidden: true)
     @inner_bag_name = inner_bag_name
     @detect_hidden = detect_hidden
   end
@@ -18,13 +18,15 @@ class InnerBagValidator < BagValidator
       raise BagValidationError, "Inner bag path does not exist: #{path}"
     end
 
-    @bag = BagIt::Bag.new(path, {}, false, @detect_hidden)
-    validity = @bag.valid?
+    bag = BagAdapter::BagAdapter.new(
+      target_dir: path, detect_hidden: @detect_hidden
+    )
+    result = bag.check_if_valid
 
-    if !validity
-      raise BagValidationError, "Inner bag is not valid: #{@bag.errors.full_messages.join(", ")}"
+    if !result.is_valid
+      raise BagValidationError, "Inner bag is not valid: #{result.error_message}"
     else
-      validity
+      result.is_valid
     end
   end
 end

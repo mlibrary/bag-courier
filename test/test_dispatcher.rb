@@ -71,7 +71,10 @@ class APTrustDispatcherTest < SequelTestCase
         remote_client: RemoteClient::FileSystemRemoteClient.new("/some/path"),
         remote_path: "some_subdir"
       ),
-      validator: InnerBagValidator.new("some-inner-bag-name", @detect_hidden)
+      validator: InnerBagValidator.new(
+        inner_bag_name: "some-inner-bag-name",
+        detect_hidden: @detect_hidden
+      )
     )
   end
 
