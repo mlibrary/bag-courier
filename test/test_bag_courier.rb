@@ -68,7 +68,7 @@ class BagCourierTest < SequelTestCase
     )
     innerbag.add_bag_info({})
     innerbag.add_manifests
-    @validator = InnerBagValidator.new("package", @detect_hidden)
+    @validator = InnerBagValidator.new(inner_bag_name: "package", detect_hidden: @detect_hidden)
     # Set up remote-related objects
     @data_transfer = DataTransfer::RemoteClientDataTransfer.new(
       remote_client: RemoteClient::FileSystemRemoteClient.new(
@@ -123,7 +123,13 @@ class BagCourierTest < SequelTestCase
     )
   end
 
-  def create_courier(dry_run:, target_client:, validator: @validator, remove_export: false, detect_hidden:)
+  def create_courier(
+    dry_run:,
+    target_client:,
+    detect_hidden:,
+    validator: @validator,
+    remove_export: false
+  )
     BagCourier::BagCourier.new(
       bag_id: @bag_id,
       bag_info: @bag_info,

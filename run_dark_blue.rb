@@ -83,7 +83,9 @@ class DarkBlueJob
         remote_client: remote_client,
         remote_path: package_data.remote_path
       ),
-      validator: InnerBagValidator.new(package_data.dir_name, @detect_hidden)
+      validator: InnerBagValidator.new(
+        inner_bag_name: package_data.dir_name, detect_hidden: @detect_hidden
+      )
     )
     logger.measure_info("Delivered package #{package_data.metadata.id}.") do
       courier.deliver

@@ -3,6 +3,13 @@ require "bagit"
 require_relative "../services"
 
 module BagAdapter
+  ValidationResult = Struct.new(
+    "ValidationResult",
+    :is_valid,
+    :error_message,
+    keyword_init: true
+  )
+
   class BagAdapter
     include DarkBlueLogger
 
@@ -50,6 +57,18 @@ module BagAdapter
       # 'tagmanifest-sha1.txt' is a bagit gem default, so we need to remove it manually.
       sha1tag = File.join(@bag.bag_dir, "tagmanifest-sha1.txt")
       File.delete(sha1tag) if File.exist?(sha1tag)
+    end
+
+    def check_if_valid
+      is_valid = @bag.valid?
+      if is_valid
+        ValidationResult.new(is_valid: is_valid, error_message: nil)
+      else
+        ValidationResult.new(
+          is_valid: is_valid,
+          error_message: @bag.errors.full_messages.join(", ")
+        )
+      end
     end
   end
 end
