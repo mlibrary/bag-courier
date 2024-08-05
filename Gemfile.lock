@@ -78,7 +78,7 @@ DEPENDENCIES
   mysql2 (~> 0.5.6)
   prometheus-client (~> 4.2.2)
   rake (~> 13.1)
-  rexml (~> 3.3.2)
+  rexml (~> 3.3.4)
   semantic_logger (~> 4.15)
   sequel (~> 5.77)
   sftp!
