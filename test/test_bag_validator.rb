@@ -11,8 +11,8 @@ describe InnerBagValidator do
       @test_dir_path = File.join(__dir__, "test_bag_val_dir")
 
       if Dir.exist?(@test_dir_path)
-       # Delete the folder
-       FileUtils.rm_rf(@test_dir_path)
+        # Delete the folder
+        FileUtils.rm_rf(@test_dir_path)
       end
 
       @inner_bag_path = "inner_test_bag"
@@ -38,8 +38,9 @@ describe InnerBagValidator do
       @bag.add_manifests
     end
 
-     it "returns true if the bag is valid" do
-      result = InnerBagValidator.new(@inner_bag_path, @detect_hidden_no).validate(@test_data_dir)
+    it "returns true if the bag is valid" do
+      result = InnerBagValidator.new(inner_bag_name: @inner_bag_path, detect_hidden: @detect_hidden_no)
+        .validate(@test_data_dir)
       assert(result)
     end
 
@@ -49,14 +50,16 @@ describe InnerBagValidator do
         file.puts "Invalid line"
       end
       assert_raises(BagValidationError) do
-        InnerBagValidator.new(@inner_bag_path, @detect_hidden_no).validate(@test_data_dir)
+        InnerBagValidator.new(inner_bag_name: @inner_bag_path, detect_hidden: @detect_hidden_no)
+          .validate(@test_data_dir)
       end
     end
 
     it "returns error if the bag path is not valid" do
       @random_path = @data_dir_path + "/test"
       assert_raises(BagValidationError) do
-        InnerBagValidator.new(@inner_bag_path, @detect_hidden_no).validate(@random_path)
+        InnerBagValidator.new(inner_bag_name: @inner_bag_path, detect_hidden: @detect_hidden_no)
+          .validate(@random_path)
       end
     end
   end
@@ -67,8 +70,8 @@ describe InnerBagValidator do
       @test_dir_path = File.join(__dir__, "test_bag_val_dir")
 
       if Dir.exist?(@test_dir_path)
-       # Delete the folder
-       FileUtils.rm_rf(@test_dir_path)
+        # Delete the folder
+        FileUtils.rm_rf(@test_dir_path)
       end
 
       @inner_bag_path = "inner_test_bag"
@@ -95,7 +98,7 @@ describe InnerBagValidator do
     end
 
     it "returns true if the bag is valid" do
-      result = InnerBagValidator.new(@inner_bag_path, @detect_hidden_yes).validate(@test_data_dir)
+      result = InnerBagValidator.new(inner_bag_name: @inner_bag_path, detect_hidden: @detect_hidden_yes).validate(@test_data_dir)
       assert(result)
     end
 
@@ -105,14 +108,16 @@ describe InnerBagValidator do
         file.puts "Invalid line"
       end
       assert_raises(BagValidationError) do
-        InnerBagValidator.new(@inner_bag_path, @detect_hidden_yes).validate(@test_data_dir)
+        InnerBagValidator.new(inner_bag_name: @inner_bag_path, detect_hidden: @detect_hidden_yes)
+          .validate(@test_data_dir)
       end
     end
 
     it "returns error if the bag path is not valid" do
       @random_path = @data_dir_path + "/test"
       assert_raises(BagValidationError) do
-        InnerBagValidator.new(@inner_bag_path, @detect_hidden_yes).validate(@random_path)
+        InnerBagValidator.new(inner_bag_name: @inner_bag_path, detect_hidden: @detect_hidden_yes)
+          .validate(@random_path)
       end
     end
   end
@@ -120,12 +125,11 @@ describe InnerBagValidator do
   describe "#validate_inner_bag with hidden files and detect hidden" do
     # Set up the test environment
     before do
-
       @test_dir_path = File.join(__dir__, "test_bag_val_dir")
 
       if Dir.exist?(@test_dir_path)
-       # Delete the folder
-       FileUtils.rm_rf(@test_dir_path)
+        # Delete the folder
+        FileUtils.rm_rf(@test_dir_path)
       end
 
       @inner_bag_path = "inner_test_bag"
@@ -176,7 +180,8 @@ describe InnerBagValidator do
     end
 
     it "returns true if the bag is valid with hidden files" do
-      result = InnerBagValidator.new(@inner_bag_path, @detect_hidden_yes).validate(@test_data_dir)
+      result = InnerBagValidator.new(inner_bag_name: @inner_bag_path, detect_hidden: @detect_hidden_yes)
+        .validate(@test_data_dir)
       assert(result)
     end
 
@@ -186,14 +191,16 @@ describe InnerBagValidator do
         file.puts "Invalid line"
       end
       assert_raises(BagValidationError) do
-        InnerBagValidator.new(@inner_bag_path, @detect_hidden_yes).validate(@test_data_dir)
+        InnerBagValidator.new(inner_bag_name: @inner_bag_path, detect_hidden: @detect_hidden_yes)
+          .validate(@test_data_dir)
       end
     end
 
     it "returns error if the bag path is not valid with hidden files" do
       @random_path = @data_dir_path + "/test"
       assert_raises(BagValidationError) do
-        InnerBagValidator.new(@inner_bag_path, @detect_hidden_yes).validate(@random_path)
+        InnerBagValidator.new(inner_bag_name: @inner_bag_path, detect_hidden: @detect_hidden_yes)
+          .validate(@random_path)
       end
     end
   end
@@ -201,7 +208,6 @@ describe InnerBagValidator do
   describe "#validate_inner_bag with hidden files and no detect hidden" do
     # Set up the test environment
     before do
-
       @test_dir_path = File.join(__dir__, "test_bag_val_dir")
 
       if Dir.exist?(@test_dir_path)
@@ -257,7 +263,8 @@ describe InnerBagValidator do
     end
 
     it "returns true if the bag is valid with hidden files" do
-      result = InnerBagValidator.new(@inner_bag_path, @detect_hidden_no).validate(@test_data_dir)
+      result = InnerBagValidator.new(inner_bag_name: @inner_bag_path, detect_hidden: @detect_hidden_no)
+        .validate(@test_data_dir)
       assert(result)
     end
 
@@ -267,14 +274,16 @@ describe InnerBagValidator do
         file.puts "Invalid line"
       end
       assert_raises(BagValidationError) do
-        InnerBagValidator.new(@inner_bag_path, @detect_hidden_no).validate(@test_data_dir)
+        InnerBagValidator.new(inner_bag_name: @inner_bag_path, detect_hidden: @detect_hidden_no)
+          .validate(@test_data_dir)
       end
     end
 
     it "returns error if the bag path is not valid with hidden files" do
       @random_path = @data_dir_path + "/test"
       assert_raises(BagValidationError) do
-        InnerBagValidator.new(@inner_bag_path, @detect_hidden_no).validate(@random_path)
+        InnerBagValidator.new(inner_bag_name: @inner_bag_path, detect_hidden: @detect_hidden_no)
+          .validate(@random_path)
       end
     end
   end
