@@ -108,7 +108,7 @@ module BagCourier
       begin
         track!(status: BagStatus::BAGGING)
         bag_path = File.join(@working_dir, @bag_id.to_s)
-        bag = BagAdapter::BagAdapter.new(bag_path, @detect_hidden)
+        bag = BagAdapter::BagAdapter.new(target_dir: bag_path, detect_hidden: @detect_hidden)
 
         track!(status: BagStatus::COPYING)
         logger.measure_info("Copied data for bag #{@bag_id} in #{@working_dir}.") do
