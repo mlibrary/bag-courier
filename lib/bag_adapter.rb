@@ -65,7 +65,6 @@ module BagAdapter
         is_valid: is_valid,
         error_message: is_valid ? nil : @bag.errors.full_messages.join(", ")
       )
-      end
     end
   end
 end
