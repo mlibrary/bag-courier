@@ -50,10 +50,10 @@ class APTrustDispatcherTest < SequelTestCase
       repository: repository,
       context: "some-context",
       extra_bag_info_data: {"something_extra" => true},
+      detect_hidden: @detect_hidden,
       target_client: target_client,
       bag_repo: BagRepository::BagDatabaseRepository.new,
-      status_event_repo: StatusEventRepository::StatusEventDatabaseRepository.new,
-      detect_hidden: @detect_hidden
+      status_event_repo: StatusEventRepository::StatusEventDatabaseRepository.new
     )
 
     @bag_identifier = "some-repo.some-context-00001"
