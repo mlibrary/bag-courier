@@ -109,4 +109,48 @@ class BagAdapterTest < Minitest::Test
       refute file_text.include?(@hidden_data_file_name)
     end
   end
+
+  def create_bag_with_hidden_file_not_in_manifest
+    bag = BagAdapter::BagAdapter.new(target_dir: @test_dir_path, detect_hidden: false)
+    add_data_files
+    bag.add_manifests
+  end
+
+  def create_bag_with_hidden_file_in_manifest
+    bag = BagAdapter::BagAdapter.new(target_dir: @test_dir_path, detect_hidden: true)
+    add_data_files
+    bag.add_manifests
+  end
+
+  def test_check_if_valid_when_hidden_file_in_manifest_and_detect_hidden_true
+    create_bag_with_hidden_file_in_manifest
+    bag = BagAdapter::BagAdapter.new(target_dir: @test_dir_path, detect_hidden: true)
+    result = bag.check_if_valid
+    assert result.is_valid
+    assert_nil result.error_message
+  end
+
+  def test_check_if_valid_when_hidden_file_not_in_manifest_and_detect_hidden_true
+    create_bag_with_hidden_file_not_in_manifest
+    bag = BagAdapter::BagAdapter.new(target_dir: @test_dir_path, detect_hidden: true)
+    result = bag.check_if_valid
+    refute result.is_valid
+    assert result.error_message.length > 0
+  end
+
+  def test_check_if_valid_when_hidden_file_in_manifest_and_detect_hidden_false
+    create_bag_with_hidden_file_in_manifest
+    bag = BagAdapter::BagAdapter.new(target_dir: @test_dir_path, detect_hidden: false)
+    result = bag.check_if_valid
+    refute result.is_valid
+    assert result.error_message.length > 0
+  end
+
+  def test_check_if_valid_when_hidden_file_not_in_manifest_and_detect_hidden_false
+    create_bag_with_hidden_file_not_in_manifest
+    bag = BagAdapter::BagAdapter.new(target_dir: @test_dir_path, detect_hidden: false)
+    result = bag.check_if_valid
+    assert result.is_valid
+    assert_nil result.error_message
+  end
 end
