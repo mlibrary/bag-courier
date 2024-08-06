@@ -126,7 +126,7 @@ class BagCourierTest < SequelTestCase
   def create_courier(
     dry_run:,
     target_client:,
-    detect_hidden:,
+    detect_hidden: true,
     validator: @validator,
     remove_export: false
   )
@@ -135,19 +135,19 @@ class BagCourierTest < SequelTestCase
       bag_info: @bag_info,
       tags: [@aptrust_info],
       data_transfer: @data_transfer,
+      detect_hidden: detect_hidden,
       working_dir: @prep_path,
       export_dir: @export_path,
       remove_export: remove_export,
       dry_run: dry_run,
       status_event_repo: @status_event_repo,
       target_client: target_client,
-      validator: validator,
-      detect_hidden: detect_hidden
+      validator: validator
     )
   end
 
   def test_deliver_with_dry_run_false
-    courier = create_courier(dry_run: false, detect_hidden: @detect_hidden, target_client: @mock_target_client)
+    courier = create_courier(dry_run: false, target_client: @mock_target_client)
     expected_tar_file_path = File.join(@export_path, @bag_id.to_s + ".tar")
     @mock_target_client.expect(:remote_text, "AWS S3 remote location in bucket fake")
     @mock_target_client.expect(:send_file, nil, local_file_path: expected_tar_file_path)
@@ -173,7 +173,7 @@ class BagCourierTest < SequelTestCase
   end
 
   def test_deliver_with_dry_run
-    courier = create_courier(dry_run: true, detect_hidden: @detect_hidden, target_client: @mock_target_client)
+    courier = create_courier(dry_run: true, target_client: @mock_target_client)
     courier.deliver
     @mock_target_client.verify
 
@@ -189,7 +189,7 @@ class BagCourierTest < SequelTestCase
   end
 
   def test_deliver_when_deposit_raises_error
-    courier = create_courier(dry_run: false, detect_hidden: @detect_hidden, target_client: @aptrust_target_client)
+    courier = create_courier(dry_run: false, target_client: @aptrust_target_client)
     raise_error = proc { raise RemoteClient::RemoteClientError, "specific details" }
     @aptrust_target_client.stub :send_file, raise_error do
       courier.deliver
@@ -203,7 +203,7 @@ class BagCourierTest < SequelTestCase
   end
 
   def test_deliver_with_remove_export
-    courier = create_courier(dry_run: false, detect_hidden: @detect_hidden, target_client: @mock_target_client, remove_export: true)
+    courier = create_courier(dry_run: false, target_client: @mock_target_client, remove_export: true)
     expected_tar_file_path = File.join(@export_path, @bag_id.to_s + ".tar")
     @mock_target_client.expect(:remote_text, "AWS S3 remote location in bucket fake")
     @mock_target_client.expect(:send_file, nil, local_file_path: expected_tar_file_path)
