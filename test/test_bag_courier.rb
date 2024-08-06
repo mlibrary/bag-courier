@@ -126,7 +126,7 @@ class BagCourierTest < SequelTestCase
   def create_courier(
     dry_run:,
     target_client:,
-    detect_hidden: true,
+    detect_hidden: @detect_hidden,
     validator: @validator,
     remove_export: false
   )
