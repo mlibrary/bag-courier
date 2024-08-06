@@ -34,13 +34,13 @@ module BagCourier
       tags:,
       data_transfer:,
       validator:,
+      detect_hidden:,
       target_client:,
       status_event_repo:,
       working_dir:,
       export_dir:,
       dry_run:,
-      remove_export:,
-      detect_hidden:
+      remove_export:
     )
       @bag_id = bag_id
       @bag_info = bag_info

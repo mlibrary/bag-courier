@@ -9,9 +9,7 @@ module Dispatcher
     def dispatch(
       object_metadata:,
       data_transfer:,
-      context: nil,
-      validator: nil,
-      extra_bag_info_data: nil
+      validator: nil
     )
       raise NotImplementedError
     end
@@ -26,9 +24,9 @@ module Dispatcher
       target_client:,
       context: nil,
       extra_bag_info_data: nil,
+      detect_hidden: true,
       status_event_repo: StatusEventRepository::StatusEventInMemoryRepository.new,
-      bag_repo: BagRepository::BagInMemoryRepository.new,
-      detect_hidden:
+      bag_repo: BagRepository::BagInMemoryRepository.new
     )
       @settings = settings
       @repository = repository
@@ -76,13 +74,13 @@ module Dispatcher
         tags: tags,
         data_transfer: data_transfer,
         validator: validator,
+        detect_hidden: @detect_hidden,
         target_client: @target_client,
         status_event_repo: @status_event_repo,
         working_dir: @settings.working_dir,
         export_dir: @settings.export_dir,
         dry_run: @settings.dry_run,
-        remove_export: @settings.remove_export,
-        detect_hidden: @detect_hidden
+        remove_export: @settings.remove_export
       )
     end
   end
