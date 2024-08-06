@@ -61,13 +61,10 @@ module BagAdapter
 
     def check_if_valid
       is_valid = @bag.valid?
-      if is_valid
-        ValidationResult.new(is_valid: is_valid, error_message: nil)
-      else
-        ValidationResult.new(
-          is_valid: is_valid,
-          error_message: @bag.errors.full_messages.join(", ")
-        )
+      ValidationResult.new(
+        is_valid: is_valid,
+        error_message: is_valid ? nil : @bag.errors.full_messages.join(", ")
+      )
       end
     end
   end
