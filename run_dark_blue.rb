@@ -48,11 +48,11 @@ class DarkBlueJob
         type: @aptrust_config.remote.type,
         settings: @aptrust_config.remote.settings
       ),
-      status_event_repo: @status_event_repo,
-      bag_repo: @bag_repo,
       context: context,
       extra_bag_info_data: extra_bag_info_data,
-      detect_hidden: @detect_hidden
+      detect_hidden: @detect_hidden,
+      status_event_repo: @status_event_repo,
+      bag_repo: @bag_repo
     )
   end
 
