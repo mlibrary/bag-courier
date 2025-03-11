@@ -11,7 +11,7 @@ The following sections cover how to configure, install, use, and test the projec
 
 Depending on the environment and configuration used with this project,
 you may need to install one or more of the following:
-- [Ruby 3.2](https://www.ruby-lang.org/en/downloads/)
+- [Ruby 3.3](https://www.ruby-lang.org/en/downloads/)
 - An SFTP client like OpenSSH (usually included with operating systems)
 - A `tar` executable (usually included, at least with Mac OS and Linux)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
