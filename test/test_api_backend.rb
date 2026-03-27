@@ -1,8 +1,7 @@
 require "faraday"
 require "faraday/retry"
-require "minitest/autorun"
-require "minitest/pride"
 
+require_relative "test_helper"
 require_relative "../lib/api_backend"
 
 class FaradayAPIBackendTest < Minitest::Test

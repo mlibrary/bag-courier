@@ -1,8 +1,6 @@
 require "securerandom"
 
-require "minitest/autorun"
-require "minitest/pride"
-
+require_relative "test_helper"
 require_relative "../lib/api_backend"
 require_relative "../lib/archivematica"
 require_relative "../lib/repository_data"

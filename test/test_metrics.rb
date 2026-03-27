@@ -1,6 +1,5 @@
-require "minitest/autorun"
-
 require_relative "setup_db"
+require_relative "test_helper"
 require_relative "../lib/bag_status"
 require_relative "../lib/bag_repository"
 require_relative "../lib/metrics"

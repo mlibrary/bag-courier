@@ -1,6 +1,4 @@
-require "minitest/autorun"
-require "minitest/pride"
-
+require_relative "test_helper"
 require_relative "../lib/tar_file_creator"
 
 class TarFileCreatorTest < Minitest::Test
