@@ -1,4 +1,4 @@
-FROM ruby:3.3.7-slim-bookworm AS base
+FROM ruby:3.4.9-slim-bookworm AS base
 
 LABEL maintainer="ssciolla@umich.edu"
 
@@ -13,8 +13,8 @@ ARG UNAME=app
 ARG UID=1000
 ARG GID=1000
 
-ENV BUNDLER_VERSION=2.6.5
-RUN gem install bundler -v 2.6.5
+ENV BUNDLER_VERSION=2.7.2
+RUN gem install bundler -v 2.7.2
 
 WORKDIR /app
 

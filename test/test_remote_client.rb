@@ -5,6 +5,7 @@ require "minitest/autorun"
 require "minitest/pride"
 require "sftp"
 
+require_relative "test_helper"
 require_relative "../lib/config"
 require_relative "../lib/remote_client"
 

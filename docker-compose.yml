@@ -35,6 +35,7 @@ services:
       - "3306:3306"
     healthcheck:
       test: mariadb-admin -uroot --password=root_pw status
+      start_period: 0s
       start_interval: 1s
       interval: 5s
       timeout: 5s

@@ -1,7 +1,5 @@
-require "minitest/autorun"
-require "minitest/pride"
-
 require_relative "setup_db"
+require_relative "test_helper"
 require_relative "../lib/bag_adapter"
 require_relative "../lib/bag_courier"
 require_relative "../lib/bag_repository"
