@@ -45,7 +45,7 @@ module Dispatcher
     )
       bag_id = BagCourier::BagId.new(
         repository: @repository.name,
-        object_id: object_metadata.id,
+        digital_object_id: object_metadata.id,
         context: @context
       )
       bag_info = BagTag::BagInfoBagTag.new(
@@ -65,7 +65,7 @@ module Dispatcher
       @bag_repo.create(
         identifier: bag_id.to_s,
         group_part: bag_id.part_id || 1,
-        repository_package_identifier: bag_id.object_id
+        repository_package_identifier: bag_id.digital_object_id
       )
 
       BagCourier::BagCourier.new(
