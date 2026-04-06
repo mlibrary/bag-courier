@@ -8,16 +8,16 @@ jobs:
     runs-on: ubuntu-latest
     services:
       mariadb:
-        image: mariadb:10
+        image: mariadb:11
         env:
           MARIADB_USER: user
           MARIADB_PASSWORD: password
           MARIADB_DATABASE: test_database
           MARIADB_ROOT_PASSWORD: password
         ports: ["3306:3306"]
-        options: --health-cmd="mysqladmin ping" --health-interval=5s --health-timeout=2s --health-retries=5
+        options: --health-cmd="mariadb-admin ping" --health-interval=5s --health-timeout=2s --health-retries=5
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Wait for MariaDB
         run: |
           for i in {1..10}
@@ -29,10 +29,10 @@ jobs:
               fi
           done
           exit 1
-      - name: Set up Ruby 3.2
-        uses: ruby/setup-ruby@v1
+      - name: Set up Ruby 3.4
+        uses: ruby/setup-ruby@4dc28cf14d77b0afa6832d9765ac422dbf0dfedd # v1.298
         with:
-          ruby-version: '3.2.3'
+          ruby-version: '3.4.9'
           bundler-cache: true
       - name: Run tests
         env:
