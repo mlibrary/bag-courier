@@ -1,5 +1,7 @@
 require "bundler/setup"
 
+require "pathname"
+
 require "aws-sdk-s3"
 require "sftp"
 
@@ -81,16 +83,20 @@ module RemoteClient
       )
     end
 
-    attr_reader :bucket
+    attr_reader :bucket, :transfer_manager
 
-    def initialize(bucket)
+    def initialize(bucket, transfer_manager)
       @bucket = bucket
+      @transfer_manager = transfer_manager
     end
 
     def self.from_config(region:, bucket_name:)
       s3 = Aws::S3::Resource.new(region: region)
       bucket = s3.bucket(bucket_name)
-      new(bucket)
+      transfer_manager = Aws::S3::TransferManager.new(
+        client: Aws::S3::Client.new(region: region)
+      )
+      new(bucket, transfer_manager)
     end
 
     def remote_text
@@ -102,8 +108,12 @@ module RemoteClient
       logger.debug("File name: #{file_name}")
       object_key = remote_path ? File.join(remote_path, file_name) : file_name
       logger.debug("Sending file \"#{file_name}\" to \"#{remote_path}\"")
-      aws_object = @bucket.object(object_key)
-      aws_object.upload_file(local_file_path, progress_callback: UPLOAD_PROGRESS)
+      @transfer_manager.upload_file(
+        local_file_path,
+        bucket: @bucket.name,
+        key: object_key,
+        progress_callback: UPLOAD_PROGRESS
+      )
     rescue Aws::S3::MultipartUploadError, Aws::S3::Errors::ServiceError => e
       raise RemoteClientError, "Error occurred while uploading file to AWS S3: #{e.full_message}"
     end
@@ -111,8 +121,11 @@ module RemoteClient
     def retrieve_file(remote_file_path:, local_dir_path:)
       file_name = File.basename(remote_file_path)
       logger.debug("Retrieving file \"#{file_name}\" and saving to \"#{local_dir_path}\"")
-      aws_object = @bucket.object(remote_file_path)
-      aws_object.download_file(File.join(local_dir_path, file_name))
+      @transfer_manager.download_file(
+        File.join(local_dir_path, file_name),
+        bucket: @bucket.name,
+        key: remote_file_path
+      )
     rescue Aws::S3::Errors::ServiceError => e
       raise RemoteClientError, "Error occurred while downloading file from AWS S3: #{e.full_message}"
     end
@@ -126,11 +139,19 @@ module RemoteClient
 
     # Retrieves files at remote_path, creating directories as necessary.
     def retrieve_from_path(local_path:, remote_path: nil)
-      logger.debug("Retrieving files (and parent directories) and placing at #{local_path}")
+      logger.debug("Retrieving content at path #{remote_path} and placing at #{local_path}")
       get_files_at_path(remote_path).each do |remote_file_path|
-        dir_path = File.join(local_path, File.dirname(remote_file_path))
-        FileUtils.mkdir_p(dir_path) unless Dir.exist?(dir_path)
-        retrieve_file(remote_file_path: remote_file_path, local_dir_path: dir_path)
+        if remote_path.nil?
+          new_full_path = File.join(local_path, remote_file_path)
+        else
+          relative_path = Pathname.new(remote_file_path).relative_path_from(Pathname.new(remote_path)).to_s
+          target_dir_name = File.basename(remote_path)
+          new_full_path = File.join(local_path, target_dir_name, relative_path)
+        end
+        logger.debug("Writing file at #{remote_file_path} to \"#{new_full_path}\"")
+        parent_path = File.dirname(new_full_path)
+        FileUtils.mkdir_p(parent_path) unless Dir.exist?(parent_path)
+        retrieve_file(remote_file_path: remote_file_path, local_dir_path: parent_path)
       end
     end
   end
