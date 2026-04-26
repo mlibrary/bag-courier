@@ -401,7 +401,7 @@ class SftpRemoteClientTest < Minitest::Test
       remote_path: remote_path, local_path: @local_dir
     )
     @mock_sftp_client.verify
-end
+  end
 end
 
 class RemoteClientFactoryTest < Minitest::Test
