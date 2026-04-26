@@ -24,7 +24,7 @@ module RemoteClient
       raise NotImplementedError
     end
 
-    def retrieve_from_path(local_path:, remote_path: nil)
+    def retrieve_from_path(local_path:, remote_path:)
       raise NotImplementedError
     end
   end
@@ -57,8 +57,11 @@ module RemoteClient
     end
 
     # Retrieves recursively all files and directories found at remote_path
-    def retrieve_from_path(local_path:, remote_path: nil)
-      full_path = File.join(@base_dir_path, remote_path || "")
+    def retrieve_from_path(local_path:, remote_path:)
+      if remote_path.nil? || remote_path === ""
+        raise RemoteClientError, "Remote path may not be empty"
+      end
+      full_path = File.join(@base_dir_path, remote_path)
       logger.debug("Full remote path: #{full_path}")
       file_paths = Dir[full_path + "/*"]
       logger.debug("Files found at path \"#{remote_path}\" in remote: #{file_paths}")
@@ -139,15 +142,28 @@ module RemoteClient
 
     # Retrieves files at remote_path, creating directories as necessary.
     def retrieve_from_path(local_path:, remote_path: nil)
+      if remote_path.nil? || remote_path === ""
+        raise RemoteClientError, "Remote path may not be empty"
+      end
+
       logger.debug("Retrieving content at path #{remote_path} and placing at #{local_path}")
       get_files_at_path(remote_path).each do |remote_file_path|
-        if remote_path.nil?
-          new_full_path = File.join(local_path, remote_file_path)
-        else
-          relative_path = Pathname.new(remote_file_path).relative_path_from(Pathname.new(remote_path)).to_s
-          target_dir_name = File.basename(remote_path)
-          new_full_path = File.join(local_path, target_dir_name, relative_path)
-        end
+        relative_path = Pathname.new(remote_file_path).relative_path_from(Pathname.new(remote_path)).to_s
+        logger.debug("relative path: #{relative_path}")
+        target_dir_name = File.basename(remote_path)
+        new_full_path = File.join(local_path, target_dir_name, relative_path)
+        logger.debug("Writing file at #{remote_file_path} to \"#{new_full_path}\"")
+        parent_path = File.dirname(new_full_path)
+        FileUtils.mkdir_p(parent_path) unless Dir.exist?(parent_path)
+        retrieve_file(remote_file_path: remote_file_path, local_dir_path: parent_path)
+      end
+    end
+
+    # Retrieves files in remote, creating directories as necessary.
+    def retrieve_all(local_path:)
+      logger.debug("Retrieving content in remote and placing at #{local_path}")
+      get_files_at_path.each do |remote_file_path|
+        new_full_path = File.join(local_path, remote_file_path)
         logger.debug("Writing file at #{remote_file_path} to \"#{new_full_path}\"")
         parent_path = File.dirname(new_full_path)
         FileUtils.mkdir_p(parent_path) unless Dir.exist?(parent_path)
@@ -183,8 +199,11 @@ module RemoteClient
       @client.get(remote_file_path, local_dir_path)
     end
 
-    def retrieve_from_path(local_path:, remote_path: nil)
-      @client.get_r(remote_path || ".", local_path)
+    def retrieve_from_path(local_path:, remote_path:)
+      if remote_path.nil? || remote_path === ""
+        raise RemoteClientError, "Remote path may not be empty."
+      end
+      @client.get_r(remote_path, local_path)
     end
   end
 

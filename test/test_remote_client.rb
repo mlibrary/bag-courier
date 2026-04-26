@@ -298,7 +298,7 @@ class AwsS3RemoteClientTest < Minitest::Test
     @mock_transfer_manager.verify
   end
 
-  def test_retrieve_from_path_when_no_remote_path
+  def test_retrieve_all_from_root
     local_path = File.join(@test_dir, "restore")
     remote_path = nil
 
@@ -325,8 +325,8 @@ class AwsS3RemoteClientTest < Minitest::Test
       bucket: @bucket_name,
       key: "/special/two.txt"
     )
-    @client_with_mocks.retrieve_from_path(
-      local_path: local_path, remote_path: remote_path
+    @client_with_mocks.retrieve_all(
+      local_path: local_path
     )
     @mock_bucket.verify
     @mock_transfer_manager.verify
@@ -401,13 +401,7 @@ class SftpRemoteClientTest < Minitest::Test
       remote_path: remote_path, local_path: @local_dir
     )
     @mock_sftp_client.verify
-  end
-
-  def test_retrieve_from_root_path
-    @mock_sftp_client.expect(:get_r, "some string output", [".", @local_dir])
-    @remote_client_with_mock.retrieve_from_path(local_path: @local_dir)
-    @mock_sftp_client.verify
-  end
+end
 end
 
 class RemoteClientFactoryTest < Minitest::Test
