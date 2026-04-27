@@ -147,10 +147,10 @@ module RemoteClient
       end
 
       logger.debug("Retrieving content at path #{remote_path} and placing at #{local_path}")
+      target_dir_name = File.basename(remote_path)
       get_files_at_path(remote_path).each do |remote_file_path|
         relative_path = Pathname.new(remote_file_path)
                                 .relative_path_from(Pathname.new(remote_path)).to_s
-        target_dir_name = File.basename(remote_path)
         new_full_path = File.join(local_path, target_dir_name, relative_path)
         logger.debug("Writing file at #{remote_file_path} to \"#{new_full_path}\"")
         parent_path = File.dirname(new_full_path)

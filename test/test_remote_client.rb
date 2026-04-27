@@ -275,8 +275,6 @@ class AwsS3RemoteClientTest < Minitest::Test
       [{prefix: remote_path}]
     )
     @mock_bucket.expect(:name, @bucket_name)
-    @mock_bucket.expect(:name, @bucket_name)
-
     @mock_transfer_manager.expect(
       :download_file,
       true,
@@ -284,6 +282,7 @@ class AwsS3RemoteClientTest < Minitest::Test
       bucket: @bucket_name,
       key: "/special/one.txt"
     )
+    @mock_bucket.expect(:name, @bucket_name)
     @mock_transfer_manager.expect(
       :download_file,
       true,
@@ -309,8 +308,6 @@ class AwsS3RemoteClientTest < Minitest::Test
       [{prefix: remote_path}]
     )
     @mock_bucket.expect(:name, @bucket_name)
-    @mock_bucket.expect(:name, @bucket_name)
-
     @mock_transfer_manager.expect(
       :download_file,
       true,
@@ -318,6 +315,7 @@ class AwsS3RemoteClientTest < Minitest::Test
       bucket: @bucket_name,
       key: "one.txt"
     )
+    @mock_bucket.expect(:name, @bucket_name)
     @mock_transfer_manager.expect(
       :download_file,
       true,
