@@ -157,7 +157,7 @@ class AwsS3RemoteClientTest < Minitest::Test
   end
 
   def test_send_file_to_remote_root
-    local_file_path = "/export/file.txt"
+    local_file_path = "export/file.txt"
 
     @mock_bucket.expect(:name, @bucket_name)
     @mock_transfer_manager.expect(
@@ -175,8 +175,8 @@ class AwsS3RemoteClientTest < Minitest::Test
   end
 
   def test_send_file_to_remote_path
-    local_file_path = "/export/file.txt"
-    remote_path = "/special/"
+    local_file_path = "export/file.txt"
+    remote_path = "special/"
 
     @mock_bucket.expect(:name, @bucket_name)
     @mock_transfer_manager.expect(
@@ -184,7 +184,7 @@ class AwsS3RemoteClientTest < Minitest::Test
       true,
       [local_file_path],
       bucket: @bucket_name,
-      key: "/special/file.txt",
+      key: "special/file.txt",
       progress_callback: ->(args){ RemoteClient::AwsS3RemoteClient::UPLOAD_PROGRESS }
     )
     @client_with_mocks.send_file(
@@ -195,14 +195,14 @@ class AwsS3RemoteClientTest < Minitest::Test
   end
 
   def test_retrieve_file
-    remote_file_path = "/special/file.txt"
-    local_dir_path = "/restore/"
+    remote_file_path = "special/file.txt"
+    local_dir_path = "restore/"
 
     @mock_bucket.expect(:name, @bucket_name)
     @mock_transfer_manager.expect(
       :download_file,
       true,
-      ["/restore/file.txt"],
+      ["restore/file.txt"],
       bucket: @bucket_name,
       key: remote_file_path
     )
@@ -217,8 +217,8 @@ class AwsS3RemoteClientTest < Minitest::Test
   end
 
   def test_retrieve_file_with_no_key_error
-    remote_file_path = "/special/file.txt"
-    local_dir_path = "/export/"
+    remote_file_path = "special/file.txt"
+    local_dir_path = "export/"
 
     raise_error = proc do
       raise Aws::S3::Errors::NoSuchKey.new(
@@ -260,7 +260,7 @@ class AwsS3RemoteClientTest < Minitest::Test
     client = RemoteClient::AwsS3RemoteClient.new(@mock_bucket, fake_transfer_manager);
     fake_transfer_manager.stub :upload_file, raise_error do
       assert_raises RemoteClient::RemoteClientError do
-        client.send_file(local_file_path: "/export/file.txt")
+        client.send_file(local_file_path: "export/file.txt")
       end
     end
     @mock_bucket.verify
@@ -268,12 +268,12 @@ class AwsS3RemoteClientTest < Minitest::Test
 
   def test_retrieve_from_path
     local_path = File.join(@test_dir, "restore")
-    remote_path = "/special/"
+    remote_path = "special/"
 
     @mock_bucket.expect(
       :objects,
       # Approximating the structure of Aws::S3::ObjectSummary::Collection
-      [FakeObject.new(key: "/special/one.txt"), FakeObject.new(key: "/special/two.txt")].to_enum,
+      [FakeObject.new(key: "special/one.txt"), FakeObject.new(key: "special/two.txt")].to_enum,
       [{prefix: remote_path}]
     )
     @mock_bucket.expect(:name, @bucket_name)
@@ -282,7 +282,7 @@ class AwsS3RemoteClientTest < Minitest::Test
       true,
       [File.join(local_path, "special", "one.txt")],
       bucket: @bucket_name,
-      key: "/special/one.txt"
+      key: "special/one.txt"
     )
     @mock_bucket.expect(:name, @bucket_name)
     @mock_transfer_manager.expect(
@@ -290,13 +290,32 @@ class AwsS3RemoteClientTest < Minitest::Test
       true,
       [File.join(local_path, "special", "two.txt")],
       bucket: @bucket_name,
-      key: "/special/two.txt"
+      key: "special/two.txt"
     )
     @client_with_mocks.retrieve_from_path(
       local_path: local_path, remote_path: remote_path
     )
     @mock_bucket.verify
     @mock_transfer_manager.verify
+  end
+
+  def test_retrieve_from_path_when_a_key_is_invalid
+    local_path = File.join(@test_dir, "restore")
+    remote_path = "special/"
+
+    @mock_bucket.expect(
+      :objects,
+      # Approximating the structure of Aws::S3::ObjectSummary::Collection
+      [FakeObject.new(key: "special/one.txt"), FakeObject.new(key: "special/../evil.txt")].to_enum,
+      [{prefix: remote_path}]
+    )
+    assert_raises RemoteClient::RemoteClientError do
+      @client_with_mocks.retrieve_from_path(
+        local_path: local_path, remote_path: remote_path
+      )
+    end
+
+    @mock_bucket.verify
   end
 
   def test_retrieve_all_from_root
@@ -306,7 +325,7 @@ class AwsS3RemoteClientTest < Minitest::Test
     @mock_bucket.expect(
       :objects,
       # Approximating the structure of Aws::S3::ObjectSummary::Collection
-      [FakeObject.new(key: "one.txt"), FakeObject.new(key: "/special/two.txt")].to_enum,
+      [FakeObject.new(key: "one.txt"), FakeObject.new(key: "special/two.txt")].to_enum,
       [{prefix: remote_path}]
     )
     @mock_bucket.expect(:name, @bucket_name)
@@ -323,7 +342,7 @@ class AwsS3RemoteClientTest < Minitest::Test
       true,
       [File.join(local_path, "special", "two.txt")],
       bucket: @bucket_name,
-      key: "/special/two.txt"
+      key: "special/two.txt"
     )
     @client_with_mocks.retrieve_all(
       local_path: local_path
@@ -331,6 +350,24 @@ class AwsS3RemoteClientTest < Minitest::Test
     @mock_bucket.verify
     @mock_transfer_manager.verify
   end
+
+  def test_retrieve_all_from_root_when_key_is_bad
+    local_path = File.join(@test_dir, "restore")
+    remote_path = nil
+
+    @mock_bucket.expect(
+      :objects,
+      # Approximating the structure of Aws::S3::ObjectSummary::Collection
+      [FakeObject.new(key: "one.txt"), FakeObject.new(key: "/two.txt")].to_enum,
+      [{prefix: remote_path}]
+    )
+
+    assert_raises RemoteClient::RemoteClientError do
+      @client_with_mocks.retrieve_all(local_path: local_path)
+    end
+    @mock_bucket.verify
+  end
+
 
   def teardown
     FileUtils.rm_r(@test_dir)

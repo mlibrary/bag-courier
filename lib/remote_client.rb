@@ -86,6 +86,18 @@ module RemoteClient
       )
     end
 
+    def self.validate_remote_path(path)
+      if path.start_with?("/")
+        raise RemoteClientError, "Remote path must not start with \"/\"; remote path provided: #{path}"
+      end
+      Pathname.new(path).each_filename do |segment|
+        if segment.strip === ".."
+          message = "Remote path must not include segments of \"..\"; remote path provided: #{path}"
+          raise RemoteClientError, message
+        end
+      end
+    end
+
     attr_reader :bucket, :transfer_manager
 
     def initialize(bucket, transfer_manager)
@@ -145,10 +157,16 @@ module RemoteClient
       if remote_path.nil? || remote_path === ""
         raise RemoteClientError, "Remote path may not be empty"
       end
+      AwsS3RemoteClient.validate_remote_path(remote_path)
+
+      remote_file_paths = get_files_at_path(remote_path)
+      remote_file_paths.each do |remote_file_path|
+        AwsS3RemoteClient.validate_remote_path(remote_file_path)
+      end
 
       logger.debug("Retrieving content at path #{remote_path} and placing at #{local_path}")
       target_dir_name = File.basename(remote_path)
-      get_files_at_path(remote_path).each do |remote_file_path|
+      remote_file_paths.each do |remote_file_path|
         relative_path = Pathname.new(remote_file_path)
                                 .relative_path_from(Pathname.new(remote_path)).to_s
         new_full_path = File.join(local_path, target_dir_name, relative_path)
@@ -161,8 +179,13 @@ module RemoteClient
 
     # Retrieves files in remote, creating directories as necessary.
     def retrieve_all(local_path:)
+      remote_file_paths = get_files_at_path
+      remote_file_paths.each do |remote_file_path|
+        AwsS3RemoteClient.validate_remote_path(remote_file_path)
+      end
+
       logger.debug("Retrieving content in remote and placing at #{local_path}")
-      get_files_at_path.each do |remote_file_path|
+      remote_file_paths.each do |remote_file_path|
         new_full_path = File.join(local_path, remote_file_path)
         logger.debug("Writing file at #{remote_file_path} to \"#{new_full_path}\"")
         parent_path = File.dirname(new_full_path)
