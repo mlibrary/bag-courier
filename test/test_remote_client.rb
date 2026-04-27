@@ -241,6 +241,7 @@ class AwsS3RemoteClientTest < Minitest::Test
         )
       end
     end
+    @mock_bucket.verify
   end
 
   def test_send_file_with_multipart_upload_error
@@ -262,6 +263,7 @@ class AwsS3RemoteClientTest < Minitest::Test
         client.send_file(local_file_path: "/export/file.txt")
       end
     end
+    @mock_bucket.verify
   end
 
   def test_retrieve_from_path

@@ -141,7 +141,7 @@ module RemoteClient
     private :get_files_at_path
 
     # Retrieves files at remote_path, creating directories as necessary.
-    def retrieve_from_path(local_path:, remote_path: nil)
+    def retrieve_from_path(local_path:, remote_path:)
       if remote_path.nil? || remote_path === ""
         raise RemoteClientError, "Remote path may not be empty"
       end
