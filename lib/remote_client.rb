@@ -11,6 +11,14 @@ module RemoteClient
   class RemoteClientError < StandardError
   end
 
+  class RemotePathUtility
+    def self.ensure_presence(path)
+      if path.nil? || path.empty?
+        raise RemoteClientError, "Remote path may not be empty."
+      end
+    end
+  end
+
   class RemoteClientBase
     def remote_text
       raise NotImplementedError
@@ -58,9 +66,7 @@ module RemoteClient
 
     # Retrieves recursively all files and directories found at remote_path
     def retrieve_from_path(local_path:, remote_path:)
-      if remote_path.nil? || remote_path === ""
-        raise RemoteClientError, "Remote path may not be empty"
-      end
+      RemotePathUtility.ensure_presence(remote_path)
       full_path = File.join(@base_dir_path, remote_path)
       logger.debug("Full remote path: #{full_path}")
       file_paths = Dir[full_path + "/*"]
@@ -154,14 +160,12 @@ module RemoteClient
 
     # Retrieves files at remote_path, creating directories as necessary.
     def retrieve_from_path(local_path:, remote_path:)
-      if remote_path.nil? || remote_path === ""
-        raise RemoteClientError, "Remote path may not be empty"
-      end
-      AwsS3RemoteClient.validate_remote_path(remote_path)
+      RemotePathUtility.ensure_presence(remote_path)
+      self.class.validate_remote_path(remote_path)
 
       remote_file_paths = get_files_at_path(remote_path)
       remote_file_paths.each do |remote_file_path|
-        AwsS3RemoteClient.validate_remote_path(remote_file_path)
+        self.class.validate_remote_path(remote_file_path)
       end
 
       logger.debug("Retrieving content at path #{remote_path} and placing at #{local_path}")
@@ -181,7 +185,7 @@ module RemoteClient
     def retrieve_all(local_path:)
       remote_file_paths = get_files_at_path
       remote_file_paths.each do |remote_file_path|
-        AwsS3RemoteClient.validate_remote_path(remote_file_path)
+        self.class.validate_remote_path(remote_file_path)
       end
 
       logger.debug("Retrieving content in remote and placing at #{local_path}")
@@ -223,9 +227,7 @@ module RemoteClient
     end
 
     def retrieve_from_path(local_path:, remote_path:)
-      if remote_path.nil? || remote_path === ""
-        raise RemoteClientError, "Remote path may not be empty."
-      end
+      RemotePathUtility.ensure_presence(remote_path)
       @client.get_r(remote_path, local_path)
     end
   end
