@@ -67,13 +67,13 @@ module RemoteClient
     # Retrieves recursively all files and directories found at remote_path
     def retrieve_from_path(local_path:, remote_path:)
       RemotePathUtility.ensure_presence(remote_path)
-      full_path = File.join(@base_dir_path, remote_path)
-      logger.debug("Full remote path: #{full_path}")
-      file_paths = Dir[full_path + "/*"]
+      full_remote_path = File.join(@base_dir_path, remote_path)
+      logger.debug("Full remote path: #{full_remote_path}")
+      file_paths = Dir[full_remote_path + "/*"]
       logger.debug("Files found at path \"#{remote_path}\" in remote: #{file_paths}")
 
       # Copies over current data
-      FileUtils.cp_r(full_path, local_path)
+      FileUtils.cp_r(full_remote_path, local_path)
       logger.debug("Retrieving files (and directories) and placing at \"#{local_path}\"")
     end
   end
