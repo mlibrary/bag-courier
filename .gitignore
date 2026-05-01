@@ -16,3 +16,5 @@ test/*_test
 
 # Misc.
 .DS_Store
+
+.byebug_history

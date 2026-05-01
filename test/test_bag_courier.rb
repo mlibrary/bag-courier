@@ -52,7 +52,8 @@ class BagCourierTest < SequelTestCase
     @test_dir_path = File.join(__dir__, "bag_courier_test")
     @prep_path = File.join(@test_dir_path, "prep")
     @export_path = File.join(@test_dir_path, "export")
-    @package_path = File.join(@test_dir_path, "package")
+    @preservation_path = File.join(@test_dir_path, "preservation")
+    @package_path = File.join(@preservation_path, "package")
     FileUtils.rm_r(@test_dir_path) if File.exist?(@test_dir_path)
     FileUtils.mkdir_p([@test_dir_path, @prep_path, @export_path, @package_path])
     @detect_hidden = true
@@ -70,8 +71,9 @@ class BagCourierTest < SequelTestCase
     # Set up remote-related objects
     @data_transfer = DataTransfer::RemoteClientDataTransfer.new(
       remote_client: RemoteClient::FileSystemRemoteClient.new(
-        File.join(@package_path)
-      )
+        File.join(@preservation_path)
+      ),
+      remote_path: "package"
     )
 
     @mock_target_client = Minitest::Mock.new
