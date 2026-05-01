@@ -23,4 +23,7 @@ end
 group :test do
   gem "minitest", "~> 5.27.0"
   gem "rake", "~> 13.3.1"
+  gem "byebug"
+  gem "rspec"
+  gem "rspec-temp_dir"
 end
