@@ -135,7 +135,7 @@ module RemoteClient
         bucket: @bucket.name,
         key: remote_file_path
       )
-    rescue Aws::S3::Errors::ServiceError => e
+    rescue Aws::S3::MultipartDownloadError, Aws::S3::Errors::NoSuchKey => e
       raise RemoteClientError, "Error occurred while downloading file from AWS S3: #{e.full_message}"
     end
 
@@ -161,12 +161,16 @@ module RemoteClient
         source = File.join(staging_dir, remote_path)
         FileUtils.mv(source, local_path)
       end
+    rescue Aws::S3::DirectoryDownloadError => e
+      raise RemoteClientError, "Error occurred while downloading directory from AWS S3: #{e.full_message}"
     end
 
     # Retrieves files in remote, creating directories as necessary.
     def retrieve_all(local_path:)
       logger.debug("Retrieving content in remote and placing at #{local_path}")
       transfer_manager.download_directory(local_path, bucket: @bucket.name)
+    rescue Aws::S3::DirectoryDownloadError => e
+      raise RemoteClientError, "Error occurred while downloading directory from AWS S3: #{e.full_message}"
     end
   end
 
