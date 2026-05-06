@@ -4,6 +4,13 @@ Minitest::TestTask.create
 
 task default: :test
 
+begin
+  require 'rspec/core/rake_task'
+  RSpec::Core::RakeTask.new(:spec)
+rescue LoadError
+end
+
+
 namespace :db do
   desc "Run migrations"
   task :migrate, [:version] do |t, args|
