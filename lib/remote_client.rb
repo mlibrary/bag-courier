@@ -92,18 +92,6 @@ module RemoteClient
       )
     end
 
-    def self.validate_remote_path(path)
-      if path.start_with?("/")
-        raise RemoteClientError, "Remote path must not start with \"/\"; remote path provided: #{path}"
-      end
-      Pathname.new(path).each_filename do |segment|
-        if segment.strip === ".."
-          message = "Remote path must not include segments of \"..\"; remote path provided: #{path}"
-          raise RemoteClientError, message
-        end
-      end
-    end
-
     attr_reader :bucket, :transfer_manager
 
     def initialize(bucket, transfer_manager)
@@ -161,41 +149,24 @@ module RemoteClient
     # Retrieves files at remote_path, creating directories as necessary.
     def retrieve_from_path(local_path:, remote_path:)
       RemotePathUtility.ensure_presence(remote_path)
-      self.class.validate_remote_path(remote_path)
-
-      remote_file_paths = get_files_at_path(remote_path)
-      remote_file_paths.each do |remote_file_path|
-        self.class.validate_remote_path(remote_file_path)
-      end
 
       logger.debug("Retrieving content at path #{remote_path} and placing at #{local_path}")
-      target_dir_name = File.basename(remote_path)
-      remote_file_paths.each do |remote_file_path|
-        relative_path = Pathname.new(remote_file_path)
-          .relative_path_from(Pathname.new(remote_path)).to_s
-        new_full_path = File.join(local_path, target_dir_name, relative_path)
-        logger.debug("Writing file at #{remote_file_path} to \"#{new_full_path}\"")
-        parent_path = File.dirname(new_full_path)
-        FileUtils.mkdir_p(parent_path) unless Dir.exist?(parent_path)
-        retrieve_file(remote_file_path: remote_file_path, local_dir_path: parent_path)
+
+      Dir.mktmpdir do |staging_dir|
+        transfer_manager.download_directory(
+          staging_dir,
+          bucket: @bucket.name,
+          s3_prefix: remote_path
+        )
+        source = File.join(staging_dir, remote_path)
+        FileUtils.mv(source, local_path)
       end
     end
 
     # Retrieves files in remote, creating directories as necessary.
     def retrieve_all(local_path:)
-      remote_file_paths = get_files_at_path
-      remote_file_paths.each do |remote_file_path|
-        self.class.validate_remote_path(remote_file_path)
-      end
-
       logger.debug("Retrieving content in remote and placing at #{local_path}")
-      remote_file_paths.each do |remote_file_path|
-        new_full_path = File.join(local_path, remote_file_path)
-        logger.debug("Writing file at #{remote_file_path} to \"#{new_full_path}\"")
-        parent_path = File.dirname(new_full_path)
-        FileUtils.mkdir_p(parent_path) unless Dir.exist?(parent_path)
-        retrieve_file(remote_file_path: remote_file_path, local_dir_path: parent_path)
-      end
+      transfer_manager.download_directory(local_path, bucket: @bucket.name)
     end
   end
 
