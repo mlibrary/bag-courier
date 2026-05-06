@@ -62,6 +62,12 @@ class FakeTransferManagerForDirectoryDownloadError
   end
 end
 
+Rspec.shared_examples "a remote client" do
+  it { is_expected.to respond_to(:remote_text) }
+  it { is_expected.to respond_to(:send_file) }
+  it { is_expected.to respond_to(:retrieve_file) }
+  it { is_expected.to respond_to(:retrieve_from_path) }
+end
 
 describe RemoteClient::AwsS3RemoteClient do
   include_context "uses temp dir"
@@ -74,6 +80,7 @@ describe RemoteClient::AwsS3RemoteClient do
   subject do
     described_class.new(@bucket, @transfer_manager)
   end
+  it_behaves_like "a remote client"
 
   context "#from_config" do
     it "sets up an instance with the right classes" do
