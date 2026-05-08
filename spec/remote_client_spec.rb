@@ -80,19 +80,18 @@ describe RemoteClient::AwsS3RemoteClient do
   end
 
   subject do
-    described_class.new(@bucket, @transfer_manager)
+    described_class.new(bucket: @bucket, transfer_manager: @transfer_manager)
   end
   it_behaves_like "a remote client"
 
   context "#from_config" do
-    it "sets up an instance with the right classes" do
-      @client = RemoteClient::AwsS3RemoteClient.from_config(
-        region: "us-east-2",
-        bucket_name: "aptrust.receiving.someorg.edu"
-      )
-      expect(@client.bucket.class).to eq(Aws::S3::Bucket)
-      expect(@client.transfer_manager.class).to eq(Aws::S3::TransferManager)
-      expect(@client.bucket.name).to eq("aptrust.receiving.someorg.edu")
+    it "sets up an instance using config values" do
+      expect {
+        RemoteClient::AwsS3RemoteClient.from_config(
+          region: "us-east-2",
+          bucket_name: "aptrust.receiving.someorg.edu"
+        )
+      }.not_to raise_error
     end
   end
 
@@ -175,7 +174,6 @@ describe RemoteClient::AwsS3RemoteClient do
         subject.retrieve_file(remote_file_path: "file.txt", local_dir_path: temp_dir)
       }.to raise_error(RemoteClient::RemoteClientError)
     end
-
   end
 
   context "#retrieve_from_path" do

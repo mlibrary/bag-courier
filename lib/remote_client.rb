@@ -1,7 +1,5 @@
 require "bundler/setup"
 
-require "pathname"
-
 require "aws-sdk-s3"
 require "sftp"
 
@@ -70,7 +68,8 @@ module RemoteClient
       full_remote_path = File.join(@base_dir_path, remote_path)
       logger.debug("Full remote path: #{full_remote_path}")
       file_paths = Dir[full_remote_path + "/*"]
-      logger.debug("Files found at path \"#{remote_path}\" in remote: #{file_paths}")
+      relative_file_paths = file_paths.map { |p| p.delete_prefix(remote_path) }
+      logger.debug("Files found at path \"#{remote_path}\" in remote: #{relative_file_paths}")
 
       # Copies over current data
       FileUtils.cp_r(full_remote_path, local_path)
@@ -94,7 +93,7 @@ module RemoteClient
 
     attr_reader :bucket, :transfer_manager
 
-    def initialize(bucket, transfer_manager)
+    def initialize(bucket:, transfer_manager:)
       @bucket = bucket
       @transfer_manager = transfer_manager
     end
@@ -105,7 +104,7 @@ module RemoteClient
       transfer_manager = Aws::S3::TransferManager.new(
         client: Aws::S3::Client.new(region: region)
       )
-      new(bucket, transfer_manager)
+      new(bucket: bucket, transfer_manager: transfer_manager)
     end
 
     def remote_text
