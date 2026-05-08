@@ -30,6 +30,8 @@ class FakeTransferManagerForMultipartUploadError
   end
 end
 
+FakeObject = Struct.new(:key, keyword_init: true)
+
 class FakeTransferManagerForRetrievalFromPath
   def download_directory(destination, bucket:, **options)
     prefix = options[:s3_prefix]
@@ -179,6 +181,10 @@ describe RemoteClient::AwsS3RemoteClient do
   context "#retrieve_from_path" do
     it "puts the files (with their relative directory structure) into expected place" do
       @transfer_manager = FakeTransferManagerForRetrievalFromPath.new
+      allow(@bucket).to receive(:objects).and_return([
+        FakeObject.new(key: "/parent/child/here/file1.txt"),
+        FakeObject.new(key: "/parent/child/here/file2.txt")
+      ].to_enum)
 
       subject.retrieve_from_path(local_path: temp_dir, remote_path: "parent/child/here")
       expect(File.exist?("#{temp_dir}/here/file1.txt")).to eq(true)
@@ -187,6 +193,10 @@ describe RemoteClient::AwsS3RemoteClient do
 
     it "throws a remote client error when download directory error occurs" do
       @transfer_manager = FakeTransferManagerForDirectoryDownloadError.new
+      allow(@bucket).to receive(:objects).and_return([
+        FakeObject.new(key: "/parent/child/here/file1.txt"),
+        FakeObject.new(key: "/parent/child/here/file2.txt")
+      ].to_enum)
 
       expect {
         subject.retrieve_from_path(local_path: temp_dir, remote_path: "parent/child/here")

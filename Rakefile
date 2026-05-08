@@ -10,7 +10,6 @@ begin
 rescue LoadError
 end
 
-
 namespace :db do
   desc "Run migrations"
   task :migrate, [:version] do |t, args|
