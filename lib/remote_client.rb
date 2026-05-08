@@ -68,7 +68,7 @@ module RemoteClient
       full_remote_path = File.join(@base_dir_path, remote_path)
       logger.debug("Full remote path: #{full_remote_path}")
       file_paths = Dir[full_remote_path + "/*"]
-      relative_file_paths = file_paths.map { |p| p.delete_prefix(remote_path) }
+      relative_file_paths = file_paths.map { |p| p.delete_prefix(full_remote_path) }
       logger.debug("Files found at path \"#{remote_path}\" in remote: #{relative_file_paths}")
 
       # Copies over current data
