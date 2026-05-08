@@ -116,7 +116,7 @@ describe RemoteClient::AwsS3RemoteClient do
   end
 
   context "#send_file" do
-    it "should call transfer manager with the correct arguments without remote path" do
+    it "calls transfer manager with the correct arguments without remote path" do
       file_path = File.join(temp_dir, "file.txt")
       FileUtils.touch(file_path)
       expect(@transfer_manager).to receive(:upload_file).with(
@@ -128,7 +128,7 @@ describe RemoteClient::AwsS3RemoteClient do
       subject.send_file(local_file_path: file_path)
     end
 
-    it "should call transfer manager with the correct arguments with remote path" do
+    it "calls transfer manager with the correct arguments with remote path" do
       file_path = File.join(temp_dir, "file.txt")
       FileUtils.touch(file_path)
       expect(@transfer_manager).to receive(:upload_file).with(
@@ -140,7 +140,7 @@ describe RemoteClient::AwsS3RemoteClient do
       subject.send_file(local_file_path: file_path, remote_path: "somewhere")
     end
 
-    it "should raise a remote client error when multi-part upload error is encountered" do
+    it "throws a remote client error when multi-part upload error is encountered" do
       @transfer_manager = FakeTransferManagerForMultipartUploadError.new
 
       file_path = File.join(temp_dir, "file.txt")
@@ -200,7 +200,6 @@ describe RemoteClient::AwsS3RemoteClient do
         subject.retrieve_from_path(local_path: temp_dir, remote_path: "parent/child/here")
       }.to raise_error(RemoteClient::RemoteClientError)
     end
-
   end
 
   context "#retrieve_all" do
@@ -220,4 +219,3 @@ describe RemoteClient::AwsS3RemoteClient do
     end
   end
 end
-
