@@ -2,67 +2,7 @@ require "aws-sdk-s3"
 
 require_relative "../lib/remote_client"
 
-class FakeTransferManagerForSingleRetrieval
-  def download_file(destination, bucket:, **options)
-    FileUtils.touch(destination)
-  end
-end
-
-class FakeTransferManagerForNoKeyError
-  def download_file(destination, bucket:, **options)
-    raise Aws::S3::Errors::NoSuchKey.new(
-      Seahorse::Client::RequestContext.new, "Object key does not exist"
-    )
-  end
-end
-
-class FakeTransferManagerForMultipartDownloadError
-  def download_file(destination, bucket:, **options)
-    raise Aws::S3::MultipartDownloadError.new("Your multi-part download failed, oh no!")
-  end
-end
-
-class FakeTransferManagerForMultipartUploadError
-  def upload_file(destination, bucket:, **options)
-    raise Aws::S3::MultipartUploadError.new(
-      "Your multi-part upload failed, oh no!", [Exception.new]
-    )
-  end
-end
-
 FakeObject = Struct.new(:key, keyword_init: true)
-
-class FakeTransferManagerForRetrievalFromPath
-  def download_directory(destination, bucket:, **options)
-    prefix = options[:s3_prefix]
-    directories = File.join(*[destination, prefix].compact)
-    FileUtils.mkdir_p(directories)
-
-    ["file1.txt", "file2.txt"].each do |filename|
-      FileUtils.touch(File.join(directories, filename))
-    end
-  end
-end
-
-class FakeTransferManagerForRetrievalFromRoot
-  def download_directory(destination, bucket:, **options)
-    directories = File.join(destination, "child")
-    FileUtils.mkdir_p(directories)
-
-    ["file1.txt", "file2.txt"].each do |filename|
-      FileUtils.touch(File.join(directories, filename))
-    end
-    FileUtils.touch(File.join(destination, "file3.txt"))
-  end
-end
-
-class FakeTransferManagerForDirectoryDownloadError
-  def download_directory(destination, bucket:, **options)
-    raise Aws::S3::DirectoryDownloadError.new(
-      "There was an error downloading a directory, oh no!", [Exception.new]
-    )
-  end
-end
 
 Rspec.shared_examples "a remote client" do
   it { is_expected.to respond_to(:remote_text) }
@@ -141,7 +81,11 @@ describe RemoteClient::AwsS3RemoteClient do
     end
 
     it "throws a remote client error when multi-part upload error is encountered" do
-      @transfer_manager = FakeTransferManagerForMultipartUploadError.new
+      expect(@transfer_manager).to receive(:upload_file) {
+        raise Aws::S3::MultipartUploadError.new(
+          "Your multi-part upload failed, oh no!", [Exception.new]
+        )
+      }
 
       file_path = File.join(temp_dir, "file.txt")
       FileUtils.touch(file_path)
@@ -153,14 +97,23 @@ describe RemoteClient::AwsS3RemoteClient do
 
   context "#retrieve_file" do
     it "puts a file into the expected place" do
-      @transfer_manager = FakeTransferManagerForSingleRetrieval.new
+      file_path = File.join(temp_dir, "file.txt")
+      expect(@transfer_manager).to receive(:download_file).with(
+        file_path, bucket: "my-s3-bucket", key: "file.txt"
+      ) { |destination|
+        FileUtils.touch(destination)
+      }
 
       subject.retrieve_file(remote_file_path: "file.txt", local_dir_path: temp_dir)
       expect(File.exist?(File.join(temp_dir, "file.txt"))).to eq(true)
     end
 
     it "throws a remote client error when no key exists" do
-      @transfer_manager = FakeTransferManagerForNoKeyError.new
+      expect(@transfer_manager).to receive(:download_file) {
+        raise Aws::S3::Errors::NoSuchKey.new(
+          Seahorse::Client::RequestContext.new, "Object key does not exist!"
+        )
+      }
 
       expect {
         subject.retrieve_file(remote_file_path: "nosuchfile.txt", local_dir_path: temp_dir)
@@ -168,7 +121,9 @@ describe RemoteClient::AwsS3RemoteClient do
     end
 
     it "throws a remote client error when multi-part download error is encountered" do
-      @transfer_manager = FakeTransferManagerForMultipartDownloadError.new
+      expect(@transfer_manager).to receive(:download_file) {
+        raise Aws::S3::MultipartDownloadError.new("Your multi-part download failed, oh no!")
+      }
 
       expect {
         subject.retrieve_file(remote_file_path: "file.txt", local_dir_path: temp_dir)
@@ -178,11 +133,19 @@ describe RemoteClient::AwsS3RemoteClient do
 
   context "#retrieve_from_path" do
     it "puts the files (with their relative directory structure) into expected place" do
-      @transfer_manager = FakeTransferManagerForRetrievalFromPath.new
       allow(@bucket).to receive(:objects).and_return([
         FakeObject.new(key: "/parent/child/here/file1.txt"),
         FakeObject.new(key: "/parent/child/here/file2.txt")
       ].to_enum)
+      expect(@transfer_manager).to receive(:download_directory).with(
+        instance_of(String), bucket: "my-s3-bucket", s3_prefix: "parent/child/here"
+      ) { |destination, kwargs|
+        directories = File.join(*[destination, kwargs[:s3_prefix]].compact)
+        FileUtils.mkdir_p(directories)
+        ["file1.txt", "file2.txt"].each do |filename|
+          FileUtils.touch(File.join(directories, filename))
+        end
+      }
 
       subject.retrieve_from_path(local_path: temp_dir, remote_path: "parent/child/here")
       expect(File.exist?("#{temp_dir}/here/file1.txt")).to eq(true)
@@ -190,11 +153,15 @@ describe RemoteClient::AwsS3RemoteClient do
     end
 
     it "throws a remote client error when download directory error occurs" do
-      @transfer_manager = FakeTransferManagerForDirectoryDownloadError.new
       allow(@bucket).to receive(:objects).and_return([
         FakeObject.new(key: "/parent/child/here/file1.txt"),
         FakeObject.new(key: "/parent/child/here/file2.txt")
       ].to_enum)
+      expect(@transfer_manager).to receive(:download_directory) {
+        raise Aws::S3::DirectoryDownloadError.new(
+          "There was an error downloading a directory, oh no!", [Exception.new]
+        )
+      }
 
       expect {
         subject.retrieve_from_path(local_path: temp_dir, remote_path: "parent/child/here")
@@ -204,7 +171,16 @@ describe RemoteClient::AwsS3RemoteClient do
 
   context "#retrieve_all" do
     it "puts all the files (with their relative directory structure) into expected place" do
-      @transfer_manager = FakeTransferManagerForRetrievalFromRoot.new
+      expect(@transfer_manager).to receive(:download_directory).with(
+        temp_dir, bucket: "my-s3-bucket"
+      ) { |destination|
+        directories = File.join(destination, "child")
+        FileUtils.mkdir_p(directories)
+        ["file1.txt", "file2.txt"].each do |filename|
+          FileUtils.touch(File.join(directories, filename))
+        end
+        FileUtils.touch(File.join(destination, "file3.txt"))
+      }
 
       subject.retrieve_all(local_path: temp_dir)
       expect(File.exist?("#{temp_dir}/child/file1.txt")).to eq(true)
@@ -213,8 +189,11 @@ describe RemoteClient::AwsS3RemoteClient do
     end
 
     it "throws a remote client error when download directory error occurs" do
-      @transfer_manager = FakeTransferManagerForDirectoryDownloadError.new
-
+      expect(@transfer_manager).to receive(:download_directory) {
+        raise Aws::S3::DirectoryDownloadError.new(
+          "There was an error downloading a directory, oh no!", [Exception.new]
+        )
+      }
       expect { subject.retrieve_all(local_path: temp_dir) }.to raise_error(RemoteClient::RemoteClientError)
     end
   end
