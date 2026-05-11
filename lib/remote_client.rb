@@ -147,7 +147,11 @@ module RemoteClient
     def retrieve_from_path(local_path:, remote_path:)
       RemotePathUtility.ensure_presence(remote_path)
       logger.debug("Retrieving content at path #{remote_path} and placing at #{local_path}")
-      logger.debug("Files found at path \"#{remote_path}\" in remote: #{get_files_at_path(remote_path)}")
+      file_paths = get_files_at_path(remote_path)
+      logger.debug("Files found at path \"#{remote_path}\" in remote: #{file_paths}")
+      if file_paths.empty?
+        return
+      end
 
       Dir.mktmpdir do |staging_dir|
         transfer_manager.download_directory(
@@ -155,8 +159,8 @@ module RemoteClient
           bucket: @bucket.name,
           s3_prefix: remote_path
         )
-        source = File.join(staging_dir, remote_path)
-        FileUtils.mv(source, local_path)
+        source_path = File.join(staging_dir, remote_path)
+        FileUtils.mv(source_path, local_path)
       end
     rescue Aws::S3::DirectoryDownloadError => e
       raise RemoteClientError, "Error occurred while downloading directory from AWS S3: #{e.full_message}"

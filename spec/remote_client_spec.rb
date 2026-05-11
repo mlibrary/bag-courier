@@ -152,6 +152,13 @@ describe RemoteClient::AwsS3RemoteClient do
       expect(File.exist?("#{temp_dir}/here/file2.txt")).to eq(true)
     end
 
+    it "exits early when no files are found" do
+      allow(@bucket).to receive(:objects).and_return([].to_enum)
+      expect {
+        subject.retrieve_from_path(local_path: temp_dir, remote_path: "no/such/path")
+      }.to_not raise_error
+    end
+
     it "throws a remote client error when download directory error occurs" do
       allow(@bucket).to receive(:objects).and_return([
         FakeObject.new(key: "/parent/child/here/file1.txt"),
