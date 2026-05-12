@@ -15,6 +15,21 @@ module RemoteClient
         raise RemoteClientError, "Remote path may not be empty."
       end
     end
+
+    def self.ensure_relative(path)
+      if path.start_with?("/")
+        raise RemoteClientError, "Remote path must not start with \"/\"; remote path provided: #{path}"
+      end
+    end
+
+    def self.ensure_no_traversal(path)
+      Pathname.new(path).each_filename do |segment|
+        if [".", ".."].include?(segment.strip)
+          message = "Remote path must not include segments of \".\" or \"..\"; remote path provided: #{path}"
+          raise RemoteClientError, message
+        end
+      end
+    end
   end
 
   class RemoteClientBase
@@ -65,6 +80,8 @@ module RemoteClient
     # Retrieves recursively all files and directories found at remote_path
     def retrieve_from_path(local_path:, remote_path:)
       RemotePathUtility.ensure_presence(remote_path)
+      RemotePathUtility.ensure_relative(remote_path)
+      RemotePathUtility.ensure_no_traversal(remote_path)
       full_remote_path = File.join(@base_dir_path, remote_path)
       logger.debug("Full remote path: #{full_remote_path}")
       file_paths = Dir[full_remote_path + "/*"]
@@ -146,6 +163,7 @@ module RemoteClient
     # Retrieves files at remote_path, creating directories as necessary.
     def retrieve_from_path(local_path:, remote_path:)
       RemotePathUtility.ensure_presence(remote_path)
+      RemotePathUtility.ensure_relative(remote_path)
       logger.debug("Retrieving content at path #{remote_path} and placing at #{local_path}")
       file_paths = get_files_at_path(remote_path)
       logger.debug("Files found at path \"#{remote_path}\" in remote: #{file_paths}")

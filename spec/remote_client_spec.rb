@@ -11,6 +11,53 @@ RSpec.shared_examples "a remote client" do
   it { is_expected.to respond_to(:retrieve_from_path) }
 end
 
+describe RemoteClient::RemotePathUtility do
+
+  subject do
+    described_class
+  end
+
+  context "#ensure_presence" do
+    it "throws an error when empty string" do
+      expect { subject.ensure_presence("") }.to raise_error
+    end
+
+    it "throws an error when nil" do
+      expect { subject.ensure_presence(nil) }.to raise_error
+    end
+
+    it "does not throw an error when valid" do
+      expect { subject.ensure_presence("some/path") }.to_not raise_error
+    end
+  end
+
+  context "#ensure_relative" do
+    it "throws an error when absolute" do
+      expect { subject.ensure_relative("/some/absolute/path") }.to raise_error
+    end
+
+    it "does not throw an error when valid" do
+      expect { subject.ensure_relative("some/path") }.to_not raise_error
+    end
+  end
+
+  context "#ensure_no_traversal" do
+    it "throws an error when it contains .." do
+      expect { subject.ensure_no_traversal("../../some/evil/path") }.to raise_error
+    end
+
+    it "throws an error when it contains ." do
+      expect { subject.ensure_no_traversal("./some/other/evil/path") }.to raise_error
+    end
+
+
+    it "does not throw an error when valid" do
+      expect { subject.ensure_no_traversal("some/path") }.to_not raise_error
+    end
+  end
+
+end
+
 describe RemoteClient::AwsS3RemoteClient do
   include_context "uses temp dir"
 
