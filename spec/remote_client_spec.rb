@@ -4,7 +4,7 @@ require_relative "../lib/remote_client"
 
 FakeObject = Struct.new(:key, keyword_init: true)
 
-Rspec.shared_examples "a remote client" do
+RSpec.shared_examples "a remote client" do
   it { is_expected.to respond_to(:remote_text) }
   it { is_expected.to respond_to(:send_file) }
   it { is_expected.to respond_to(:retrieve_file) }
