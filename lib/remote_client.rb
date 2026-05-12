@@ -86,7 +86,8 @@ module RemoteClient
       logger.debug("Full remote path: #{full_remote_path}")
       file_paths = Dir[full_remote_path + "/*"]
       relative_file_paths = file_paths.map { |p| p.delete_prefix(full_remote_path) }
-      logger.debug("Files found at path \"#{remote_path}\" in remote: #{relative_file_paths}")
+      logger.debug("Number of files found at path \"#{remote_path}\" in remote: #{relative_file_paths.size}")
+      logger.debug("First 10 file paths found: #{file_paths.take(10)}")
 
       # Copies over current data
       FileUtils.cp_r(full_remote_path, local_path)
@@ -166,7 +167,8 @@ module RemoteClient
       RemotePathUtility.ensure_relative(remote_path)
       logger.debug("Retrieving content at path #{remote_path} and placing at #{local_path}")
       file_paths = get_files_at_path(remote_path)
-      logger.debug("Files found at path \"#{remote_path}\" in remote: #{file_paths}")
+      logger.debug("Number of files found at path \"#{remote_path}\" in remote: #{file_paths.size}")
+      logger.debug("First 10 file paths found: #{file_paths.take(10)}")
       if file_paths.empty?
         return
       end
