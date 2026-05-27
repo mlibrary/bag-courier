@@ -19,11 +19,11 @@ describe RemoteClient::RemotePathUtility do
 
   context "#ensure_presence" do
     it "throws an error when empty string" do
-      expect { subject.ensure_presence("") }.to raise_error
+      expect { subject.ensure_presence("") }.to raise_error(RemoteClient::RemoteClientError)
     end
 
     it "throws an error when nil" do
-      expect { subject.ensure_presence(nil) }.to raise_error
+      expect { subject.ensure_presence(nil) }.to raise_error(RemoteClient::RemoteClientError)
     end
 
     it "does not throw an error when valid" do
@@ -33,7 +33,7 @@ describe RemoteClient::RemotePathUtility do
 
   context "#ensure_relative" do
     it "throws an error when absolute" do
-      expect { subject.ensure_relative("/some/absolute/path") }.to raise_error
+      expect { subject.ensure_relative("/some/absolute/path") }.to raise_error(RemoteClient::RemoteClientError)
     end
 
     it "does not throw an error when valid" do
@@ -43,11 +43,11 @@ describe RemoteClient::RemotePathUtility do
 
   context "#ensure_no_traversal" do
     it "throws an error when it contains .." do
-      expect { subject.ensure_no_traversal("../../some/evil/path") }.to raise_error
+      expect { subject.ensure_no_traversal("../../some/evil/path") }.to raise_error(RemoteClient::RemoteClientError)
     end
 
     it "throws an error when it contains ." do
-      expect { subject.ensure_no_traversal("./some/other/evil/path") }.to raise_error
+      expect { subject.ensure_no_traversal("./some/other/evil/path") }.to raise_error(RemoteClient::RemoteClientError)
     end
 
 
@@ -152,7 +152,7 @@ describe RemoteClient::AwsS3RemoteClient do
       }
 
       subject.retrieve_file(remote_file_path: "file.txt", local_dir_path: temp_dir)
-      expect(File.exist?(File.join(temp_dir, "file.txt"))).to eq(true)
+      expect(File.exist?(file_path)).to eq(true)
     end
 
     it "throws a remote client error when no key exists" do
