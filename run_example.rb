@@ -24,7 +24,7 @@ target_client = RemoteClient::RemoteClientFactory.from_config(
 source_client = RemoteClient::RemoteClientFactory.from_config(
   type: :file_system,
   settings: Config::FileSystemRemoteConfig.new(
-    remote_path: "some/source/path/for/object"
+    remote_path: "some/source/path"
   )
 )
 
@@ -44,14 +44,13 @@ object_metadata = Dispatcher::ObjectMetadata.new(
 courier = dispatcher.dispatch(
   object_metadata: object_metadata,
   data_transfer: DataTransfer::RemoteClientDataTransfer.new(
-    source_client
-    # remote_path: # use this if your object isn't at the root of the remote
-  ),
-  context: "somecontext"
+    remote_client: source_client,
+    remote_path: "some/object/path"
+  )
 )
 courier.deliver
 
 logger.info("Events")
-courier.status_event_repo.get_all_by_bag_id(courier.bag_id.to_s).each do |e|
+courier.status_event_repo.get_all_for_bag_identifier(courier.bag_id.to_s).each do |e|
   logger.info(e)
 end
