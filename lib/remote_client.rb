@@ -9,26 +9,43 @@ module RemoteClient
   class RemoteClientError < StandardError
   end
 
-  class RemotePathUtility
-    def self.ensure_presence(path)
-      if path.nil? || path.empty?
-        raise RemoteClientError, "Remote path may not be empty."
+  class PathValidator
+    def self.ensure_not_nil(path)
+      if path.nil?
+        raise RemoteClientError, "Path must not be nil."
       end
+    end
+
+    def self.ensure_not_empty(path)
+      if path.empty?
+        raise RemoteClientError, "Path must not be empty."
+      end
+    end
+
+    def self.ensure_present(path)
+      self.ensure_not_empty(path)
+      self.ensure_not_nil(path)
     end
 
     def self.ensure_relative(path)
       if path.start_with?("/")
-        raise RemoteClientError, "Remote path must not start with \"/\"; remote path provided: #{path}"
+        raise RemoteClientError, "Path must not start with \"/\"; path provided: #{path}"
       end
     end
 
     def self.ensure_no_traversal(path)
       Pathname.new(path).each_filename do |segment|
         if [".", ".."].include?(segment.strip)
-          message = "Remote path must not include segments of \".\" or \"..\"; remote path provided: #{path}"
+          message = "Path must not include segments of \".\" or \"..\"; path provided: #{path}"
           raise RemoteClientError, message
         end
       end
+    end
+
+    def self.ensure_safe(path)
+      self.ensure_present(path)
+      self.ensure_relative(path)
+      self.ensure_no_traversal(path)
     end
   end
 
@@ -62,13 +79,23 @@ module RemoteClient
     end
 
     def send_file(local_file_path:, remote_path: nil)
+      PathValidator.ensure_present(local_file_path)
+      if !remote_path.nil?
+        PathValidator.ensure_not_empty(remote_path)
+        PathValidator.ensure_relative(remote_path)
+        PathValidator.ensure_no_traversal(remote_path)
+      end
+
       file_name = File.basename(local_file_path)
-      new_remote_path = File.join(@base_dir_path, remote_path || "")
+      new_remote_path = !remote_path.nil? ? File.join(@base_dir_path, remote_path) : @base_dir_path
       logger.debug("Sending file \"#{file_name}\" to \"#{new_remote_path}\"")
       FileUtils.cp(local_file_path, File.join(new_remote_path, file_name))
     end
 
     def retrieve_file(remote_file_path:, local_dir_path:)
+      PathValidator.ensure_safe(remote_file_path)
+      PathValidator.ensure_present(local_dir_path)
+
       file_name = File.basename(remote_file_path)
       logger.debug("Retrieving file \"#{file_name}\" and saving to \"#{local_dir_path}\"")
       FileUtils.cp(
@@ -79,9 +106,9 @@ module RemoteClient
 
     # Retrieves recursively all files and directories found at remote_path
     def retrieve_from_path(local_path:, remote_path:)
-      RemotePathUtility.ensure_presence(remote_path)
-      RemotePathUtility.ensure_relative(remote_path)
-      RemotePathUtility.ensure_no_traversal(remote_path)
+      PathValidator.ensure_present(local_path)
+      PathValidator.ensure_safe(remote_path)
+
       full_remote_path = File.join(@base_dir_path, remote_path)
       logger.debug("Full remote path: #{full_remote_path}")
       file_paths = Dir[full_remote_path + "/*"]
@@ -130,9 +157,16 @@ module RemoteClient
     end
 
     def send_file(local_file_path:, remote_path: nil)
+      PathValidator.ensure_present(local_file_path)
+      if !remote_path.nil?
+        PathValidator.ensure_not_empty(remote_path)
+        PathValidator.ensure_relative(remote_path)
+        PathValidator.ensure_no_traversal(remote_path)
+      end
+
       file_name = File.basename(local_file_path)
       logger.debug("File name: #{file_name}")
-      object_key = remote_path ? File.join(remote_path, file_name) : file_name
+      object_key = !remote_path.nil? ? File.join(remote_path, file_name) : file_name
       logger.debug("Sending file \"#{file_name}\" to \"#{remote_path}\"")
       @transfer_manager.upload_file(
         local_file_path,
@@ -145,6 +179,9 @@ module RemoteClient
     end
 
     def retrieve_file(remote_file_path:, local_dir_path:)
+      PathValidator.ensure_safe(remote_file_path)
+      PathValidator.ensure_present(local_dir_path)
+
       file_name = File.basename(remote_file_path)
       logger.debug("Retrieving file \"#{file_name}\" and saving to \"#{local_dir_path}\"")
       @transfer_manager.download_file(
@@ -163,8 +200,10 @@ module RemoteClient
 
     # Retrieves files at remote_path, creating directories as necessary.
     def retrieve_from_path(local_path:, remote_path:)
-      RemotePathUtility.ensure_presence(remote_path)
-      RemotePathUtility.ensure_relative(remote_path)
+      PathValidator.ensure_present(local_path)
+      # Traversal sequences are checked by the AWS S3 client, so this is preemptive.
+      PathValidator.ensure_safe(remote_path)
+
       logger.debug("Retrieving content at path #{remote_path} and placing at #{local_path}")
       file_paths = get_files_at_path(remote_path)
       logger.debug("Number of files found at path \"#{remote_path}\" in remote: #{file_paths.size}")
@@ -188,6 +227,8 @@ module RemoteClient
 
     # Retrieves files in remote, creating directories as necessary.
     def retrieve_all(local_path:)
+      PathValidator.ensure_present(local_path)
+
       logger.debug("Retrieving content in remote and placing at #{local_path}")
       transfer_manager.download_directory(local_path, bucket: @bucket.name)
     rescue Aws::S3::DirectoryDownloadError => e
@@ -215,15 +256,25 @@ module RemoteClient
     end
 
     def send_file(local_file_path:, remote_path: nil)
+      PathValidator.ensure_present(local_file_path)
+      if !remote_path.nil?
+        PathValidator.ensure_not_empty(remote_path)
+      end
+
       @client.put(local_file_path, remote_path || ".")
     end
 
     def retrieve_file(remote_file_path:, local_dir_path:)
+      PathValidator.ensure_present(remote_file_path)
+      PathValidator.ensure_present(local_dir_path)
+
       @client.get(remote_file_path, local_dir_path)
     end
 
     def retrieve_from_path(local_path:, remote_path:)
-      RemotePathUtility.ensure_presence(remote_path)
+      PathValidator.ensure_present(local_path)
+      PathValidator.ensure_present(remote_path)
+
       @client.get_r(remote_path, local_path)
     end
   end

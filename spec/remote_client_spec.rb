@@ -11,23 +11,29 @@ RSpec.shared_examples "a remote client" do
   it { is_expected.to respond_to(:retrieve_from_path) }
 end
 
-describe RemoteClient::RemotePathUtility do
+describe RemoteClient::PathValidator do
 
   subject do
     described_class
   end
 
-  context "#ensure_presence" do
-    it "throws an error when empty string" do
-      expect { subject.ensure_presence("") }.to raise_error(RemoteClient::RemoteClientError)
-    end
-
+  context "#ensure_not_nil" do
     it "throws an error when nil" do
-      expect { subject.ensure_presence(nil) }.to raise_error(RemoteClient::RemoteClientError)
+      expect { subject.ensure_not_nil(nil) }.to raise_error(RemoteClient::RemoteClientError)
     end
 
     it "does not throw an error when valid" do
-      expect { subject.ensure_presence("some/path") }.to_not raise_error
+      expect { subject.ensure_not_nil("some/path") }.to_not raise_error
+    end
+  end
+
+  context "#ensure_not_empty" do
+    it "throws an error when empty string" do
+      expect { subject.ensure_not_empty("") }.to raise_error(RemoteClient::RemoteClientError)
+    end
+
+    it "does not throw an error when valid" do
+      expect { subject.ensure_not_empty("some/path") }.to_not raise_error
     end
   end
 
@@ -49,7 +55,6 @@ describe RemoteClient::RemotePathUtility do
     it "throws an error when it contains ." do
       expect { subject.ensure_no_traversal("./some/other/evil/path") }.to raise_error(RemoteClient::RemoteClientError)
     end
-
 
     it "does not throw an error when valid" do
       expect { subject.ensure_no_traversal("some/path") }.to_not raise_error
