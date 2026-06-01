@@ -303,6 +303,8 @@ module RemoteClient
           user: settings.user,
           key_path: settings.key_path
         )
+      else
+        raise RemoteClientError, "Unsupported or invalid type: #{type}"
       end
     end
   end
