@@ -37,6 +37,21 @@ describe RemoteClient::PathValidator do
     end
   end
 
+  context "#ensure_present" do
+    it "throws an error when nil" do
+      expect { subject.ensure_present(nil) }.to raise_error(RemoteClient::RemoteClientError)
+    end
+
+    it "throws an error when empty string" do
+      expect { subject.ensure_present("") }.to raise_error(RemoteClient::RemoteClientError)
+    end
+
+    it "does not throw an error when valid" do
+      expect { subject.ensure_not_empty("some/path") }.to_not raise_error
+    end
+  end
+
+
   context "#ensure_relative" do
     it "throws an error when absolute" do
       expect { subject.ensure_relative("/some/absolute/path") }.to raise_error(RemoteClient::RemoteClientError)

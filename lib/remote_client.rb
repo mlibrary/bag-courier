@@ -1,5 +1,8 @@
 require "bundler/setup"
 
+require "pathname"
+require "tmpdir"
+
 require "aws-sdk-s3"
 require "sftp"
 
@@ -23,8 +26,8 @@ module RemoteClient
     end
 
     def self.ensure_present(path)
-      self.ensure_not_empty(path)
       self.ensure_not_nil(path)
+      self.ensure_not_empty(path)
     end
 
     def self.ensure_relative(path)
