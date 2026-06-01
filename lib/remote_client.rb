@@ -196,24 +196,18 @@ module RemoteClient
       raise RemoteClientError, "Error occurred while downloading file from AWS S3: #{e.full_message}"
     end
 
-    def get_files_at_path(remote_path)
-      @bucket.objects({ prefix: remote_path }).map { |o| o.key }
-    end
-    private :get_files_at_path
-
     # Retrieves files at remote_path, creating directories as necessary.
     def retrieve_from_path(local_path:, remote_path:)
       PathValidator.ensure_present(local_path)
       # Traversal sequences are checked by the AWS S3 client, so this is preemptive.
       PathValidator.ensure_safe(remote_path)
 
-      logger.debug("Retrieving content at path #{remote_path} and placing at #{local_path}")
-      file_paths = get_files_at_path(remote_path)
-      logger.debug("Number of files found at path \"#{remote_path}\" in remote: #{file_paths.size}")
-      logger.debug("First 10 file paths found: #{file_paths.take(10)}")
-      if file_paths.empty?
+      sample_file_paths = @bucket.objects(prefix: remote_path).take(10).map(&:key)
+      logger.debug("First 10 file paths found: #{sample_file_paths}")
+      if sample_file_paths.empty?
         return
       end
+      logger.debug("Retrieving content at path #{remote_path} and placing at #{local_path}")
 
       Dir.mktmpdir do |staging_dir|
         transfer_manager.download_directory(
