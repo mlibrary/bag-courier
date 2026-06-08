@@ -74,7 +74,6 @@ class ArchivematicaAPITest < Minitest::Test
       )
     ]
 
-
     @mock_backend = Minitest::Mock.new
     @mocked_api = ArchivematicaAPI.new(
       api_backend: @mock_backend
