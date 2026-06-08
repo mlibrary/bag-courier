@@ -246,6 +246,7 @@ module RemoteClient
       end
       new_path
     end
+    private :make_absolute
 
     def self.from_config(user:, host:, key_path:)
       SFTP.configure do |config|

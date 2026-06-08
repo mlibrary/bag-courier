@@ -145,7 +145,7 @@ class ArchivematicaAPITest < Minitest::Test
       "limit" => 1
     })
     @mock_backend.verify
-    assert_equal objects, @package_data
+    assert_equal @package_data, objects
   end
 
   def test_get_packages_with_no_stored_date
@@ -162,7 +162,7 @@ class ArchivematicaAPITest < Minitest::Test
     @api.stub :get_objects_from_pages, args_checker do
       packages = @api.get_packages(location_uuid: @location_uuid)
       assert packages.all? { |p| p.is_a?(Archivematica::Package) }
-      assert_equal(packages, @expected_packages)
+      assert_equal(@expected_packages, packages)
     end
   end
 
@@ -183,7 +183,7 @@ class ArchivematicaAPITest < Minitest::Test
     @api.stub :get_objects_from_pages, args_checker do
       packages = @api.get_packages(location_uuid: @location_uuid, stored_date: time_filter)
       assert packages.all? { |p| p.is_a?(Archivematica::Package) }
-      assert_equal(packages, @expected_packages)
+      assert_equal(@expected_packages, packages)
     end
   end
 

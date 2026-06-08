@@ -74,6 +74,7 @@ module Archivematica
     def normalize_path(path)
       path.delete_prefix("/")
     end
+    private :normalize_path
 
     def create_package(package_data)
       Package.new(
