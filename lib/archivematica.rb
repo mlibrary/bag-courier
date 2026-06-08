@@ -71,10 +71,14 @@ module Archivematica
       results
     end
 
+    def normalize_path(path)
+      path.delete_prefix("/")
+    end
+
     def create_package(package_data)
       Package.new(
         uuid: package_data["uuid"],
-        path: package_data["current_full_path"],
+        path: normalize_path(package_data["current_full_path"]),
         size: package_data["size"],
         stored_date: package_data["stored_date"]
       )

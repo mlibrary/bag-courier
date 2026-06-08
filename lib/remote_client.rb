@@ -239,6 +239,14 @@ module RemoteClient
       @host = host
     end
 
+    def make_absolute(path)
+      new_path = path
+      if !new_path.start_with?("/")
+        new_path = "/" + new_path
+      end
+      new_path
+    end
+
     def self.from_config(user:, host:, key_path:)
       SFTP.configure do |config|
         config.host = host
@@ -256,23 +264,31 @@ module RemoteClient
       PathValidator.ensure_present(local_file_path)
       if !remote_path.nil?
         PathValidator.ensure_not_empty(remote_path)
+        PathValidator.ensure_no_traversal(remote_path)
+        new_remote_path = make_absolute(remote_path)
+      else
+        new_remote_path = "/"
       end
 
-      @client.put(local_file_path, remote_path || ".")
+      @client.put(local_file_path, new_remote_path)
     end
 
     def retrieve_file(remote_file_path:, local_dir_path:)
       PathValidator.ensure_present(remote_file_path)
+      PathValidator.ensure_no_traversal(remote_file_path)
       PathValidator.ensure_present(local_dir_path)
 
-      @client.get(remote_file_path, local_dir_path)
+      new_remote_file_path = make_absolute(remote_file_path)
+      @client.get(new_remote_file_path, local_dir_path)
     end
 
     def retrieve_from_path(local_path:, remote_path:)
       PathValidator.ensure_present(local_path)
       PathValidator.ensure_present(remote_path)
+      PathValidator.ensure_no_traversal(remote_path)
 
-      @client.get_r(remote_path, local_path)
+      new_remote_path = make_absolute(remote_path)
+      @client.get_r(new_remote_path, local_path)
     end
   end
 

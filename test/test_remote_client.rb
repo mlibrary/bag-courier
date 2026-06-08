@@ -139,7 +139,7 @@ class SftpRemoteClientTest < Minitest::Test
 
   def test_send_file
     local_path = File.join(@local_dir, "file.txt")
-    @mock_sftp_client.expect(:put, "some string output", [local_path, "special"])
+    @mock_sftp_client.expect(:put, "some string output", [local_path, "/special"])
     @remote_client_with_mock.send_file(
       local_file_path: local_path, remote_path: "special"
     )
@@ -148,14 +148,14 @@ class SftpRemoteClientTest < Minitest::Test
 
   def test_send_file_to_root
     local_path = File.join(@local_dir, "file.txt")
-    @mock_sftp_client.expect(:put, "some string output", [local_path, "."])
+    @mock_sftp_client.expect(:put, "some string output", [local_path, "/"])
     @remote_client_with_mock.send_file(local_file_path: local_path)
     @mock_sftp_client.verify
   end
 
   def test_retrieve_file
     remote_path = File.join("special", "file.txt")
-    @mock_sftp_client.expect(:get, "some string output", [remote_path, @local_dir])
+    @mock_sftp_client.expect(:get, "some string output", ["/" + remote_path, @local_dir])
     @remote_client_with_mock.retrieve_file(
       remote_file_path: remote_path, local_dir_path: @local_dir
     )
@@ -163,7 +163,7 @@ class SftpRemoteClientTest < Minitest::Test
   end
 
   def test_retrieve_from_path
-    remote_path = File.join("special")
+    remote_path = File.join("/special")
     @mock_sftp_client.expect(:get_r, "some string output", [remote_path, @local_dir])
     @remote_client_with_mock.retrieve_from_path(
       remote_path: remote_path, local_path: @local_dir
