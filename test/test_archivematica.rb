@@ -53,6 +53,27 @@ class ArchivematicaAPITest < Minitest::Test
       }
     ]
 
+    @expected_packages = [
+      Package.new(
+        uuid: "9e7bbf35-9e31-4679-9228-e132ddcf34ea",
+        path: "storage/9e7b/bf35/9e31/4679/9228/e132/ddcf/34ea/identifier-one-9e7bbf35-9e31-4679-9228-e132ddcf34ea",
+        size: 1000,
+        stored_date: "2024-01-17T00:00:00.000000"
+      ),
+      Package.new(
+        uuid: "590a9015-a5ef-47af-b0da-276a88ecd543",
+        path: "storage/590a/9015/a5ef/47af/b0da/276a/88ec/d543/identifier-two-590a9015-a5ef-47af-b0da-276a88ecd543",
+        size: 300000,
+        stored_date: "2024-01-16T00:00:00.000000"
+      ),
+      Package.new(
+        uuid: "4fb38e65-a972-434e-a32c-d668a122514a",
+        path: "storage/4fb3/8e65/a972/434e/a32c/d668/a122/514a/identifier-three-4fb38e65-a972-434e-a32c-d668a122514a",
+        size: 5000000,
+        stored_date: "2024-01-13T00:00:00.000000"
+      )
+    ]
+
     @mock_backend = Minitest::Mock.new
     @mocked_api = ArchivematicaAPI.new(
       api_backend: @mock_backend
@@ -123,7 +144,7 @@ class ArchivematicaAPITest < Minitest::Test
       "limit" => 1
     })
     @mock_backend.verify
-    assert_equal objects, @package_data
+    assert_equal @package_data, objects
   end
 
   def test_get_packages_with_no_stored_date
@@ -140,7 +161,7 @@ class ArchivematicaAPITest < Minitest::Test
     @api.stub :get_objects_from_pages, args_checker do
       packages = @api.get_packages(location_uuid: @location_uuid)
       assert packages.all? { |p| p.is_a?(Archivematica::Package) }
-      assert_equal(@package_data.map { |p| p["uuid"] }, packages.map { |p| p.uuid })
+      assert_equal(@expected_packages, packages)
     end
   end
 
@@ -161,7 +182,7 @@ class ArchivematicaAPITest < Minitest::Test
     @api.stub :get_objects_from_pages, args_checker do
       packages = @api.get_packages(location_uuid: @location_uuid, stored_date: time_filter)
       assert packages.all? { |p| p.is_a?(Archivematica::Package) }
-      assert_equal(@package_data.map { |p| p["uuid"] }, packages.map { |p| p.uuid })
+      assert_equal(@expected_packages, packages)
     end
   end
 
@@ -170,7 +191,7 @@ class ArchivematicaAPITest < Minitest::Test
 
     expected = Package.new(
       uuid: "9e7bbf35-9e31-4679-9228-e132ddcf34ea",
-      path: "/storage/9e7b/bf35/9e31/4679/9228/e132/ddcf/34ea/identifier-one-9e7bbf35-9e31-4679-9228-e132ddcf34ea",
+      path: "storage/9e7b/bf35/9e31/4679/9228/e132/ddcf/34ea/identifier-one-9e7bbf35-9e31-4679-9228-e132ddcf34ea",
       size: 1000,
       stored_date: "2024-01-17T00:00:00.000000"
     )
@@ -200,13 +221,13 @@ class ArchivematicaServiceTest < Minitest::Test
 
     @first_package = Package.new(
       uuid: "0948e2ae-eb24-4984-a71b-43bc440534d0",
-      path: "/storage/0948/e2ae/eb24/4984/a71b/43bc/4405/34d0/identifier-one-0948e2ae-eb24-4984-a71b-43bc440534d0",
+      path: "storage/0948/e2ae/eb24/4984/a71b/43bc/4405/34d0/identifier-one-0948e2ae-eb24-4984-a71b-43bc440534d0",
       size: 200000,
       stored_date: "2024-02-18T00:00:00.000000"
     )
     @second_package = Package.new(
       uuid: "0baa468e-dd42-49ff-ba90-5dedc30c8541",
-      path: "/storage/0baa/468e/dd42/49ff/ba90/5ded/c30c/8541/identifier-two-0baa468e-dd42-49ff-ba90-5dedc30c8541",
+      path: "storage/0baa/468e/dd42/49ff/ba90/5ded/c30c/8541/identifier-two-0baa468e-dd42-49ff-ba90-5dedc30c8541",
       size: 500000000,
       stored_date: "2024-02-19T00:00:00.000000"
     )
